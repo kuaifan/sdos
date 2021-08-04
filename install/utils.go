@@ -2,6 +2,7 @@ package install
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -15,7 +16,8 @@ import (
 	"github.com/wonderivan/logger"
 )
 
-func Ymd() string {
+// YmdHis 返回示例：2021-08-05 00:00:01
+func YmdHis() string {
 	timeObj := time.Now()
 	year := timeObj.Year()
 	month := timeObj.Month()
@@ -27,12 +29,33 @@ func Ymd() string {
 	return fmt.Sprintf("%d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minute, second)
 }
 
-func FileExist(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil || os.IsExist(err)
+// Exists 判断所给路径文件/文件夹是否存在
+func Exists(path string) bool {
+	_, err := os.Stat(path)    //os.Stat获取文件信息
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
 }
 
-//VersionToInt v1.15.6  => 115
+// IsDir 判断所给路径是否为文件夹
+func IsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
+
+// IsFile 判断所给路径是否为文件
+func IsFile(path string) bool {
+	return !IsDir(path)
+}
+
+// VersionToInt v1.15.6  => 115
 func VersionToInt(version string) int {
 	// v1.15.6  => 1.15.6
 	version = strings.Replace(version, "v", "", -1)
@@ -46,7 +69,7 @@ func VersionToInt(version string) int {
 	return 0
 }
 
-//VersionToIntAll v1.19.1 ==> 1191
+// VersionToIntAll v1.19.1 ==> 1191
 func VersionToIntAll(version string) int {
 	version = strings.Replace(version, "v", "", -1)
 	arr := strings.Split(version, ".")
@@ -59,7 +82,7 @@ func VersionToIntAll(version string) int {
 	return 0
 }
 
-//IpFormat is
+// IpFormat is
 func IpFormat(host string) string {
 	ipAndPort := strings.Split(host, ":")
 	if len(ipAndPort) != 2 {
@@ -133,6 +156,17 @@ func RunShellInSystem(string string) (string, string, error) {
 	return stdout.String(), stderr.String(), err
 }
 
+// RunShellInFile shell运行文件
+func RunShellInFile(path string) (string, string, error) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("/bin/sh", path)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	return stdout.String(), stderr.String(), err
+}
+
 // RemoveIpPort 去除IP中的端口
 func RemoveIpPort(ip string) string {
 	if strings.Contains(ip, ":") {
@@ -193,4 +227,13 @@ func DecodeIPs(ips []string) []string {
 func GetRemoteHostName(hostIP string) string {
 	hostName := SSHConfig.CmdToString(hostIP, "hostname", "")
 	return strings.ToLower(hostName)
+}
+
+func base64Decode(data string) string {
+	uDec, err := base64.URLEncoding.DecodeString(data)
+	if err != nil {
+		logger.Error("Error decoding string: %s ", err.Error())
+		return ""
+	}
+	return string(uDec)
 }
