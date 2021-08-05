@@ -229,6 +229,11 @@ func GetRemoteHostName(hostIP string) string {
 	return strings.ToLower(hostName)
 }
 
+func base64Encode(data string) string {
+	sEnc := base64.StdEncoding.EncodeToString([]byte(data))
+	return fmt.Sprintf(sEnc)
+}
+
 func base64Decode(data string) string {
 	uDec, err := base64.URLEncoding.DecodeString(data)
 	if err != nil {

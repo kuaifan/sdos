@@ -8,11 +8,11 @@ import (
 	"github.com/wonderivan/logger"
 )
 
-// wsCmd represents the websocket command
-var wsCmd = &cobra.Command{
-	Use:   "ws",
+// workCmd represents the websocket command
+var workCmd = &cobra.Command{
+	Use:   "work",
 	Short: "Simplest websocket",
-	Long:  `sdos ws --server-url ws://127.0.0.1`,
+	Long:  `sdos work --server-url ws://127.0.0.1`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(install.ServerUrl) == 0 {
 			logger.Error("server-url is empty at the same time. please check your args in command.")
@@ -24,11 +24,11 @@ var wsCmd = &cobra.Command{
 		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		install.BuildWs()
+		install.BuildWork()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(wsCmd)
-	wsCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "websocket url")
+	rootCmd.AddCommand(workCmd)
+	workCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "websocket url")
 }

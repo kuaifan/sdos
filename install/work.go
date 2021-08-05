@@ -12,8 +12,8 @@ import (
 	"time"
 )
 
-//BuildWs is
-func BuildWs() {
+//BuildWork is
+func BuildWork() {
 	done := make(chan bool)
 	ws := wsc.New(ServerUrl)
 	// 自定义配置
@@ -28,6 +28,16 @@ func BuildWs() {
 	// 设置回调处理
 	ws.OnConnected(func() {
 		logger.Info("OnConnected: ", ws.WebSocket.Url)
+		// 连接成功后，测试每60秒发送消息
+		go func() {
+			t := time.NewTicker(60 * time.Second)
+			for {
+				select {
+				case <-t.C:
+					checkPingip(ws)
+				}
+			}
+		}()
 	})
 	ws.OnConnectError(func(err error) {
 		logger.Info("OnConnectError: ", err.Error())
@@ -68,6 +78,23 @@ func BuildWs() {
 		case <-done:
 			return
 		}
+	}
+}
+
+func checkPingip(ws *wsc.Wsc) {
+	fileName := "/usr/sdwan/config/ips"
+	if !Exists(fileName) {
+		return
+	}
+	cmd := fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName)
+	result, _, err := RunShellInSystem(cmd)
+	if err != nil {
+		logger.Error("Run oping error: %s", err)
+		return
+	}
+	err = ws.SendTextMessage(fmt.Sprintf("{\"type\":\"nodeping\",\"data\":\"%s\"}", base64Encode(result)))
+	if err == wsc.CloseErr {
+		logger.Error("Send message error: %s", err)
 	}
 }
 
