@@ -235,7 +235,7 @@ func base64Encode(data string) string {
 }
 
 func base64Decode(data string) string {
-	uDec, err := base64.URLEncoding.DecodeString(data)
+	uDec, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		logger.Error("Error decoding string: %s ", err.Error())
 		return ""
