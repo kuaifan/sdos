@@ -34,7 +34,10 @@ func BuildWork() {
 			for {
 				select {
 				case <-t.C:
-					checkPingip(ws)
+					err := checkPingip(ws)
+					if err == wsc.CloseErr {
+						return
+					}
 				}
 			}
 		}()
@@ -81,21 +84,18 @@ func BuildWork() {
 	}
 }
 
-func checkPingip(ws *wsc.Wsc) {
+func checkPingip(ws *wsc.Wsc) error {
 	fileName := "/usr/sdwan/config/ips"
 	if !Exists(fileName) {
-		return
+		return nil
 	}
 	cmd := fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName)
 	result, _, err := RunShellInSystem(cmd)
 	if err != nil {
 		logger.Error("Run oping error: %s", err)
-		return
+		return nil
 	}
-	err = ws.SendTextMessage(fmt.Sprintf("{\"type\":\"nodeping\",\"data\":\"%s\"}", base64Encode(result)))
-	if err == wsc.CloseErr {
-		logger.Error("Send message error: %s", err)
-	}
+	return ws.SendTextMessage(fmt.Sprintf("{\"type\":\"nodeping\",\"data\":\"%s\"}", base64Encode(result)))
 }
 
 func handleMessageReceived(message string) {
