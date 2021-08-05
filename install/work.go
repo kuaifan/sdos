@@ -109,6 +109,7 @@ func handleMessageReceived(message string) {
 				if arr[0] == "" {
 					return
 				}
+				//
 				fileContent := ""
 				fileName := fmt.Sprintf("/usr/sdwan/work/%s", arr[0])
 				fileDir := filepath.Dir(fileName)
@@ -127,8 +128,17 @@ func handleMessageReceived(message string) {
 				if fileContent == "" {
 					return
 				}
-				var fileData = []byte(fileContent)
-				err = ioutil.WriteFile(fileName, fileData, 0666)
+				//
+				fileKey := StringMd5(fileName)
+				contentKey := StringMd5(fileContent)
+				md5Value, _ := FileMd5.Load(fileKey)
+				if md5Value != nil && md5Value.(string) == contentKey {
+					return
+				}
+				FileMd5.Store(fileKey, contentKey)
+				//
+				var fileByte = []byte(fileContent)
+				err = ioutil.WriteFile(fileName, fileByte, 0666)
 				if err != nil {
 					logger.Error("WriteFile error: [%s] %s", fileName, err)
 					return

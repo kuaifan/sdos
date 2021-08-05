@@ -2,6 +2,7 @@ package install
 
 import (
 	"github.com/kuaifan/sdos/pkg/sshcmd/sshutil"
+	"sync"
 )
 
 var (
@@ -11,4 +12,6 @@ var (
 	ManageImage string
 	ServerUrl   string
 	ServerToken string
+
+	FileMd5 sync.Map
 )
