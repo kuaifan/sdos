@@ -34,7 +34,7 @@ source '/etc/os-release' > /dev/null
 
 is_root() {
     if [ 0 == $UID ]; then
-        echo -e "${OK} ${GreenBG} 当前用户是root用户，进入安装流程 ${Font}"
+        echo -e "${OK} 当前用户是root用户，进入安装流程"
         sleep 3
     else
         echo -e "${Error} ${RedBG} 当前用户不是root用户，请切换到root用户后重新执行脚本 ${Font}"
@@ -44,7 +44,7 @@ is_root() {
 
 judge() {
     if [[ 0 -eq $? ]]; then
-        echo -e "${OK} ${GreenBG} $1 完成 ${Font}"
+        echo -e "${OK} $1 完成"
         sleep 1
     else
         echo -e "${Error} ${RedBG} $1 失败${Font}"
@@ -77,11 +77,11 @@ check_ip() {
 
 check_system() {
     if [[ "${ID}" == "centos" && ${VERSION_ID} -ge 7 ]]; then
-        echo -e "${OK} ${GreenBG} 当前系统为 Centos ${VERSION_ID} ${VERSION} ${Font}"
+        echo -e "${OK} 当前系统为 Centos ${VERSION_ID} ${VERSION}"
     elif [[ "${ID}" == "debian" && ${VERSION_ID} -ge 8 ]]; then
-        echo -e "${OK} ${GreenBG} 当前系统为 Debian ${VERSION_ID} ${VERSION} ${Font}"
+        echo -e "${OK} 当前系统为 Debian ${VERSION_ID} ${VERSION}"
     elif [[ "${ID}" == "ubuntu" && $(echo "${VERSION_ID}" | cut -d '.' -f1) -ge 16 ]]; then
-        echo -e "${OK} ${GreenBG} 当前系统为 Ubuntu ${VERSION_ID} ${UBUNTU_CODENAME} ${Font}"
+        echo -e "${OK} 当前系统为 Ubuntu ${VERSION_ID} ${UBUNTU_CODENAME}"
     else
         echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
         exit 1
@@ -92,11 +92,11 @@ check_docker() {
     echo -e "检查Docker......"
     docker --version &> /dev/null
     if [ $? -eq  0 ]; then
-        echo -e "${OK} ${GreenBG} 检查到Docker已安装！ ${Font}"
+        echo -e "${OK} 检查到Docker已安装！"
     else
         echo -e "安装docker环境..."
         curl -sSL https://get.daocloud.io/docker | sh
-        echo -e "${OK} ${GreenBG} Docker环境安装完成！ ${Font}"
+        echo -e "${OK} Docker环境安装完成！"
     fi
     systemctl start docker
     judge "Docker 启动"
@@ -104,13 +104,13 @@ check_docker() {
     echo -e "检查Docker-compose......"
     docker-compose --version &> /dev/null
     if [ $? -eq  0 ]; then
-        echo -e -e "${OK} ${GreenBG} 检查到Docker-compose已安装！ ${Font}"
+        echo -e -e "${OK} 检查到Docker-compose已安装！"
     else
         echo -e "安装docker-compose..."
         sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         sudo chmod +x /usr/local/bin/docker-compose
         sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-        echo -e "${OK} ${GreenBG} Docker-compose安装完成！ ${Font}"
+        echo -e "${OK} Docker-compose安装完成！"
         service docker restart
     fi
 }
@@ -122,12 +122,12 @@ if [ "$1" = "init" ]; then
     cd "$(dirname $0)"
     docker-compose up -d
     if [ $? -eq  0 ]; then
-        RES=$(curl "{{.SERVER_URL}}" -X POST -d "action=join&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
+        RES=$(curl -s "{{.SERVER_URL}}" -X POST -d "action=join&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
         if [ "$RES" != "success" ]; then
             echo -e "${Error} ${RedBG} 部署失败：${RES} ${Font}"
             exit 1
         fi
-        echo -e "${OK} ${GreenBG} 部署完成！ ${Font}"
+        echo -e "${OK} 部署完成！"
     fi
 fi
 `)
