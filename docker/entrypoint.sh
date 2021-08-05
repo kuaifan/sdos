@@ -20,6 +20,6 @@ check_work() {
 
 sysctl -p /etc/sysctl.conf
 while true; do
+    sleep 30
     check_work > /dev/null 2>&1 &
-    sleep 10
 done

@@ -107,9 +107,9 @@ check_docker() {
         echo -e "${OK} 检查到Docker-compose已安装！"
     else
         echo -e "安装docker-compose..."
-        sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
-        sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+        curl -s -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+        ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
         echo -e "${OK} Docker-compose安装完成！"
         service docker restart
     fi
