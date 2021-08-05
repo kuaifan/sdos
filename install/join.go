@@ -1,6 +1,7 @@
 package install
 
 import (
+	"fmt"
 	"github.com/wonderivan/logger"
 	"sync"
 )
@@ -36,7 +37,7 @@ func (s *SdosInstaller) JoinNodes() {
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/baseUtils", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils init")
 			_ = SSHConfig.CmdAsync(node, "rm -f /root/.sdwan/deploy/baseUtils")
-			logger.Debug("Done")
+			logger.Debug(fmt.Sprintf("[%s] Done", node))
 		}(node)
 	}
 	wg.Wait()
