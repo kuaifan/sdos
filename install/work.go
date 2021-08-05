@@ -85,7 +85,7 @@ func BuildWork() {
 }
 
 func checkPingip(ws *wsc.Wsc) error {
-	fileName := "/usr/sdwan/config/ips"
+	fileName := "/usr/sdwan/assets/ips"
 	if !Exists(fileName) {
 		return nil
 	}
@@ -110,7 +110,7 @@ func handleMessageReceived(message string) {
 					return
 				}
 				fileContent := ""
-				fileName := fmt.Sprintf("/usr/sdwan/config/%s", arr[0])
+				fileName := fmt.Sprintf("/usr/sdwan/assets/%s", arr[0])
 				fileDir := filepath.Dir(fileName)
 				if !Exists(fileDir) {
 					err = os.MkdirAll(fileDir, os.ModePerm)
@@ -150,7 +150,7 @@ func handleMessageReceived(message string) {
 			}
 		}
 		if data["cmd"] != nil {
-			cmd := fmt.Sprintf("cd /usr/sdwan/config && %s", data["cmd"])
+			cmd := fmt.Sprintf("cd /usr/sdwan/assets && %s", data["cmd"])
 			_, _, err = RunShellInSystem(cmd)
 			if err != nil {
 				logger.Error("Run cmd error: %s", err)
