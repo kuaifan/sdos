@@ -1,21 +1,13 @@
 package install
 
 import (
-	"strconv"
-
 	"github.com/kuaifan/sdos/pkg/sshcmd/sshutil"
 )
 
 var (
-	NodeIPs   []string
+	NodeIPs []string
 
 	SSHConfig sshutil.SSH
-	ServerUrl     string
-
-	Vlog int
+	Image     string
+	ServerUrl string
 )
-
-func vlogToStr() string {
-	str := strconv.Itoa(Vlog)
-	return " -v " + str
-}

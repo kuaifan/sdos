@@ -13,6 +13,7 @@ func DockerCompose(nodeName string) string {
 	var envMap = make(map[string]interface{})
 	envMap["SERVER_URL"] = ServerUrl
 	envMap["NODE_NAME"] = nodeName
+	envMap["IMAGE"] = Image
 	return FromTemplateContent(sb.String(), envMap)
 }
 

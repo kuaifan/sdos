@@ -14,8 +14,8 @@ var workCmd = &cobra.Command{
 	Short: "Simplest websocket",
 	Long:  `sdos work --server-url ws://127.0.0.1`,
 	PreRun: func(cmd *cobra.Command, args []string) {
-		if len(install.ServerUrl) == 0 {
-			logger.Error("server-url is empty at the same time. please check your args in command.")
+		if install.ServerUrl == "" {
+			logger.Error("server-url is required.")
 			err := cmd.Help()
 			if err != nil {
 				return
@@ -30,5 +30,5 @@ var workCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(workCmd)
-	workCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "websocket url")
+	workCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Websocket server url, \"ws://\" or \"wss://\" prefix.")
 }

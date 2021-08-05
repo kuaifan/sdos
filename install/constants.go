@@ -4,7 +4,7 @@ const dockerCompose = string(`version: '3'
 services:
   sdos:
     container_name: "sdwan-manage"
-    image: "kuaifan/sdwan:manage-0.0.1"
+    image: "{{.IMAGE}}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker

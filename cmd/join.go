@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"net"
 	"os"
 
 	"github.com/kuaifan/sdos/install"
@@ -15,7 +16,14 @@ var joinCmd = &cobra.Command{
 	Long:  `sdos join --node 192.168.0.5`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(install.NodeIPs) == 0 {
-			logger.Error("this command is join feature, node is empty at the same time. please check your args in command.")
+			ipv4, _, _ := install.RunShellInSystem("curl -4 ip.sb")
+			address := net.ParseIP(ipv4)
+			if address != nil {
+				install.NodeIPs = append(install.NodeIPs, ipv4)
+			}
+		}
+		if len(install.NodeIPs) == 0 || install.Image == "" || install.ServerUrl == "" {
+			logger.Error("node / image / server-url required.")
 			err := cmd.Help()
 			if err != nil {
 				return
@@ -34,8 +42,9 @@ var joinCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(joinCmd)
-	joinCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "sdwan multi-nodes ex. 192.168.0.5-192.168.0.5")
-	joinCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "servers user name for ssh")
-	joinCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "password for ssh")
-	joinCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "node publishes to this URL after deployment is complete")
+	joinCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "Sdwan multi-nodes ex. 192.168.0.5-192.168.0.5")
+	joinCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
+	joinCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh")
+	joinCmd.Flags().StringVar(&install.Image, "image", "", "Image of workstation")
+	joinCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Release server url, \"http://\" or \"https://\" prefix.")
 }
