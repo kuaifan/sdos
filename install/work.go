@@ -107,7 +107,7 @@ func handleMessageReceived(message string) {
 			for _, file := range files {
 				arr := strings.Split(file, ":")
 				if arr[0] == "" {
-					return
+					continue
 				}
 				//
 				fileContent := ""
@@ -117,7 +117,7 @@ func handleMessageReceived(message string) {
 					err = os.MkdirAll(fileDir, os.ModePerm)
 					if err != nil {
 						logger.Error("Mkdir error: [%s] %s", fileDir, err)
-						return
+						continue
 					}
 				}
 				if len(arr) > 2 {
@@ -126,14 +126,16 @@ func handleMessageReceived(message string) {
 					fileContent = base64Decode(arr[1])
 				}
 				if fileContent == "" {
-					return
+					logger.Error("File empty: %s", fileName)
+					continue
 				}
 				//
 				fileKey := StringMd5(fileName)
 				contentKey := StringMd5(fileContent)
 				md5Value, _ := FileMd5.Load(fileKey)
 				if md5Value != nil && md5Value.(string) == contentKey {
-					return
+					logger.Warn("File same: %s", fileName)
+					continue
 				}
 				FileMd5.Store(fileKey, contentKey)
 				//
@@ -141,21 +143,21 @@ func handleMessageReceived(message string) {
 				err = ioutil.WriteFile(fileName, fileByte, 0666)
 				if err != nil {
 					logger.Error("WriteFile error: [%s] %s", fileName, err)
-					return
+					continue
 				}
 				if arr[1] == "exec" {
 					_, _, _ = RunShellInSystem(fmt.Sprintf("chmod +x %s", fileName))
 					_, _, err = RunShellInFile(fileName)
 					if err != nil {
 						logger.Error("Run file error: [%s] %s", fileName, err)
-						return
+						continue
 					}
 				} else if arr[1] == "yml" {
 					cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", fileDir)
 					_, _, err = RunShellInSystem(cmd)
 					if err != nil {
 						logger.Error("Run yml error: [%s] %s", fileName, err)
-						return
+						continue
 					}
 				}
 			}
@@ -165,7 +167,6 @@ func handleMessageReceived(message string) {
 			_, _, err = RunShellInSystem(cmd)
 			if err != nil {
 				logger.Error("Run cmd error: %s", err)
-				return
 			}
 		}
 	}
