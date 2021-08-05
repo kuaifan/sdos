@@ -242,3 +242,10 @@ func base64Decode(data string) string {
 	}
 	return string(uDec)
 }
+
+func RandomString(length int) string {
+	rand.Seed(time.Now().UnixNano())
+	b := make([]byte, length)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)[:length]
+}

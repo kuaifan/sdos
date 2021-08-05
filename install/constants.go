@@ -14,6 +14,7 @@ services:
       SERVER_URL: "{{.SERVER_URL}}"
       NODE_NAME: "{{.NODE_NAME}}"
       NODE_MODE: "manage"
+      NODE_TOKEN: "{{.NODE_TOKEN}}"
     restart: unless-stopped
 `)
 
@@ -121,14 +122,12 @@ if [ "$1" = "init" ]; then
     cd "$(dirname $0)"
     docker-compose up -d
     if [ $? -eq  0 ]; then
-        RES=$(curl "{{.SERVER_URL}}" -X POST -d "action=join&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.PASSWORD}})
+        RES=$(curl "{{.SERVER_URL}}" -X POST -d "action=join&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
         RET=$(echo "$RES" | jq -r '.ret')
-        TOKEN=$(echo "$RES" | jq -r '.data.token')
         if [ "$CODE" != "1" ]; then
             echo -e "${Error} ${RedBG} 部署失败！ ${Font}"
             exit 1
         fi
-        echo "$TOKEN" > /root/.sdwan/.token
         echo -e "${OK} ${GreenBG} 部署完成！ ${Font}"
     fi
 fi

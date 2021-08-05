@@ -36,6 +36,7 @@ var joinCmd = &cobra.Command{
 		if install.SSHConfig.User == "" {
 			install.SSHConfig.User = "root"
 		}
+		install.ServerToken = install.RandomString(32)
 		install.BuildJoin(beforeNodes)
 	},
 }

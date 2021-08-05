@@ -14,6 +14,7 @@ func DockerCompose(nodeName string, node string) string {
 	envMap["SERVER_URL"] = ServerUrl
 	envMap["NODE_NAME"] = nodeName
 	envMap["NODE_IP"] = node
+	envMap["NODE_TOKEN"] = ServerToken
 	envMap["MANAGE_IMAGE"] = ManageImage
 	return FromTemplateContent(sb.String(), envMap)
 }
@@ -25,7 +26,8 @@ func BaseUtils(nodeName string, node string) string {
 	envMap["SERVER_URL"] = ServerUrl
 	envMap["NODE_NAME"] = nodeName
 	envMap["NODE_IP"] = node
-	envMap["PASSWORD"] = SSHConfig.GetPassword(node)
+	envMap["NODE_TOKEN"] = ServerToken
+	envMap["NODE_PASSWORD"] = SSHConfig.GetPassword(node)
 	return FromTemplateContent(sb.String(), envMap)
 }
 

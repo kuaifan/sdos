@@ -10,4 +10,5 @@ var (
 	SSHConfig   sshutil.SSH
 	ManageImage string
 	ServerUrl   string
+	ServerToken string
 )
