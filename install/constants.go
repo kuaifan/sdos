@@ -115,6 +115,36 @@ check_docker() {
     fi
 }
 
+add_alias() {
+    cat > ~/.bashrc_docker <<-EOF
+dockeralias()
+{
+    if [ "\$1" == "" ] || [ "\$1" == "ls" ]; then
+        shift
+        docker ps --format "table {{"{{"}}.ID{{"}}"}}\t{{"{{"}}.Image{{"}}"}}\t{{"{{"}}.Command{{"}}"}}\t{{"{{"}}.RunningFor{{"}}"}}\t{{"{{"}}.Status{{"}}"}}\t{{"{{"}}.Names{{"}}"}}"
+    elif [ "\$1" == "sh" ]; then
+        shift
+        docker exec -it \$@ /bin/sh
+    elif [ "\$1" == "bash" ]; then
+        shift
+        docker exec -it \$@ /bin/bash
+    else
+        docker \$@
+    fi
+}
+alias d='dockeralias'
+EOF
+    sed -i "/bashrc_docker/d" ~/.bashrc
+    echo ". ~/.bashrc_docker" >> ~/.bashrc
+    source ~/.bashrc
+}
+
+remove_alias() {
+    rm -f ~/.bashrc_docker
+    sed -i "/bashrc_docker/d" ~/.bashrc
+    source ~/.bashrc
+}
+
 if [ "$1" = "join" ]; then
     check_system
     check_docker
@@ -126,13 +156,15 @@ if [ "$1" = "join" ]; then
             echo -e "${Error} ${RedBG} 部署失败：${RES} ${Font}"
             exit 1
         fi
+        add_alias
     fi
 elif [ "$1" = "remove" ]; then
     cd "$(dirname $0)"
-	ll=$(docker ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^sdwan-" | awk '{print $2}')
-	ii=$(docker images --format "table {{"{{"}}.Repository{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^kuaifan/sdwan" | awk '{print $2}')
-	[ -n "$ll" ] && docker rm -f $ll
-	[ -n "$ii" ] && docker rmi -f $ii
+    ll=$(docker ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^sdwan-" | awk '{print $2}')
+    ii=$(docker images --format "table {{"{{"}}.Repository{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^kuaifan/sdwan" | awk '{print $2}')
+    [ -n "$ll" ] && docker rm -f $ll
+    [ -n "$ii" ] && docker rmi -f $ii
     RES=$(curl -s "{{.SERVER_URL}}" -X POST -d "action=remove&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
+    remove_alias
 fi
 `)
