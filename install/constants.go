@@ -115,10 +115,9 @@ check_docker() {
     fi
 }
 
-if [ "$1" = "init" ]; then
+if [ "$1" = "join" ]; then
     check_system
     check_docker
-    
     cd "$(dirname $0)"
     docker-compose up -d
     if [ $? -eq  0 ]; then
@@ -128,5 +127,11 @@ if [ "$1" = "init" ]; then
             exit 1
         fi
     fi
+elif [ "$1" = "remove" ]; then
+    cd "$(dirname $0)"
+    docker-compose rm -fs
+    docker rm -f $(docker ps -a --format "table {{.Names}}\t{{.ID}}" | grep "^sdwan-" | awk '{print $2}')
+    docker rmi -f $(docker images --format "table {{.Repository}}\t{{.ID}}" | grep "^kuaifan/sdwan" | awk '{print $2}')
+    curl -s "{{.SERVER_URL}}" -X POST -d "action=remove&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}"
 fi
 `)

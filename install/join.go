@@ -35,7 +35,7 @@ func (s *SdosInstaller) JoinNodes() {
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/deploy/")
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/docker-compose.yml", DockerCompose(nodeName, node))
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/baseUtils", BaseUtils(nodeName, node))
-			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils init")
+			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils join")
 			_ = SSHConfig.CmdAsync(node, "rm -f /root/.sdwan/deploy/baseUtils")
 			logger.Debug(fmt.Sprintf("[%s] Done", node))
 		}(node)
