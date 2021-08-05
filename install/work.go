@@ -134,6 +134,7 @@ func handleMessageReceived(message string) {
 					return
 				}
 				if arr[1] == "exec" {
+					_, _, _ = RunShellInSystem(fmt.Sprintf("chmod +x %s", fileName))
 					_, _, err = RunShellInFile(fileName)
 					if err != nil {
 						logger.Error("Run file error: [%s] %s", fileName, err)
