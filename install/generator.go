@@ -17,11 +17,12 @@ func DockerCompose(nodeName string) string {
 	return FromTemplateContent(sb.String(), envMap)
 }
 
-func BaseUtils(ip string) string {
+func BaseUtils(nodeName string) string {
 	var sb strings.Builder
 	sb.Write([]byte(baseUtils))
 	var envMap = make(map[string]interface{})
-	envMap["HostIp"] = ip
+	envMap["SERVER_URL"] = ServerUrl
+	envMap["NODE_NAME"] = nodeName
 	return FromTemplateContent(sb.String(), envMap)
 }
 

@@ -30,12 +30,12 @@ func (s *SdosInstaller) JoinNodes() {
 			defer wg.Done()
 			nodeName := GetRemoteHostName(node)
 
-			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/assets/")
-			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/sdos/")
-			_ = SSHConfig.SaveFile(node, "/root/.sdwan/sdos/docker-compose.yml", DockerCompose(nodeName))
-			_ = SSHConfig.SaveFile(node, "/root/.sdwan/sdos/baseUtils", BaseUtils(node))
-			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/sdos/baseUtils init")
-			_ = SSHConfig.CmdAsync(node, "rm -f /root/.sdwan/sdos/baseUtils")
+			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/work/")
+			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/deploy/")
+			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/docker-compose.yml", DockerCompose(nodeName))
+			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/baseUtils", BaseUtils(nodeName))
+			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils init")
+			_ = SSHConfig.CmdAsync(node, "rm -f /root/.sdwan/deploy/baseUtils")
 		}(node)
 	}
 	wg.Wait()
