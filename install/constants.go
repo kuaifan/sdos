@@ -129,8 +129,8 @@ if [ "$1" = "join" ]; then
     fi
 elif [ "$1" = "remove" ]; then
     cd "$(dirname $0)"
-    docker rm -f $(docker ps -a --format "table {{.Names}}\t{{.ID}}" | grep "^sdwan-" | awk '{print $2}')
-    docker rmi -f $(docker images --format "table {{.Repository}}\t{{.ID}}" | grep "^kuaifan/sdwan" | awk '{print $2}')
+    docker rm -f $(docker ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^sdwan-" | awk '{print $2}')
+    docker rmi -f $(docker images --format "table {{"{{"}}.Repository{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^kuaifan/sdwan" | awk '{print $2}')
     curl -s "{{.SERVER_URL}}" -X POST -d "action=remove&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}"
 fi
 `)

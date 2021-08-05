@@ -30,15 +30,11 @@ func (s *SdosInstaller) RemoveNodes() {
 		wg.Add(1)
 		go func(node string) {
 			defer wg.Done()
-			if Exists("/root/.sdwan/") {
-				nodeName := GetRemoteHostName(node)
-				_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/deploy/")
-				_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/baseUtils", BaseUtils(nodeName, node))
-				_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils remove")
-				_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
-			} else {
-				logger.Warn(fmt.Sprintf("[%s] Not installed", node))
-			}
+			nodeName := GetRemoteHostName(node)
+			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/deploy/")
+			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/baseUtils", BaseUtils(nodeName, node))
+			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils remove")
+			_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
 			logger.Debug(fmt.Sprintf("[%s] Done", node))
 		}(node)
 	}
