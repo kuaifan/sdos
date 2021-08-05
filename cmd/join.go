@@ -22,8 +22,8 @@ var joinCmd = &cobra.Command{
 				install.NodeIPs = append(install.NodeIPs, ipv4)
 			}
 		}
-		if len(install.NodeIPs) == 0 || install.Image == "" || install.ServerUrl == "" {
-			logger.Error("node / image / server-url required.")
+		if len(install.NodeIPs) == 0 || install.ManageImage == "" || install.ServerUrl == "" {
+			logger.Error("node / manage-image / server-url required.")
 			err := cmd.Help()
 			if err != nil {
 				return
@@ -42,9 +42,9 @@ var joinCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(joinCmd)
-	joinCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "Sdwan multi-nodes ex. 192.168.0.5-192.168.0.5")
+	joinCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "Multi nodes ex. 192.168.0.5-192.168.0.5")
 	joinCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
 	joinCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh")
-	joinCmd.Flags().StringVar(&install.Image, "image", "", "Image of workstation")
+	joinCmd.Flags().StringVar(&install.ManageImage, "manage-image", "", "Image of Management")
 	joinCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Release server url, \"http://\" or \"https://\" prefix.")
 }

@@ -7,7 +7,7 @@ import (
 var (
 	NodeIPs []string
 
-	SSHConfig sshutil.SSH
-	Image     string
-	ServerUrl string
+	SSHConfig   sshutil.SSH
+	ManageImage string
+	ServerUrl   string
 )
