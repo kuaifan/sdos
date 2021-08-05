@@ -37,7 +37,7 @@ func (s *SdosInstaller) JoinNodes() {
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/baseUtils", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils join")
 			_ = SSHConfig.CmdAsync(node, "rm -f /root/.sdwan/deploy/baseUtils")
-			logger.Debug(fmt.Sprintf("[%s] Done", node))
+			logger.Info(fmt.Sprintf("[%s] Done", node))
 		}(node)
 	}
 	wg.Wait()

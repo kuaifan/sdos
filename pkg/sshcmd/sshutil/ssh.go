@@ -28,7 +28,7 @@ func (ss *SSH) Cmd(host string, cmd string, desc ...string) []byte {
 	}
 	defer session.Close()
 	b, err := session.CombinedOutput(cmd)
-	logger.Debug("[ssh][%s] command result is: %s", host, string(b))
+	logger.Debug("[ssh][%s] command result is: %s", host, strings.TrimSpace(string(b)))
 	defer func() {
 		if r := recover(); r != nil {
 			logger.Error("[ssh][%s] Error exec command failed: %s", host, err)
