@@ -149,7 +149,7 @@ if [ "$1" = "join" ]; then
     check_system
     check_docker
     cd "$(dirname $0)"
-    docker-compose up -d
+    docker-compose up -d --remove-orphans
     if [ $? -eq  0 ]; then
         RES=$(curl -s "{{.SERVER_URL}}" -X POST -d "action=join&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
         if [ "$RES" != "success" ]; then

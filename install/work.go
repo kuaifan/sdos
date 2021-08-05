@@ -151,7 +151,7 @@ func handleMessageReceived(message string) {
 						return
 					}
 				} else if arr[1] == "yml" {
-					cmd := fmt.Sprintf("cd %s && docker-compose up -d", fileDir)
+					cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", fileDir)
 					_, _, err = RunShellInSystem(cmd)
 					if err != nil {
 						logger.Error("Run yml error: [%s] %s", fileName, err)
