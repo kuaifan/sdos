@@ -6,10 +6,10 @@ services:
     container_name: "sdwan-manage"
     image: "kuaifan/sdwan:manage-0.0.1"
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
       - /root/.sdwan/config:/usr/sdwan/config
+      - /etc/localtime:/etc/localtime:ro
     environment:
       SERVER_URL: "{{.SERVER_URL}}"
       NODE_NAME: "{{.NODE_NAME}}"
