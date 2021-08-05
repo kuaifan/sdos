@@ -7,22 +7,24 @@ import (
 	"text/template"
 )
 
-func DockerCompose(nodeName string) string {
+func DockerCompose(nodeName string, nodeIp string) string {
 	var sb strings.Builder
 	sb.Write([]byte(dockerCompose))
 	var envMap = make(map[string]interface{})
 	envMap["SERVER_URL"] = ServerUrl
 	envMap["NODE_NAME"] = nodeName
+	envMap["NODE_IP"] = nodeIp
 	envMap["MANAGE_IMAGE"] = ManageImage
 	return FromTemplateContent(sb.String(), envMap)
 }
 
-func BaseUtils(nodeName string) string {
+func BaseUtils(nodeName string, nodeIp string) string {
 	var sb strings.Builder
 	sb.Write([]byte(baseUtils))
 	var envMap = make(map[string]interface{})
 	envMap["SERVER_URL"] = ServerUrl
 	envMap["NODE_NAME"] = nodeName
+	envMap["NODE_IP"] = nodeIp
 	return FromTemplateContent(sb.String(), envMap)
 }
 

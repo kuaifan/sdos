@@ -121,7 +121,7 @@ if [ "$1" = "init" ]; then
     cd "$(dirname $0)"
     docker-compose up -d
     if [ $? -eq  0 ]; then
-        RES=$(curl "{{.SERVER_URL}}")
+        RES=$(curl "{{.SERVER_URL}}" -X POST -d "action=join&name={{.NODE_NAME}}&ip={{.NODE_IP}})
         RET=$(echo "$RES" | jq -r '.ret')
         TOKEN=$(echo "$RES" | jq -r '.data.token')
         if [ "$CODE" != "1" ]; then
