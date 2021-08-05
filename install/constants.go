@@ -104,7 +104,7 @@ check_docker() {
     echo -e "检查Docker-compose......"
     docker-compose --version &> /dev/null
     if [ $? -eq  0 ]; then
-        echo -e -e "${OK} 检查到Docker-compose已安装！"
+        echo -e "${OK} 检查到Docker-compose已安装！"
     else
         echo -e "安装docker-compose..."
         sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -127,7 +127,6 @@ if [ "$1" = "init" ]; then
             echo -e "${Error} ${RedBG} 部署失败：${RES} ${Font}"
             exit 1
         fi
-        echo -e "${OK} 部署完成！"
     fi
 fi
 `)
