@@ -22,8 +22,8 @@ var removeCmd = &cobra.Command{
 				install.NodeIPs = append(install.NodeIPs, ipv4)
 			}
 		}
-		if len(install.NodeIPs) == 0 || install.ManageImage == "" || install.ServerUrl == "" {
-			logger.Error("node / manage-image / server-url required.")
+		if len(install.NodeIPs) == 0 || install.ServerUrl == "" {
+			logger.Error("node / server-url required.")
 			err := cmd.Help()
 			if err != nil {
 				return
@@ -45,6 +45,5 @@ func init() {
 	removeCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "Multi nodes ex. 192.168.0.5-192.168.0.5")
 	removeCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
 	removeCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh")
-	removeCmd.Flags().StringVar(&install.ManageImage, "manage-image", "", "Image of Management")
 	removeCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Release server url, \"http://\" or \"https://\" prefix.")
 }

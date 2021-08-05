@@ -33,7 +33,6 @@ func (s *SdosInstaller) RemoveNodes() {
 			if Exists("/root/.sdwan/") {
 				nodeName := GetRemoteHostName(node)
 				_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/deploy/")
-				_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/docker-compose.yml", DockerCompose(nodeName, node))
 				_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/baseUtils", BaseUtils(nodeName, node))
 				_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils remove")
 				_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
