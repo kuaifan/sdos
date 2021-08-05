@@ -123,9 +123,8 @@ if [ "$1" = "init" ]; then
     docker-compose up -d
     if [ $? -eq  0 ]; then
         RES=$(curl "{{.SERVER_URL}}" -X POST -d "action=join&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
-        RET=$(echo "$RES" | jq -r '.ret')
-        if [ "$CODE" != "1" ]; then
-            echo -e "${Error} ${RedBG} 部署失败！ ${Font}"
+        if [ "$RES" != "success" ]; then
+            echo -e "${Error} ${RedBG} 部署失败：${RES} ${Font}"
             exit 1
         fi
         echo -e "${OK} ${GreenBG} 部署完成！ ${Font}"
