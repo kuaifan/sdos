@@ -35,7 +35,7 @@ func (s *SdosInstaller) RemoveNodes() {
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/baseUtils", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils remove")
 			_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
-			logger.Info(fmt.Sprintf("[%s] Done", node))
+			logger.Debug(fmt.Sprintf("[%s] Done", node))
 		}(node)
 	}
 	wg.Wait()
