@@ -1,7 +1,6 @@
 package install
 
 import (
-	"fmt"
 	"github.com/wonderivan/logger"
 	"sync"
 )
@@ -26,17 +25,28 @@ func removeNodesFunc(removeNodes []string) {
 //RemoveNodes is
 func (s *SdosInstaller) RemoveNodes() {
 	var wg sync.WaitGroup
+	var result sync.Map
 	for _, node := range s.Nodes {
 		wg.Add(1)
 		go func(node string) {
 			defer wg.Done()
 			nodeName := GetRemoteHostName(node)
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/deploy/")
-			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/baseUtils", BaseUtils(nodeName, node))
-			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/baseUtils remove")
+			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/install", BaseUtils(nodeName, node))
+			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/install remove")
 			_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
-			logger.Debug(fmt.Sprintf("[%s] Done", node))
+			result.Store(node, SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", ""))
 		}(node)
 	}
 	wg.Wait()
+	result.Range(resultRemoveWalk)
+}
+
+func resultRemoveWalk(key interface{}, value interface{}) bool {
+	if value.(string) == "success" {
+		logger.Info("[%s] %s", key, value)
+	} else {
+		logger.Error("[%s] %s", key, value)
+	}
+	return true
 }

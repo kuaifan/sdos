@@ -30,82 +30,48 @@ Font="\033[0m"
 OK="${Green}[OK]${Font}"
 Error="${Red}[错误]${Font}"
 
+CmdPath=$0
+
 source '/etc/os-release' > /dev/null
 
 is_root() {
-    if [ 0 == $UID ]; then
-        echo -e "${OK} 当前用户是root用户，进入安装流程"
-        sleep 3
-    else
+    if [ 0 != $UID ]; then
         echo -e "${Error} ${RedBG} 当前用户不是root用户，请切换到root用户后重新执行脚本 ${Font}"
+        rm -f $CmdPath
         exit 1
-    fi
-}
-
-judge() {
-    if [[ 0 -eq $? ]]; then
-        echo -e "${OK} $1 完成"
-        sleep 1
-    else
-        echo -e "${Error} ${RedBG} $1 失败${Font}"
-        exit 1
-    fi
-}
-
-local_ip() {
-  IP=$1
-  if [[ $IP =~ ^192\.168\..* ]] || [[ $IP =~ ^172\..* ]] || [[ $IP =~ ^10\..* ]]; then
-    IP=""
-  fi
-  [ "$(check_ip "$IP")" != "yes" ] && IP=""
-  echo -e "$IP"
-}
-
-check_ip() {
-    IP=$1
-    VALID_CHECK=$(echo "$IP" | awk -F. '$1<=255&&$2<=255&&$3<=255&&$4<=255{print "yes"}')
-    if echo "$IP" | grep -E "^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$" > /dev/null; then
-        if [ ${VALID_CHECK:-no} == "yes" ]; then
-            echo "yes"
-        else
-            echo "no"
-        fi
-    else
-        echo "no"
     fi
 }
 
 check_system() {
     if [[ "${ID}" == "centos" && ${VERSION_ID} -ge 7 ]]; then
-        echo -e "${OK} 当前系统为 Centos ${VERSION_ID} ${VERSION}"
+		echo > /dev/null
     elif [[ "${ID}" == "debian" && ${VERSION_ID} -ge 8 ]]; then
-        echo -e "${OK} 当前系统为 Debian ${VERSION_ID} ${VERSION}"
+		echo > /dev/null
     elif [[ "${ID}" == "ubuntu" && $(echo "${VERSION_ID}" | cut -d '.' -f1) -ge 16 ]]; then
-        echo -e "${OK} 当前系统为 Ubuntu ${VERSION_ID} ${UBUNTU_CODENAME}"
+		echo > /dev/null
     else
         echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+        rm -f $CmdPath
         exit 1
     fi
 }
 
 check_docker() {
-    echo -e "检查Docker......"
     docker --version &> /dev/null
-    if [ $? -eq  0 ]; then
-        echo -e "${OK} 检查到Docker已安装！"
-    else
+    if [ $? -ne  0 ]; then
         echo -e "安装docker环境..."
         curl -sSL https://get.daocloud.io/docker | sh
         echo -e "${OK} Docker环境安装完成！"
     fi
     systemctl start docker
-    judge "Docker 启动"
+	if [[ 0 -ne $? ]]; then
+        echo -e "${Error} ${RedBG} Docker 启动 失败${Font}"
+        rm -f $CmdPath
+        exit 1
+    fi
     #
-    echo -e "检查Docker-compose......"
     docker-compose --version &> /dev/null
-    if [ $? -eq  0 ]; then
-        echo -e "${OK} 检查到Docker-compose已安装！"
-    else
+    if [ $? -ne  0 ]; then
         echo -e "安装docker-compose..."
         curl -s -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         chmod +x /usr/local/bin/docker-compose
@@ -145,18 +111,16 @@ remove_alias() {
     source ~/.bashrc
 }
 
+echo "error" > /tmp/sdwan_install
+
 if [ "$1" = "join" ]; then
     check_system
     check_docker
     cd "$(dirname $0)"
     docker-compose up -d --remove-orphans
-    if [ $? -eq  0 ]; then
-        RES=$(curl -s "{{.SERVER_URL}}" -X POST -d "action=join&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
-        if [ "$RES" != "success" ]; then
-            echo -e "${Error} ${RedBG} 部署失败：[{{.NODE_IP}}] ${RES} ${Font}"
-            exit 1
-        fi
-        add_alias
+    if [ $? -ne  0 ]; then
+        rm -f $CmdPath
+        exit 1
     fi
 elif [ "$1" = "remove" ]; then
     cd "$(dirname $0)"
@@ -167,4 +131,7 @@ elif [ "$1" = "remove" ]; then
     RES=$(curl -s "{{.SERVER_URL}}" -X POST -d "action=remove&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
     remove_alias
 fi
+
+echo "success" > /tmp/sdwan_install
+rm -f $CmdPath
 `)

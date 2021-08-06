@@ -216,7 +216,7 @@ func DecodeIPs(ips []string) []string {
 }
 
 func GetRemoteHostName(hostIP string) string {
-	hostName := SSHConfig.CmdToString(hostIP, "hostname", "")
+	hostName := SSHConfig.CmdToStringNoLog(hostIP, "hostname", "")
 	return strings.ToLower(hostName)
 }
 
