@@ -153,7 +153,7 @@ if [ "$1" = "join" ]; then
     if [ $? -eq  0 ]; then
         RES=$(curl -s "{{.SERVER_URL}}" -X POST -d "action=join&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
         if [ "$RES" != "success" ]; then
-            echo -e "${Error} ${RedBG} 部署失败：${RES} ${Font}"
+            echo -e "${Error} ${RedBG} 部署失败：[{{.NODE_IP}}] ${RES} ${Font}"
             exit 1
         fi
         add_alias
