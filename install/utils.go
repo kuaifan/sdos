@@ -147,22 +147,11 @@ func ParseIPs(ips []string) []string {
 	return DecodeIPs(ParsePasss(ips))
 }
 
-// RunShellInSystem 在当前系统运行shell命令
-func RunShellInSystem(string string) (string, string, error) {
+// RunCommand 执行命令
+func RunCommand(arg ...string) (string, string, error) {
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
-	cmd := exec.Command("/bin/sh", "-c", string)
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Run()
-	return stdout.String(), stderr.String(), err
-}
-
-// RunShellInFile shell运行文件
-func RunShellInFile(path string) (string, string, error) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd := exec.Command("/bin/sh", path)
+	cmd := exec.Command("/bin/sh", arg...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()

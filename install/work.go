@@ -91,7 +91,7 @@ func checkPingip(ws *wsc.Wsc) error {
 		return nil
 	}
 	cmd := fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName)
-	result, _, err := RunShellInSystem(cmd)
+	result, _, err := RunCommand("-c", cmd)
 	if err != nil {
 		logger.Error("Run oping error: %s", err)
 		return nil
@@ -161,22 +161,22 @@ func handleMessageFile(data string) {
 			continue
 		}
 		if arr[1] == "nic" {
-			_, _, _ = RunShellInSystem(fmt.Sprintf("chmod +x %s", fileName))
-			_, _, err = RunShellInFile(fmt.Sprintf("%s install", fileName))
+			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
+			_, _, err = RunCommand(fileName, "install")
 			if err != nil {
 				logger.Error("Run file error: [%s install] %s", fileName, err)
 				continue
 			}
 		} else if arr[1] == "exec" {
-			_, _, _ = RunShellInSystem(fmt.Sprintf("chmod +x %s", fileName))
-			_, _, err = RunShellInFile(fileName)
+			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
+			_, _, err = RunCommand(fileName)
 			if err != nil {
 				logger.Error("Run file error: [%s] %s", fileName, err)
 				continue
 			}
 		} else if arr[1] == "yml" {
 			cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", fileDir)
-			_, _, err = RunShellInSystem(cmd)
+			_, _, err = RunCommand("-c", cmd)
 			if err != nil {
 				logger.Error("Run yml error: [%s] %s", fileName, err)
 				continue
@@ -188,7 +188,7 @@ func handleMessageFile(data string) {
 // 运行自定义脚本
 func handleMessageCmd(data string) {
 	cmd := fmt.Sprintf("cd /usr/sdwan/work && %s", data)
-	_, _, err := RunShellInSystem(cmd)
+	_, _, err := RunCommand("-c", cmd)
 	if err != nil {
 		logger.Error("Run cmd error: %s", err)
 	}
@@ -207,8 +207,8 @@ func handleMessageNic(nicDir string, nicName string) {
 		file := files[i]
 		name := filepath.Base(file)
 		if !InArray(name, nics) {
-			_, _, _ = RunShellInSystem(fmt.Sprintf("chmod +x %s", file))
-			_, _, err = RunShellInFile(fmt.Sprintf("%s remove", file))
+			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", file))
+			_, _, err = RunCommand(file, "remove")
 			if err != nil {
 				logger.Error("Run file error: [%s remove] %s", file, err)
 			}

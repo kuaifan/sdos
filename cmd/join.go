@@ -16,7 +16,7 @@ var joinCmd = &cobra.Command{
 	Long:  `sdos join --node 192.168.0.5`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(install.NodeIPs) == 0 {
-			ipv4, _, _ := install.RunShellInSystem("curl -4 ip.sb")
+			ipv4, _, _ := install.RunCommand("-c", "curl -4 ip.sb")
 			address := net.ParseIP(ipv4)
 			if address != nil {
 				install.NodeIPs = append(install.NodeIPs, ipv4)
