@@ -104,13 +104,17 @@ func handleMessageReceived(message string) {
 	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(message), &data); err == nil {
 		if data["file"] != nil {
-			handleMessageFile(data["file"].(string))
+			file, _ := data["file"].(string)
+			handleMessageFile(file)
 		}
 		if data["cmd"] != nil {
-			handleMessageCmd(data["cmd"].(string))
+			cmd, _ := data["cmd"].(string)
+			handleMessageCmd(cmd)
 		}
-		if data["type"] == "nodenic" {
-			handleMessageNic(data["nicDir"].(string), data["nicName"].(string))
+		if data["type"] == "nodenic" && data["nicDir"] != nil && data["nicName"] != nil {
+			nicDir, _ := data["nicDir"].(string)
+			nicName, _ := data["nicName"].(string)
+			handleMessageNic(nicDir, nicName)
 		}
 	}
 }
