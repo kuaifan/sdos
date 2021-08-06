@@ -84,6 +84,7 @@ func BuildWork() {
 	}
 }
 
+// 发送ping
 func checkPingip(ws *wsc.Wsc) error {
 	fileName := "/usr/sdwan/work/ips"
 	if !Exists(fileName) {
@@ -98,75 +99,118 @@ func checkPingip(ws *wsc.Wsc) error {
 	return ws.SendTextMessage(fmt.Sprintf("{\"type\":\"nodeping\",\"data\":\"%s\"}", base64Encode(result)))
 }
 
+// 处理消息
 func handleMessageReceived(message string) {
-	//json str 转map
 	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(message), &data); err == nil {
 		if data["file"] != nil {
-			files := strings.Split(data["file"].(string), ",")
-			for _, file := range files {
-				arr := strings.Split(file, ":")
-				if arr[0] == "" {
-					continue
-				}
-				//
-				fileContent := ""
-				fileName := fmt.Sprintf("/usr/sdwan/work/%s", arr[0])
-				fileDir := filepath.Dir(fileName)
-				if !Exists(fileDir) {
-					err = os.MkdirAll(fileDir, os.ModePerm)
-					if err != nil {
-						logger.Error("Mkdir error: [%s] %s", fileDir, err)
-						continue
-					}
-				}
-				if len(arr) > 2 {
-					fileContent = base64Decode(arr[2])
-				} else {
-					fileContent = base64Decode(arr[1])
-				}
-				if fileContent == "" {
-					logger.Error("File empty: %s", fileName)
-					continue
-				}
-				//
-				fileKey := StringMd5(fileName)
-				contentKey := StringMd5(fileContent)
-				md5Value, _ := FileMd5.Load(fileKey)
-				if md5Value != nil && md5Value.(string) == contentKey {
-					logger.Warn("File same: %s", fileName)
-					continue
-				}
-				FileMd5.Store(fileKey, contentKey)
-				//
-				var fileByte = []byte(fileContent)
-				err = ioutil.WriteFile(fileName, fileByte, 0666)
-				if err != nil {
-					logger.Error("WriteFile error: [%s] %s", fileName, err)
-					continue
-				}
-				if arr[1] == "exec" {
-					_, _, _ = RunShellInSystem(fmt.Sprintf("chmod +x %s", fileName))
-					_, _, err = RunShellInFile(fileName)
-					if err != nil {
-						logger.Error("Run file error: [%s] %s", fileName, err)
-						continue
-					}
-				} else if arr[1] == "yml" {
-					cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", fileDir)
-					_, _, err = RunShellInSystem(cmd)
-					if err != nil {
-						logger.Error("Run yml error: [%s] %s", fileName, err)
-						continue
-					}
-				}
-			}
+			handleMessageFile(data["file"].(string))
 		}
 		if data["cmd"] != nil {
-			cmd := fmt.Sprintf("cd /usr/sdwan/work && %s", data["cmd"])
+			handleMessageCmd(data["cmd"].(string))
+		}
+		if data["type"] == "nodenic" {
+			handleMessageNic(data["nicDir"].(string), data["nicName"].(string))
+		}
+	}
+}
+
+// 保存文件或运行文件
+func handleMessageFile(data string) {
+	var err error
+	files := strings.Split(data, ",")
+	for _, file := range files {
+		arr := strings.Split(file, ":")
+		if arr[0] == "" {
+			continue
+		}
+		//
+		fileContent := ""
+		fileName := fmt.Sprintf("/usr/sdwan/work/%s", arr[0])
+		fileDir := filepath.Dir(fileName)
+		if !Exists(fileDir) {
+			err = os.MkdirAll(fileDir, os.ModePerm)
+			if err != nil {
+				logger.Error("Mkdir error: [%s] %s", fileDir, err)
+				continue
+			}
+		}
+		if len(arr) > 2 {
+			fileContent = base64Decode(arr[2])
+		} else {
+			fileContent = base64Decode(arr[1])
+		}
+		if fileContent == "" {
+			logger.Error("File empty: %s", fileName)
+			continue
+		}
+		//
+		fileKey := StringMd5(fileName)
+		contentKey := StringMd5(fileContent)
+		md5Value, _ := FileMd5.Load(fileKey)
+		if md5Value != nil && md5Value.(string) == contentKey {
+			logger.Warn("File same: %s", fileName)
+			continue
+		}
+		FileMd5.Store(fileKey, contentKey)
+		//
+		var fileByte = []byte(fileContent)
+		err = ioutil.WriteFile(fileName, fileByte, 0666)
+		if err != nil {
+			logger.Error("WriteFile error: [%s] %s", fileName, err)
+			continue
+		}
+		if arr[1] == "nic" {
+			_, _, _ = RunShellInSystem(fmt.Sprintf("chmod +x %s", fileName))
+			_, _, err = RunShellInFile(fmt.Sprintf("%s install", fileName))
+			if err != nil {
+				logger.Error("Run file error: [%s install] %s", fileName, err)
+				continue
+			}
+		} else if arr[1] == "exec" {
+			_, _, _ = RunShellInSystem(fmt.Sprintf("chmod +x %s", fileName))
+			_, _, err = RunShellInFile(fileName)
+			if err != nil {
+				logger.Error("Run file error: [%s] %s", fileName, err)
+				continue
+			}
+		} else if arr[1] == "yml" {
+			cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", fileDir)
 			_, _, err = RunShellInSystem(cmd)
 			if err != nil {
-				logger.Error("Run cmd error: %s", err)
+				logger.Error("Run yml error: [%s] %s", fileName, err)
+				continue
+			}
+		}
+	}
+}
+
+// 运行自定义脚本
+func handleMessageCmd(data string) {
+	cmd := fmt.Sprintf("cd /usr/sdwan/work && %s", data)
+	_, _, err := RunShellInSystem(cmd)
+	if err != nil {
+		logger.Error("Run cmd error: %s", err)
+	}
+}
+
+// 删除没用的网卡
+func handleMessageNic(nicDir string, nicName string) {
+	path := fmt.Sprintf("/usr/sdwan/work/%s", nicDir)
+	nics := strings.Split(nicName, ",")
+
+	files, err := filepath.Glob(filepath.Join(path, "*"))
+	if err != nil {
+		logger.Error(err)
+	}
+	for i := range files {
+		file := files[i]
+		name := filepath.Base(file)
+		if !InArray(name, nics) {
+			_, _, _ = RunShellInSystem(fmt.Sprintf("chmod +x %s", file))
+			_, _, err = RunShellInFile(fmt.Sprintf("%s remove", file))
+			if err != nil {
+				logger.Error("Run file error: [%s remove] %s", file, err)
 			}
 		}
 	}
