@@ -117,17 +117,20 @@ if [ "$1" = "join" ]; then
     check_system
     check_docker
     cd "$(dirname $0)"
-    docker-compose up -d --remove-orphans
+    echo "docker-compose up ..."
+    docker-compose up -d --remove-orphans &> /tmp/sdwan_join_docker_compose.log
     if [ $? -ne  0 ]; then
+        cat /tmp/sdwan_join_docker_compose.log
         rm -f $CmdPath
         exit 1
     fi
+    echo "docker-compose up ... done"
     add_alias
 elif [ "$1" = "remove" ]; then
     ll=$(docker ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^sdwan-" | awk '{print $2}')
     ii=$(docker images --format "table {{"{{"}}.Repository{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^kuaifan/sdwan" | awk '{print $2}')
-    [ -n "$ll" ] && docker rm -f $ll
-    [ -n "$ii" ] && docker rmi -f $ii
+    [ -n "$ll" ] && docker rm -f $ll &> /dev/null
+    [ -n "$ii" ] && docker rmi -f $ii &> /dev/null
     remove_alias
 fi
 
