@@ -1,8 +1,11 @@
 package install
 
 import (
+	"github.com/nahid/gohttp"
 	"github.com/wonderivan/logger"
+	"strconv"
 	"sync"
+	"time"
 )
 
 //BuildJoin is
@@ -23,7 +26,6 @@ func joinNodesFunc(joinNodes []string) {
 
 func (s *SdosInstaller) JoinNodes() {
 	var wg sync.WaitGroup
-	var result sync.Map
 	for _, node := range s.Nodes {
 		wg.Add(1)
 		go func(node string) {
@@ -34,18 +36,47 @@ func (s *SdosInstaller) JoinNodes() {
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/docker-compose.yml", DockerCompose(nodeName, node))
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/install", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/install join")
-			result.Store(node, SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", ""))
+			publishJoin(node, nodeName)
 		}(node)
 	}
 	wg.Wait()
-	result.Range(resultJoinWalk)
+	resultJoin.Range(resultJoinWalk)
+}
+
+func publishJoin(node, nodeName string) {
+	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", "")
+	if res == "success" {
+		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+		resp, err := gohttp.NewRequest().
+			FormData(map[string]string{
+				"action":    "join",
+				"name":      nodeName,
+				"ip":        RemoveIpPort(node),
+				"pw":        SSHConfig.GetPassword(node),
+				"tk":        ServerToken,
+				"timestamp": timestamp,
+			}).
+			Post(ServerUrl)
+		if err != nil || resp == nil {
+			logger.Error("[%s] join error %s", node, err)
+		} else {
+			body, errp := resp.GetBodyAsString()
+			if errp != nil {
+				logger.Error("[%s] join failed %s", node, errp)
+			} else {
+				resultJoin.Store(node, body)
+			}
+		}
+	} else {
+		resultJoin.Store(node, res)
+	}
 }
 
 func resultJoinWalk(key interface{}, value interface{}) bool {
 	if value.(string) == "success" {
-		logger.Info("[%s] %s", key, value)
+		logger.Info("[%s] join %s", key, value)
 	} else {
-		logger.Error("[%s] %s", key, value)
+		logger.Error("[%s] join %s", key, value)
 	}
 	return true
 }

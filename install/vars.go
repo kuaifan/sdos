@@ -14,4 +14,7 @@ var (
 	ServerToken string
 
 	FileMd5 sync.Map
+
+	resultJoin   sync.Map
+	resultRemove sync.Map
 )

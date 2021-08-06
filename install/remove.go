@@ -1,8 +1,11 @@
 package install
 
 import (
+	"github.com/nahid/gohttp"
 	"github.com/wonderivan/logger"
+	"strconv"
 	"sync"
+	"time"
 )
 
 //BuildRemove is
@@ -25,7 +28,6 @@ func removeNodesFunc(removeNodes []string) {
 //RemoveNodes is
 func (s *SdosInstaller) RemoveNodes() {
 	var wg sync.WaitGroup
-	var result sync.Map
 	for _, node := range s.Nodes {
 		wg.Add(1)
 		go func(node string) {
@@ -35,18 +37,45 @@ func (s *SdosInstaller) RemoveNodes() {
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/install", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/install remove")
 			_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
-			result.Store(node, SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", ""))
+			publishRemove(node, nodeName)
 		}(node)
 	}
 	wg.Wait()
-	result.Range(resultRemoveWalk)
+	resultRemove.Range(resultRemoveWalk)
+}
+
+func publishRemove(node string, nodeName string) {
+	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", "")
+	if res == "success" {
+		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+		resp, err := gohttp.NewRequest().
+			FormData(map[string]string{
+				"action":    "remove",
+				"name":      nodeName,
+				"ip":        RemoveIpPort(node),
+				"timestamp": timestamp,
+			}).
+			Post(ServerUrl)
+		if err != nil || resp == nil {
+			logger.Error("[%s] remove error %s", node, err)
+		} else {
+			body, errp := resp.GetBodyAsString()
+			if errp != nil {
+				logger.Error("[%s] remove failed %s", node, errp)
+			} else {
+				resultRemove.Store(node, body)
+			}
+		}
+	} else {
+		resultRemove.Store(node, res)
+	}
 }
 
 func resultRemoveWalk(key interface{}, value interface{}) bool {
 	if value.(string) == "success" {
-		logger.Info("[%s] %s", key, value)
+		logger.Info("[%s] remove %s", key, value)
 	} else {
-		logger.Error("[%s] %s", key, value)
+		logger.Error("[%s] remove %s", key, value)
 	}
 	return true
 }

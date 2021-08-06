@@ -44,11 +44,11 @@ is_root() {
 
 check_system() {
     if [[ "${ID}" == "centos" && ${VERSION_ID} -ge 7 ]]; then
-		echo > /dev/null
+        echo > /dev/null
     elif [[ "${ID}" == "debian" && ${VERSION_ID} -ge 8 ]]; then
-		echo > /dev/null
+        echo > /dev/null
     elif [[ "${ID}" == "ubuntu" && $(echo "${VERSION_ID}" | cut -d '.' -f1) -ge 16 ]]; then
-		echo > /dev/null
+        echo > /dev/null
     else
         echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
         rm -f $CmdPath
@@ -64,7 +64,7 @@ check_docker() {
         echo -e "${OK} Docker环境安装完成！"
     fi
     systemctl start docker
-	if [[ 0 -ne $? ]]; then
+    if [[ 0 -ne $? ]]; then
         echo -e "${Error} ${RedBG} Docker 启动 失败${Font}"
         rm -f $CmdPath
         exit 1
@@ -122,13 +122,12 @@ if [ "$1" = "join" ]; then
         rm -f $CmdPath
         exit 1
     fi
+    add_alias
 elif [ "$1" = "remove" ]; then
-    cd "$(dirname $0)"
     ll=$(docker ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^sdwan-" | awk '{print $2}')
     ii=$(docker images --format "table {{"{{"}}.Repository{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^kuaifan/sdwan" | awk '{print $2}')
     [ -n "$ll" ] && docker rm -f $ll
     [ -n "$ii" ] && docker rmi -f $ii
-    RES=$(curl -s "{{.SERVER_URL}}" -X POST -d "action=remove&name={{.NODE_NAME}}&ip={{.NODE_IP}}&pw={{.NODE_PASSWORD}}&tk={{.NODE_TOKEN}}")
     remove_alias
 fi
 

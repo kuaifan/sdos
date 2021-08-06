@@ -12,14 +12,14 @@ import (
 
 func (ss *SSH) Cmd(host string, cmd string, desc ...string) []byte {
 	if desc != nil {
-		logger.Debug("[ssh][%s] %s", host, strings.Join(desc, ""))
+		logger.Debug("[ssh] [%s] %s", host, strings.Join(desc, ""))
 	} else {
-		logger.Info("[ssh][%s] %s", host, cmd)
+		logger.Info("[ssh] [%s] %s", host, cmd)
 	}
 	session, err := ss.Connect(host)
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("[ssh][%s] Error create ssh session failed,%s", host, err)
+			logger.Error("[ssh] [%s] Error create ssh session failed,%s", host, err)
 		}
 	}()
 	if err != nil {
@@ -27,10 +27,10 @@ func (ss *SSH) Cmd(host string, cmd string, desc ...string) []byte {
 	}
 	defer session.Close()
 	b, err := session.CombinedOutput(cmd)
-	logger.Debug("[ssh][%s] command result is: %s", host, strings.TrimSpace(string(b)))
+	logger.Debug("[ssh] [%s] command result is: %s", host, strings.TrimSpace(string(b)))
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("[ssh][%s] Error exec command failed: %s", host, err)
+			logger.Error("[ssh] [%s] Error exec command failed: %s", host, err)
 		}
 	}()
 	if err != nil {
@@ -43,7 +43,7 @@ func (ss *SSH) CmdNoLog(host string, cmd string) []byte {
 	session, err := ss.Connect(host)
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("[ssh][%s] Error create ssh session failed,%s", host, err)
+			logger.Error("[ssh] [%s] Error create ssh session failed,%s", host, err)
 		}
 	}()
 	if err != nil {
@@ -53,7 +53,7 @@ func (ss *SSH) CmdNoLog(host string, cmd string) []byte {
 	b, err := session.CombinedOutput(cmd)
 	defer func() {
 		if r := recover(); r != nil {
-			logger.Error("[ssh][%s] Error exec command failed: %s", host, err)
+			logger.Error("[ssh] [%s] Error exec command failed: %s", host, err)
 		}
 	}()
 	if err != nil {
@@ -69,14 +69,14 @@ func readPipe(host string, pipe io.Reader, isErr bool) {
 		if line == nil {
 			return
 		} else if err != nil {
-			logger.Info("[ssh][%s] %s", host, line)
+			logger.Info("[ssh] [%s] %s", host, line)
 			logger.Error("[ssh] [%s] %s", host, err)
 			return
 		} else {
 			if isErr {
-				logger.Error("[ssh][%s] %s", host, line)
+				logger.Error("[ssh] [%s] %s", host, line)
 			} else {
-				logger.Info("[ssh][%s] %s", host, line)
+				logger.Info("[ssh] [%s] %s", host, line)
 			}
 		}
 	}
@@ -84,28 +84,28 @@ func readPipe(host string, pipe io.Reader, isErr bool) {
 
 func (ss *SSH) CmdAsync(host string, cmd string, desc ...string) error {
 	if desc != nil {
-		logger.Debug("[ssh][%s] %s", host, strings.Join(desc, ""))
+		logger.Debug("[ssh] [%s] %s", host, strings.Join(desc, ""))
 	} else {
-		logger.Debug("[ssh][%s] %s", host, cmd)
+		logger.Debug("[ssh] [%s] %s", host, cmd)
 	}
 	session, err := ss.Connect(host)
 	if err != nil {
-		logger.Error("[ssh][%s] Error create ssh session failed,%s", host, err)
+		logger.Error("[ssh] [%s] Error create ssh session failed,%s", host, err)
 		return err
 	}
 	defer session.Close()
 	stdout, err := session.StdoutPipe()
 	if err != nil {
-		logger.Error("[ssh][%s] Unable to request StdoutPipe(): %s", host, err)
+		logger.Error("[ssh] [%s] Unable to request StdoutPipe(): %s", host, err)
 		return err
 	}
 	stderr, err := session.StderrPipe()
 	if err != nil {
-		logger.Error("[ssh][%s] Unable to request StderrPipe(): %s", host, err)
+		logger.Error("[ssh] [%s] Unable to request StderrPipe(): %s", host, err)
 		return err
 	}
 	if err := session.Start(cmd); err != nil {
-		logger.Error("[ssh][%s] Unable to execute command: %s", host, err)
+		logger.Error("[ssh] [%s] Unable to execute command: %s", host, err)
 		return err
 	}
 	doneout := make(chan bool, 1)
