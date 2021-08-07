@@ -20,7 +20,6 @@ func BuildWork() {
 	}
 	done := make(chan bool)
 	ws := wsc.New(ServerUrl)
-	logger.SetWebsocket(ws)
 	// 自定义配置
 	ws.SetConfig(&wsc.Config{
 		WriteWait:         10 * time.Second,
@@ -32,6 +31,7 @@ func BuildWork() {
 	})
 	// 设置回调处理
 	ws.OnConnected(func() {
+		logger.SetWebsocket(ws)
 		logger.Info("OnConnected: ", ws.WebSocket.Url)
 		// 连接成功后，每60秒发送消息
 		go func() {
@@ -173,8 +173,10 @@ func handleMessageFile(data string) {
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
 			_, _, err = RunCommand(fileName, "install")
 			if err != nil {
-				logger.Error("Run file error: [%s install] %s", fileName, err)
+				logger.Error("Run nic error: [%s install] %s", fileName, err)
 				continue
+			} else {
+				logger.Info("Run nic success: [%s install]", fileName)
 			}
 		} else if arr[1] == "exec" {
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
@@ -182,6 +184,8 @@ func handleMessageFile(data string) {
 			if err != nil {
 				logger.Error("Run file error: [%s] %s", fileName, err)
 				continue
+			} else {
+				logger.Info("Run file success: [%s]", fileName)
 			}
 		} else if arr[1] == "yml" {
 			cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", fileDir)
@@ -189,6 +193,8 @@ func handleMessageFile(data string) {
 			if err != nil {
 				logger.Error("Run yml error: [%s] %s", fileName, err)
 				continue
+			} else {
+				logger.Info("Run yml success: [%s]", fileName)
 			}
 		}
 	}
@@ -200,6 +206,8 @@ func handleMessageCmd(data string) {
 	_, _, err := RunCommand("-c", cmd)
 	if err != nil {
 		logger.Error("Run cmd error: %s", err)
+	} else {
+		logger.Info("Run cmd success: %s", cmd)
 	}
 }
 
@@ -219,7 +227,9 @@ func handleMessageNic(nicDir string, nicName string) {
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", file))
 			_, _, err = RunCommand(file, "remove")
 			if err != nil {
-				logger.Error("Run file error: [%s remove] %s", file, err)
+				logger.Error("Run nic error: [%s remove] %s", file, err)
+			} else {
+				logger.Info("Run nic success: [%s remove]", file)
 			}
 		}
 	}
