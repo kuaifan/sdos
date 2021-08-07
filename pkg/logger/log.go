@@ -1,8 +1,10 @@
 package logger
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/togettoyou/wsc"
 	"io/ioutil"
 	"os"
 	"runtime"
@@ -11,8 +13,15 @@ import (
 	"time"
 )
 
-// 默认日志输出
-var defaultLogger *LocalLogger
+var (
+	// 默认日志输出
+	defaultLogger *LocalLogger
+
+	// 日志发送至websocket
+	wsLogger *wsc.Wsc
+	wsErrorMsg []string
+)
+
 
 // 日志等级，从0-7，日优先级由高到低
 const (
@@ -213,6 +222,17 @@ func (this *LocalLogger) writeToLoggers(when time.Time, msg *loginfo, level int)
 			fmt.Fprintf(os.Stderr, "unable to WriteMsg to adapter:%v,error:%v\n", l.name, err)
 		}
 	}
+	if wsLogger != nil {
+		ss, err := json.Marshal(msg)
+		if err != nil {
+			return
+		}
+		data := base64Encode(string(ss))
+		err = sendWscMessage(data)
+		if err == wsc.CloseErr {
+			wsErrorMsg = append(wsErrorMsg, data)
+		}
+	}
 }
 
 func (this *LocalLogger) writeMsg(logLevel int, msg string, v ...interface{}) error {
@@ -328,6 +348,20 @@ func Reset() {
 
 func SetLogPathTrim(trimPath string) {
 	defaultLogger.SetLogPathTrim(trimPath)
+}
+
+func SetWsc(ws *wsc.Wsc) {
+	wsLogger = ws
+	//
+	reMsg := wsErrorMsg
+	wsErrorMsg = []string{}
+	for _, data := range reMsg {
+		_ = sendWscMessage(data)
+	}
+}
+
+func sendWscMessage(data string) error {
+	return wsLogger.SendTextMessage(fmt.Sprintf("{\"type\":\"nodelog\",\"data\":\"%s\"}", data))
 }
 
 // param 可以是log配置文件名，也可以是log配置内容,默认DEBUG输出到控制台
@@ -461,4 +495,9 @@ func stringTrim(s string, cut string) string {
 		return ss[0]
 	}
 	return ss[1]
+}
+
+func base64Encode(data string) string {
+	sEnc := base64.StdEncoding.EncodeToString([]byte(data))
+	return fmt.Sprintf(sEnc)
 }

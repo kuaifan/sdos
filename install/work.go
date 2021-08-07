@@ -28,7 +28,9 @@ func BuildWork() {
 	// 设置回调处理
 	ws.OnConnected(func() {
 		logger.Info("OnConnected: ", ws.WebSocket.Url)
-		// 连接成功后，测试每60秒发送消息
+		// 连接成功后，发送日志
+		logger.SetWsc(ws)
+		// 连接成功后，每60秒发送消息
 		go func() {
 			t := time.NewTicker(60 * time.Second)
 			for {
