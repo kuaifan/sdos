@@ -46,6 +46,7 @@ func init() {
 	installCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "Multi nodes ex. 192.168.0.5-192.168.0.5")
 	installCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
 	installCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh")
+	installCmd.Flags().BoolVar(&install.InstallReset, "reset", false, "Remove before installation")
 	installCmd.Flags().StringVar(&install.ManageImage, "manage-image", "", "Image of Management")
 	installCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Release server url, \"http://\" or \"https://\" prefix.")
 }

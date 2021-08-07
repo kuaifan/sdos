@@ -34,6 +34,10 @@ func (s *SdosInstaller) InstallNodes() {
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/work/")
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/deploy/")
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/docker-compose.yml", DockerCompose(nodeName, node))
+			if InstallReset {
+				_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/utils", BaseUtils(nodeName, node))
+				_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/utils remove")
+			}
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/utils", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/utils install")
 			publishInstall(node, nodeName)

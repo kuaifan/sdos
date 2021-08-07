@@ -8,13 +8,14 @@ import (
 var (
 	NodeIPs []string
 
-	SSHConfig   sshutil.SSH
-	ManageImage string
-	ServerUrl   string
-	ServerToken string
+	SSHConfig    sshutil.SSH
+	ManageImage  string
+	ServerUrl    string
+	ServerToken  string
+	InstallReset bool
 
 	FileMd5 sync.Map
 
-	resultInstall   sync.Map
-	resultRemove sync.Map
+	resultInstall sync.Map
+	resultRemove  sync.Map
 )
