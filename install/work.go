@@ -14,8 +14,13 @@ import (
 
 //BuildWork is
 func BuildWork() {
+	if os.Getenv("NODE_MODE") == "" {
+		logger.Error("System env is error")
+		os.Exit(1)
+	}
 	done := make(chan bool)
 	ws := wsc.New(ServerUrl)
+	logger.SetWebsocket(ws)
 	// 自定义配置
 	ws.SetConfig(&wsc.Config{
 		WriteWait:         10 * time.Second,
@@ -28,8 +33,6 @@ func BuildWork() {
 	// 设置回调处理
 	ws.OnConnected(func() {
 		logger.Info("OnConnected: ", ws.WebSocket.Url)
-		// 连接成功后，发送日志
-		logger.SetWsc(ws)
 		// 连接成功后，每60秒发送消息
 		go func() {
 			t := time.NewTicker(60 * time.Second)
