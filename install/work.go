@@ -31,8 +31,8 @@ func BuildWork() {
 	})
 	// 设置回调处理
 	ws.OnConnected(func() {
+		logger.Debug("OnConnected: ", ws.WebSocket.Url)
 		logger.SetWebsocket(ws)
-		logger.Info("OnConnected: ", ws.WebSocket.Url)
 		// 连接成功后，每60秒发送消息
 		go func() {
 			t := time.NewTicker(60 * time.Second)
@@ -48,36 +48,36 @@ func BuildWork() {
 		}()
 	})
 	ws.OnConnectError(func(err error) {
-		logger.Info("OnConnectError: ", err.Error())
+		logger.Debug("OnConnectError: ", err.Error())
 	})
 	ws.OnDisconnected(func(err error) {
-		logger.Info("OnDisconnected: ", err.Error())
+		logger.Debug("OnDisconnected: ", err.Error())
 	})
 	ws.OnClose(func(code int, text string) {
-		logger.Info("OnClose: ", code, text)
+		logger.Debug("OnClose: ", code, text)
 		done <- true
 	})
 	ws.OnTextMessageSent(func(message string) {
-		//logger.Info("OnTextMessageSent: ", message)
+		logger.Debug("OnTextMessageSent: ", message)
 	})
 	ws.OnBinaryMessageSent(func(data []byte) {
-		//logger.Info("OnBinaryMessageSent: ", string(data))
+		logger.Debug("OnBinaryMessageSent: ", string(data))
 	})
 	ws.OnSentError(func(err error) {
-		logger.Info("OnSentError: ", err.Error())
+		logger.Debug("OnSentError: ", err.Error())
 	})
 	ws.OnPingReceived(func(appData string) {
-		logger.Info("OnPingReceived: ", appData)
+		logger.Debug("OnPingReceived: ", appData)
 	})
 	ws.OnPongReceived(func(appData string) {
-		logger.Info("OnPongReceived: ", appData)
+		logger.Debug("OnPongReceived: ", appData)
 	})
 	ws.OnTextMessageReceived(func(message string) {
-		//logger.Info("OnTextMessageReceived: ", message)
+		logger.Debug("OnTextMessageReceived: ", message)
 		handleMessageReceived(message)
 	})
 	ws.OnBinaryMessageReceived(func(data []byte) {
-		logger.Info("OnBinaryMessageReceived: ", string(data))
+		logger.Debug("OnBinaryMessageReceived: ", string(data))
 	})
 	// 开始连接
 	go ws.Connect()
@@ -150,7 +150,7 @@ func handleMessageFile(data string) {
 			fileContent = base64Decode(arr[1])
 		}
 		if fileContent == "" {
-			logger.Error("File empty: %s", fileName)
+			logger.Warn("File empty: %s", fileName)
 			continue
 		}
 		//
@@ -158,7 +158,7 @@ func handleMessageFile(data string) {
 		contentKey := StringMd5(fileContent)
 		md5Value, _ := FileMd5.Load(fileKey)
 		if md5Value != nil && md5Value.(string) == contentKey {
-			logger.Warn("File same: %s", fileName)
+			logger.Debug("File same: %s", fileName)
 			continue
 		}
 		FileMd5.Store(fileKey, contentKey)

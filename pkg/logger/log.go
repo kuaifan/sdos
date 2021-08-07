@@ -221,7 +221,7 @@ func (this *LocalLogger) writeToLoggers(when time.Time, msg *loginfo, level int)
 			fmt.Fprintf(os.Stderr, "unable to WriteMsg to adapter:%v,error:%v\n", l.name, err)
 		}
 	}
-	if wsLogger != nil {
+	if wsLogger != nil && level != LevelDebug {
 		ss, err := json.Marshal(msg)
 		if err != nil {
 			return
