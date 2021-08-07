@@ -227,7 +227,7 @@ func (this *LocalLogger) writeToLoggers(when time.Time, msg *loginfo, level int)
 			return
 		}
 		data := fmt.Sprintf(`{"type":"nodelog","data":"%s"}`, base64Encode(string(ss)))
-		err = sendWscMessage(data)
+		err = sendWebsocketMessage(data)
 		if err == wsc.CloseErr {
 			wsErrorMsg = append(wsErrorMsg, data)
 		}
@@ -347,20 +347,6 @@ func Reset() {
 
 func SetLogPathTrim(trimPath string) {
 	defaultLogger.SetLogPathTrim(trimPath)
-}
-
-func SetWsc(ws *wsc.Wsc) {
-	wsLogger = ws
-	//
-	reMsg := wsErrorMsg
-	wsErrorMsg = []string{}
-	for _, data := range reMsg {
-		_ = sendWscMessage(data)
-	}
-}
-
-func sendWscMessage(data string) error {
-	return wsLogger.SendTextMessage(data)
 }
 
 // param 可以是log配置文件名，也可以是log配置内容,默认DEBUG输出到控制台
@@ -494,6 +480,20 @@ func stringTrim(s string, cut string) string {
 		return ss[0]
 	}
 	return ss[1]
+}
+
+func SetWebsocket(ws *wsc.Wsc) {
+	wsLogger = ws
+	//
+	reMsg := wsErrorMsg
+	wsErrorMsg = []string{}
+	for _, data := range reMsg {
+		_ = sendWebsocketMessage(data)
+	}
+}
+
+func sendWebsocketMessage(data string) error {
+	return wsLogger.SendTextMessage(data)
 }
 
 func base64Encode(data string) string {
