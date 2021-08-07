@@ -18,11 +18,11 @@ func BuildWork() {
 	ws := wsc.New(ServerUrl)
 	// 自定义配置
 	ws.SetConfig(&wsc.Config{
-		WriteWait: 10 * time.Second,
-		MaxMessageSize: 20480,
-		MinRecTime: 2 * time.Second,
-		MaxRecTime: 30 * time.Second,
-		RecFactor: 1.5,
+		WriteWait:         10 * time.Second,
+		MaxMessageSize:    20480,
+		MinRecTime:        2 * time.Second,
+		MaxRecTime:        30 * time.Second,
+		RecFactor:         1.5,
 		MessageBufferSize: 1024,
 	})
 	// 设置回调处理
@@ -98,7 +98,7 @@ func checkPingip(ws *wsc.Wsc) error {
 		logger.Error("Run oping error: %s", err)
 		return nil
 	}
-	return ws.SendTextMessage(fmt.Sprintf("{\"type\":\"nodeping\",\"data\":\"%s\"}", base64Encode(result)))
+	return ws.SendTextMessage(fmt.Sprintf(`{"type":"nodeping","data":"%s"}`, base64Encode(result)))
 }
 
 // 处理消息

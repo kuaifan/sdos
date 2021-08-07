@@ -18,10 +18,9 @@ var (
 	defaultLogger *LocalLogger
 
 	// 日志发送至websocket
-	wsLogger *wsc.Wsc
+	wsLogger   *wsc.Wsc
 	wsErrorMsg []string
 )
-
 
 // 日志等级，从0-7，日优先级由高到低
 const (
@@ -227,7 +226,7 @@ func (this *LocalLogger) writeToLoggers(when time.Time, msg *loginfo, level int)
 		if err != nil {
 			return
 		}
-		data := base64Encode(string(ss))
+		data := fmt.Sprintf(`{"type":"nodelog","time":"%s","data":"%s"}`, when.Format(this.timeFormat), base64Encode(string(ss)))
 		err = sendWscMessage(data)
 		if err == wsc.CloseErr {
 			wsErrorMsg = append(wsErrorMsg, data)
@@ -361,7 +360,7 @@ func SetWsc(ws *wsc.Wsc) {
 }
 
 func sendWscMessage(data string) error {
-	return wsLogger.SendTextMessage(fmt.Sprintf("{\"type\":\"nodelog\",\"data\":\"%s\"}", data))
+	return wsLogger.SendTextMessage(data)
 }
 
 // param 可以是log配置文件名，也可以是log配置内容,默认DEBUG输出到控制台
