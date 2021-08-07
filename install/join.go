@@ -1,8 +1,8 @@
 package install
 
 import (
+	"github.com/kuaifan/sdos/pkg/logger"
 	"github.com/nahid/gohttp"
-	"github.com/wonderivan/logger"
 	"strconv"
 	"sync"
 	"time"

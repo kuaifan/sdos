@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/kuaifan/sdos/install"
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 )
 
 // workCmd represents the websocket command

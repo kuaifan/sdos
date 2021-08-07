@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"bytes"
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 	"os"
 	"os/exec"
 )

@@ -3,8 +3,8 @@ package install
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/kuaifan/sdos/pkg/logger"
 	"github.com/togettoyou/wsc"
-	"github.com/wonderivan/logger"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -53,10 +53,10 @@ func BuildWork() {
 		done <- true
 	})
 	ws.OnTextMessageSent(func(message string) {
-		logger.Info("OnTextMessageSent: ", message)
+		//logger.Info("OnTextMessageSent: ", message)
 	})
 	ws.OnBinaryMessageSent(func(data []byte) {
-		logger.Info("OnBinaryMessageSent: ", string(data))
+		//logger.Info("OnBinaryMessageSent: ", string(data))
 	})
 	ws.OnSentError(func(err error) {
 		logger.Info("OnSentError: ", err.Error())
@@ -68,7 +68,7 @@ func BuildWork() {
 		logger.Info("OnPongReceived: ", appData)
 	})
 	ws.OnTextMessageReceived(func(message string) {
-		logger.Info("OnTextMessageReceived: ", message)
+		//logger.Info("OnTextMessageReceived: ", message)
 		handleMessageReceived(message)
 	})
 	ws.OnBinaryMessageReceived(func(data []byte) {

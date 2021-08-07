@@ -2,7 +2,7 @@ package sshutil
 
 import (
 	"fmt"
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
 	"os"

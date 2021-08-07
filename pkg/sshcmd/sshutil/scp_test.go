@@ -1,7 +1,7 @@
 package sshutil
 
 import (
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 	"testing"
 )
 

@@ -2,7 +2,7 @@ package md5sum
 
 import (
 	"fmt"
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 	"os/exec"
 	"strings"
 )

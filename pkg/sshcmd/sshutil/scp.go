@@ -3,9 +3,9 @@ package sshutil
 import (
 	"bytes"
 	"fmt"
+	"github.com/kuaifan/sdos/pkg/logger"
 	"github.com/kuaifan/sdos/pkg/sshcmd/md5sum"
 	"github.com/pkg/sftp"
-	"github.com/wonderivan/logger"
 	"golang.org/x/crypto/ssh"
 	"io"
 	"io/ioutil"

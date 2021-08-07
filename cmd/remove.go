@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/kuaifan/sdos/install"
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 )
 
 // removeCmd represents the remove command

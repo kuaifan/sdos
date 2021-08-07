@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 )
 
 func (ss *SSH) Cmd(host string, cmd string, desc ...string) []byte {

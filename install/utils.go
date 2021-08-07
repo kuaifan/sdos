@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 )
 
 // YmdHis 返回示例：2021-08-05 00:00:01

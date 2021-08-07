@@ -2,7 +2,7 @@ package filesize
 
 import (
 	"crypto/tls"
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 	"net/http"
 )
 

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wonderivan/logger"
+	"github.com/kuaifan/sdos/pkg/logger"
 )
 
 const oneKBByte = 1024
