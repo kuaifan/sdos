@@ -8,23 +8,23 @@ import (
 	"time"
 )
 
-//BuildJoin is
-func BuildJoin(joinNodes []string) {
-	if len(joinNodes) > 0 {
-		joinNodesFunc(joinNodes)
+//BuildInstall is
+func BuildInstall(installNodes []string) {
+	if len(installNodes) > 0 {
+		installNodesFunc(installNodes)
 	}
 }
 
-func joinNodesFunc(joinNodes []string) {
-	nodes := joinNodes
+func installNodesFunc(installNodes []string) {
+	nodes := installNodes
 	i := &SdosInstaller{
 		Nodes: nodes,
 	}
-	i.JoinNodes()
-	NodeIPs = append(NodeIPs, joinNodes...)
+	i.InstallNodes()
+	NodeIPs = append(NodeIPs, installNodes...)
 }
 
-func (s *SdosInstaller) JoinNodes() {
+func (s *SdosInstaller) InstallNodes() {
 	var wg sync.WaitGroup
 	for _, node := range s.Nodes {
 		wg.Add(1)
@@ -34,22 +34,22 @@ func (s *SdosInstaller) JoinNodes() {
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/work/")
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/deploy/")
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/docker-compose.yml", DockerCompose(nodeName, node))
-			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/install", BaseUtils(nodeName, node))
-			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/install join")
-			publishJoin(node, nodeName)
+			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/utils", BaseUtils(nodeName, node))
+			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/utils install")
+			publishInstall(node, nodeName)
 		}(node)
 	}
 	wg.Wait()
-	resultJoin.Range(resultJoinWalk)
+	resultInstall.Range(resultInstallWalk)
 }
 
-func publishJoin(node, nodeName string) {
+func publishInstall(node, nodeName string) {
 	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", "")
 	if res == "success" {
 		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 		resp, err := gohttp.NewRequest().
 			FormData(map[string]string{
-				"action":    "join",
+				"action":    "install",
 				"name":      nodeName,
 				"ip":        RemoveIpPort(node),
 				"pw":        SSHConfig.GetPassword(node),
@@ -58,25 +58,25 @@ func publishJoin(node, nodeName string) {
 			}).
 			Post(ServerUrl)
 		if err != nil || resp == nil {
-			logger.Error("[%s] join error %s", node, err)
+			logger.Error("[%s] install error %s", node, err)
 		} else {
 			body, errp := resp.GetBodyAsString()
 			if errp != nil {
-				logger.Error("[%s] join failed %s", node, errp)
+				logger.Error("[%s] install failed %s", node, errp)
 			} else {
-				resultJoin.Store(node, body)
+				resultInstall.Store(node, body)
 			}
 		}
 	} else {
-		resultJoin.Store(node, res)
+		resultInstall.Store(node, res)
 	}
 }
 
-func resultJoinWalk(key interface{}, value interface{}) bool {
+func resultInstallWalk(key interface{}, value interface{}) bool {
 	if value.(string) == "success" {
-		logger.Info("[%s] join %s", key, value)
+		logger.Info("[%s] install %s", key, value)
 	} else {
-		logger.Error("[%s] join %s", key, value)
+		logger.Error("[%s] install %s", key, value)
 	}
 	return true
 }

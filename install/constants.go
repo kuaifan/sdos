@@ -113,14 +113,14 @@ remove_alias() {
 
 echo "error" > /tmp/sdwan_install
 
-if [ "$1" = "join" ]; then
+if [ "$1" = "install" ]; then
     check_system
     check_docker
     cd "$(dirname $0)"
     echo "docker-compose up ..."
-    docker-compose up -d --remove-orphans &> /tmp/sdwan_join_docker_compose.log
+    docker-compose up -d --remove-orphans &> /tmp/sdwan_install_docker_compose.log
     if [ $? -ne  0 ]; then
-        cat /tmp/sdwan_join_docker_compose.log
+        cat /tmp/sdwan_install_docker_compose.log
         rm -f $CmdPath
         exit 1
     fi

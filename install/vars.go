@@ -15,6 +15,6 @@ var (
 
 	FileMd5 sync.Map
 
-	resultJoin   sync.Map
+	resultInstall   sync.Map
 	resultRemove sync.Map
 )

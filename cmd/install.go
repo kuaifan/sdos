@@ -9,11 +9,11 @@ import (
 	"github.com/kuaifan/sdos/pkg/logger"
 )
 
-// joinCmd represents the join command
-var joinCmd = &cobra.Command{
-	Use:   "join",
-	Short: "Simplest way to join your sdwan cluster",
-	Long:  `sdos join --node 192.168.0.5`,
+// installCmd represents the install command
+var installCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Simplest way to install your sdwan cluster",
+	Long:  `sdos install --node 192.168.0.5`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(install.NodeIPs) == 0 {
 			ipv4, _, _ := install.RunCommand("-c", "curl -4 ip.sb")
@@ -37,15 +37,15 @@ var joinCmd = &cobra.Command{
 			install.SSHConfig.User = "root"
 		}
 		install.ServerToken = install.RandomString(32)
-		install.BuildJoin(beforeNodes)
+		install.BuildInstall(beforeNodes)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(joinCmd)
-	joinCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "Multi nodes ex. 192.168.0.5-192.168.0.5")
-	joinCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
-	joinCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh")
-	joinCmd.Flags().StringVar(&install.ManageImage, "manage-image", "", "Image of Management")
-	joinCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Release server url, \"http://\" or \"https://\" prefix.")
+	rootCmd.AddCommand(installCmd)
+	installCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "Multi nodes ex. 192.168.0.5-192.168.0.5")
+	installCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
+	installCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh")
+	installCmd.Flags().StringVar(&install.ManageImage, "manage-image", "", "Image of Management")
+	installCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Release server url, \"http://\" or \"https://\" prefix.")
 }
