@@ -41,7 +41,7 @@ func (s *SdosInstaller) RemoveNodes() {
 		}(node)
 	}
 	wg.Wait()
-	resultRemove.Range(resultRemoveWalk)
+	ResultRemove.Range(resultRemoveWalk)
 }
 
 func publishRemove(node string, nodeName string) {
@@ -63,11 +63,11 @@ func publishRemove(node string, nodeName string) {
 			if errp != nil {
 				logger.Error("[%s] remove failed %s", node, errp)
 			} else {
-				resultRemove.Store(node, body)
+				ResultRemove.Store(node, body)
 			}
 		}
 	} else {
-		resultRemove.Store(node, res)
+		ResultRemove.Store(node, res)
 	}
 }
 

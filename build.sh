@@ -9,3 +9,5 @@ if [ "$1" = "linux" ]; then
 else
     go build -o sdos -ldflags "$goldflags" main.go && command -v upx &> /dev/null && upx sdos
 fi
+
+exit 0

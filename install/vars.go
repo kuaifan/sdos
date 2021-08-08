@@ -5,6 +5,15 @@ import (
 	"sync"
 )
 
+type Transfer struct {
+	Name           string
+	Public         string
+	Received       int64
+	ReceivedDiff   int64
+	Sent           int64
+	SentDiff       int64
+}
+
 var (
 	NodeIPs []string
 
@@ -16,6 +25,6 @@ var (
 
 	FileMd5 sync.Map
 
-	resultInstall sync.Map
-	resultRemove  sync.Map
+	ResultInstall sync.Map
+	ResultRemove  sync.Map
 )

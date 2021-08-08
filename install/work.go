@@ -1,6 +1,7 @@
 package install
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/kuaifan/sdos/pkg/logger"
@@ -8,9 +9,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
+
+var wireguardTransfers = make(map[string]*Transfer)
 
 //BuildWork is
 func BuildWork() {
@@ -35,11 +39,12 @@ func BuildWork() {
 		logger.SetWebsocket(ws)
 		// 连接成功后，每60秒发送消息
 		go func() {
+			_ = timedTask(ws)
 			t := time.NewTicker(60 * time.Second)
 			for {
 				select {
 				case <-t.C:
-					err := checkPingip(ws)
+					err := timedTask(ws)
 					if err == wsc.CloseErr {
 						return
 					}
@@ -74,7 +79,7 @@ func BuildWork() {
 	})
 	ws.OnTextMessageReceived(func(message string) {
 		logger.Debug("OnTextMessageReceived: ", message)
-		handleMessageReceived(message)
+		handleMessageReceived(ws, message)
 	})
 	ws.OnBinaryMessageReceived(func(data []byte) {
 		logger.Debug("OnBinaryMessageReceived: ", string(data))
@@ -89,23 +94,88 @@ func BuildWork() {
 	}
 }
 
-// 发送ping
-func checkPingip(ws *wsc.Wsc) error {
+// 定时任务
+func timedTask(ws *wsc.Wsc) error {
+	// wg 流量
+	cmd := "wg show all transfer"
+	result, _, err := RunCommand("-c", cmd)
+	if err != nil {
+		logger.Debug("Run wg show error: %s", err)
+		return nil
+	}
+	value := handleWireguardTransfer(result)
+	if value != "" {
+		err = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, base64Encode(value)))
+		if err != nil {
+			return err
+		}
+	}
+	// ping 信息
 	fileName := "/usr/sdwan/work/ips"
 	if !Exists(fileName) {
 		return nil
 	}
-	cmd := fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName)
-	result, _, err := RunCommand("-c", cmd)
+	cmd = fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName)
+	result, _, err = RunCommand("-c", cmd)
 	if err != nil {
-		logger.Error("Run oping error: %s", err)
+		logger.Debug("Run oping error: %s", err)
 		return nil
 	}
-	return ws.SendTextMessage(fmt.Sprintf(`{"type":"nodeping","data":"%s"}`, base64Encode(result)))
+	return ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"ping","data":"%s"}`, base64Encode(result)))
+}
+
+// 处理Wireguard Transfers
+func handleWireguardTransfer(data string) string {
+	scanner := bufio.NewScanner(strings.NewReader(data))
+	var array []string
+	for scanner.Scan() {
+		context := strings.Fields(scanner.Text())
+		t := &Transfer{}
+		t.Name = context[0]
+		t.Public = context[1]
+		t.Received, _ = strconv.ParseInt(context[2], 10, 64)
+		t.Sent, _ = strconv.ParseInt(context[3], 10, 64)
+		if t.Received == 0 && t.Sent == 0 {
+			continue
+		}
+		t.ReceivedDiff = t.Received
+		t.SentDiff = t.Sent
+		//
+		key := StringMd5(fmt.Sprintf("%s,%s", t.Name, t.Public))
+		if o, ok := wireguardTransfers[key]; ok {
+			if t.Received > o.Received {
+				t.ReceivedDiff = t.Received - o.Received
+			} else if t.Received == o.Received {
+				t.ReceivedDiff = 0
+			}
+			if t.Sent > o.Sent {
+				t.SentDiff = t.Sent - o.Sent
+			} else if t.Sent == o.Sent {
+				t.SentDiff = 0
+			}
+		}
+		wireguardTransfers[key] = t
+		//
+		if t.ReceivedDiff > 0 || t.SentDiff > 0 {
+			val, err := json.Marshal(t)
+			if err == nil {
+				array = append(array, string(val))
+			}
+		}
+	}
+	//
+	if len(array) == 0 {
+		return ""
+	}
+	value, err := json.Marshal(array)
+	if err != nil {
+		return ""
+	}
+	return string(value)
 }
 
 // 处理消息
-func handleMessageReceived(message string) {
+func handleMessageReceived(ws *wsc.Wsc, message string) {
 	var data map[string]interface{}
 	if err := json.Unmarshal([]byte(message), &data); err == nil {
 		if data["file"] != nil {
@@ -114,7 +184,12 @@ func handleMessageReceived(message string) {
 		}
 		if data["cmd"] != nil {
 			cmd, _ := data["cmd"].(string)
-			handleMessageCmd(cmd)
+			messageCmd, messageErr := handleMessageCmd(cmd)
+			if data["cmdReturn"] != nil {
+				if messageErr != nil {
+					_ = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","return":"%s","data":"%s"}`, data["cmdReturn"], base64Encode(messageCmd)))
+				}
+			}
 		}
 		if data["type"] == "nodenic" && data["nicDir"] != nil && data["nicName"] != nil {
 			nicDir, _ := data["nicDir"].(string)
@@ -200,17 +275,6 @@ func handleMessageFile(data string) {
 	}
 }
 
-// 运行自定义脚本
-func handleMessageCmd(data string) {
-	cmd := fmt.Sprintf("cd /usr/sdwan/work && %s", data)
-	_, _, err := RunCommand("-c", cmd)
-	if err != nil {
-		logger.Error("Run cmd error: %s", err)
-	} else {
-		logger.Info("Run cmd success: %s", cmd)
-	}
-}
-
 // 删除没用的网卡
 func handleMessageNic(nicDir string, nicName string) {
 	path := fmt.Sprintf("/usr/sdwan/work/%s", nicDir)
@@ -233,4 +297,16 @@ func handleMessageNic(nicDir string, nicName string) {
 			}
 		}
 	}
+}
+
+// 运行自定义脚本
+func handleMessageCmd(data string) (string, error) {
+	cmd := fmt.Sprintf("cd /usr/sdwan/work && %s", data)
+	stdout, _, err := RunCommand("-c", cmd)
+	if err != nil {
+		logger.Error("Run cmd error: %s", err)
+	} else {
+		logger.Info("Run cmd success: %s", cmd)
+	}
+	return stdout, err
 }

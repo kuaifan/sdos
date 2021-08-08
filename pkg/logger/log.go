@@ -226,7 +226,7 @@ func (this *LocalLogger) writeToLoggers(when time.Time, msg *loginfo, level int)
 		if err != nil {
 			return
 		}
-		data := fmt.Sprintf(`{"type":"nodelog","data":"%s"}`, base64Encode(string(ss)))
+		data := fmt.Sprintf(`{"type":"node","action":"log","data":"%s"}`, base64Encode(string(ss)))
 		err = sendWebsocketMessage(data)
 		if err == wsc.CloseErr {
 			wsErrorMsg = append(wsErrorMsg, data)

@@ -44,7 +44,7 @@ func (s *SdosInstaller) InstallNodes() {
 		}(node)
 	}
 	wg.Wait()
-	resultInstall.Range(resultInstallWalk)
+	ResultInstall.Range(resultInstallWalk)
 }
 
 func publishInstall(node, nodeName string) {
@@ -68,11 +68,11 @@ func publishInstall(node, nodeName string) {
 			if errp != nil {
 				logger.Error("[%s] install failed %s", node, errp)
 			} else {
-				resultInstall.Store(node, body)
+				ResultInstall.Store(node, body)
 			}
 		}
 	} else {
-		resultInstall.Store(node, res)
+		ResultInstall.Store(node, res)
 	}
 }
 
