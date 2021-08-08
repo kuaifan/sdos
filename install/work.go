@@ -96,32 +96,36 @@ func BuildWork() {
 
 // 定时任务
 func timedTask(ws *wsc.Wsc) error {
-	// wg 流量
-	cmd := "wg show all transfer"
-	result, _, err := RunCommand("-c", cmd)
-	if err != nil {
-		logger.Debug("Run wg show error: %s", err)
-		return nil
-	}
-	value := handleWireguardTransfer(result)
-	if value != "" {
-		err = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, base64Encode(value)))
+	nodeMode := os.Getenv("NODE_MODE")
+	sendMessage := ""
+	if nodeMode == "manage" {
+		// ping 信息
+		fileName := "/usr/sdwan/work/ips"
+		if !Exists(fileName) {
+			return nil
+		}
+		result, _, err := RunCommand("-c", fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName))
 		if err != nil {
-			return err
+			logger.Debug("Run oping error: %s", err)
+			return nil
+		}
+		sendMessage = fmt.Sprintf(`{"type":"node","action":"ping","data":"%s"}`, base64Encode(result));
+	} else {
+		// wg 流量
+		result, _, err := RunCommand("-c", "wg show all transfer")
+		if err != nil {
+			logger.Debug("Run wg show error: %s", err)
+			return nil
+		}
+		value := handleWireguardTransfer(result)
+		if value != "" {
+			sendMessage = fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, base64Encode(value));
 		}
 	}
-	// ping 信息
-	fileName := "/usr/sdwan/work/ips"
-	if !Exists(fileName) {
-		return nil
+	if sendMessage != "" {
+		return ws.SendTextMessage(sendMessage)
 	}
-	cmd = fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName)
-	result, _, err = RunCommand("-c", cmd)
-	if err != nil {
-		logger.Debug("Run oping error: %s", err)
-		return nil
-	}
-	return ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"ping","data":"%s"}`, base64Encode(result)))
+	return nil
 }
 
 // 处理Wireguard Transfers

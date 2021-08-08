@@ -12,8 +12,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
     environment:
       SERVER_URL: "{{.SERVER_URL}}"
-      NODE_NAME: "{{.NODE_NAME}}"
       NODE_MODE: "manage"
+      NODE_NAME: "{{.NODE_NAME}}"
       NODE_TOKEN: "{{.NODE_TOKEN}}"
     restart: unless-stopped
 `)
