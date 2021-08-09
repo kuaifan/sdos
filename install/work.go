@@ -39,8 +39,6 @@ func BuildWork() {
 	ws.OnConnected(func() {
 		logger.Debug("OnConnected: ", ws.WebSocket.Url)
 		logger.SetWebsocket(ws)
-		// 连接成功后，马上执行任务
-		_ = timedTask(ws)
 		// 连接成功后，每60秒发送消息
 		go func() {
 			t := time.NewTicker(60 * time.Second)
@@ -108,6 +106,7 @@ func timedTask(ws *wsc.Wsc) error {
 			logger.Debug("The ips file doesn’t exist")
 			return nil
 		}
+		logger.Debug("start oping...")
 		result, _, err := RunCommand("-c", fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName))
 		if err != nil {
 			logger.Debug("Run oping error: %s", err)
