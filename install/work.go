@@ -22,7 +22,7 @@ func BuildWork() {
 		logger.Error("System env is error")
 		os.Exit(1)
 	}
-	_ = logger.SetLogger(`{"File":{"filename":"/tmp/sdwan/logger","level":"TRAC","daily":true,"maxlines":100000,"maxsize":10,"maxdays":3,"append":true,"permit":"0660"}}`)
+	_ = logger.SetLogger(`{"File":{"filename":"/tmp/sdwan.log","level":"TRAC","daily":true,"maxlines":100000,"maxsize":10,"maxdays":3,"append":true,"permit":"0660"}}`)
 	//
 	done := make(chan bool)
 	ws := wsc.New(ServerUrl)
@@ -113,7 +113,7 @@ func timedTask(ws *wsc.Wsc) error {
 			logger.Debug("Run oping error: %s", err)
 			return nil
 		}
-		sendMessage = fmt.Sprintf(`{"type":"node","action":"ping","data":"%s"}`, base64Encode(result));
+		sendMessage = fmt.Sprintf(`{"type":"node","action":"ping","data":"%s"}`, base64Encode(result))
 	} else {
 		// wg 流量
 		result, _, err := RunCommand("-c", "wg show all transfer")
@@ -123,7 +123,7 @@ func timedTask(ws *wsc.Wsc) error {
 		}
 		value := handleWireguardTransfer(result)
 		if value != "" {
-			sendMessage = fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, base64Encode(value));
+			sendMessage = fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, base64Encode(value))
 		}
 	}
 	if sendMessage != "" {
