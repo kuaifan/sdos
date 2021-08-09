@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+var connectRand = ""
 var wireguardTransfers = make(map[string]*Transfer)
 
 //BuildWork is
@@ -39,12 +40,17 @@ func BuildWork() {
 	ws.OnConnected(func() {
 		logger.Debug("OnConnected: ", ws.WebSocket.Url)
 		logger.SetWebsocket(ws)
+		connectRand = RandString(6)
 		// 连接成功后，每60秒发送消息
 		go func() {
+			r := connectRand
 			t := time.NewTicker(60 * time.Second)
 			for {
 				select {
 				case <-t.C:
+					if r != connectRand {
+						return
+					}
 					err := timedTask(ws)
 					if err == wsc.CloseErr {
 						return
