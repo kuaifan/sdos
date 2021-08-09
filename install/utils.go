@@ -1,16 +1,19 @@
 package install
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"math/rand"
 	"net"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -33,7 +36,7 @@ func YmdHis() string {
 
 // Exists 判断所给路径文件/文件夹是否存在
 func Exists(path string) bool {
-	_, err := os.Stat(path)    //os.Stat获取文件信息
+	_, err := os.Stat(path) //os.Stat获取文件信息
 	if err != nil {
 		if os.IsExist(err) {
 			return true
@@ -241,7 +244,7 @@ func RandomString(length int) string {
 	return fmt.Sprintf("%x", b)[:length]
 }
 
-func StringMd5(str string) string  {
+func StringMd5(str string) string {
 	h := md5.New()
 	h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
@@ -254,4 +257,29 @@ func InArray(item string, items []string) bool {
 		}
 	}
 	return false
+}
+
+func PingFile(path string) (string, error) {
+	cmd := fmt.Sprintf("fping -A -u -q -4 -t 2000 -c 5 -f %s", path)
+	_, result, err := RunCommand("-c", cmd)
+	if err != nil {
+		return "", err
+	}
+	spaceRe, errRe := regexp.Compile(`[/:]`)
+	if errRe != nil {
+		return "", err
+	}
+	var pingMap = make(map[string]float64)
+	scanner := bufio.NewScanner(strings.NewReader(result))
+	for scanner.Scan() {
+		s := spaceRe.Split(scanner.Text(), -1)
+		if len(s) > 9 {
+			float, _ := strconv.ParseFloat(s[9], 64)
+			pingMap[strings.TrimSpace(s[0])] = float
+		} else {
+			pingMap[strings.TrimSpace(s[0])] = 0
+		}
+	}
+	value, errJson := json.Marshal(pingMap)
+	return string(value), errJson
 }

@@ -41,10 +41,10 @@ func BuildWork() {
 		logger.Debug("OnConnected: ", ws.WebSocket.Url)
 		logger.SetWebsocket(ws)
 		connectRand = RandString(6)
-		// 连接成功后，每60秒发送消息
+		// 连接成功后，每50秒发送消息
 		go func() {
 			r := connectRand
-			t := time.NewTicker(60 * time.Second)
+			t := time.NewTicker(50 * time.Second)
 			for {
 				select {
 				case <-t.C:
@@ -113,7 +113,7 @@ func timedTask(ws *wsc.Wsc) error {
 			return nil
 		}
 		logger.Debug("start oping...")
-		result, _, err := RunCommand("-c", fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName))
+		result, err := PingFile(fileName)
 		if err != nil {
 			logger.Debug("Run oping error: %s", err)
 			return nil
