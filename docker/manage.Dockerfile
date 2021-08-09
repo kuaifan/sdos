@@ -15,8 +15,8 @@ RUN git clone https://github.com/kuaifan/sdos.git && \
 FROM --platform=$TARGETPLATFORM debian:buster
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends procps oping curl wget jq
-RUN apt-get clean
+    apt-get install -y --no-install-recommends procps oping curl wget jq && \
+    apt-get clean
 
 RUN wget --no-check-certificate https://github.com/docker/compose/releases/download/1.29.2/docker-compose-Linux-x86_64 && \
     mv docker-compose-Linux-x86_64 /usr/local/bin/docker-compose && \
