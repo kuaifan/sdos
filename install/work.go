@@ -22,6 +22,8 @@ func BuildWork() {
 		logger.Error("System env is error")
 		os.Exit(1)
 	}
+	_ = logger.SetLogger(`{"File":{"filename":"/tmp/sdwan/logger","level":"TRAC","daily":true,"maxlines":100000,"maxsize":10,"maxdays":3,"append":true,"permit":"0660"}}`)
+	//
 	done := make(chan bool)
 	ws := wsc.New(ServerUrl)
 	// 自定义配置
@@ -37,9 +39,10 @@ func BuildWork() {
 	ws.OnConnected(func() {
 		logger.Debug("OnConnected: ", ws.WebSocket.Url)
 		logger.SetWebsocket(ws)
+		// 连接成功后，马上执行任务
+		_ = timedTask(ws)
 		// 连接成功后，每60秒发送消息
 		go func() {
-			_ = timedTask(ws)
 			t := time.NewTicker(60 * time.Second)
 			for {
 				select {
@@ -102,6 +105,7 @@ func timedTask(ws *wsc.Wsc) error {
 		// ping 信息
 		fileName := "/usr/sdwan/work/ips"
 		if !Exists(fileName) {
+			logger.Debug("The ips file doesn’t exist")
 			return nil
 		}
 		result, _, err := RunCommand("-c", fmt.Sprintf("oping -w 2 -c 5 $(cat %s) | sed '/from/d' | sed '/PING/d' | sed '/^$/d'", fileName))
