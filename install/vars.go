@@ -19,6 +19,7 @@ var (
 	ManageImage string
 	ServerUrl   string
 	ServerToken string
+	Mtu         string
 	InReset     bool
 
 	SSHConfig sshutil.SSH

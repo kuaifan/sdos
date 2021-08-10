@@ -169,6 +169,15 @@ func RemoveIpPort(ip string) string {
 	return ip
 }
 
+// GetIpAndPort 返回ip、端口
+func GetIpAndPort(ip string) (string, string) {
+	if strings.Contains(ip, ":") {
+		arr := strings.Split(ip, ":")
+		return arr[0], arr[1]
+	}
+	return ip, "22"
+}
+
 // ParsePasss 将ip中的密码保存到全局变量
 func ParsePasss(ips []string) []string {
 	if SSHConfig.UserPass == nil {

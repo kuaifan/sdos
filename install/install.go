@@ -50,12 +50,19 @@ func (s *SdosInstaller) InstallNodes() {
 func publishInstall(node, nodeName string) {
 	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", "")
 	if res == "success" {
+		if Mtu == "" {
+			Mtu = "1360"
+		}
+		nodeIp, nodePort := GetIpAndPort(node)
 		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 		resp, err := gohttp.NewRequest().
 			FormData(map[string]string{
 				"action":    "install",
+				"ip":        nodeIp,
 				"name":      nodeName,
-				"ip":        RemoveIpPort(node),
+				"mtu":       Mtu,
+				"port":      nodePort,
+				"user":      SSHConfig.User,
 				"pw":        SSHConfig.GetPassword(node),
 				"tk":        ServerToken,
 				"timestamp": timestamp,
