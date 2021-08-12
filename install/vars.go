@@ -28,4 +28,8 @@ var (
 
 	ResultInstall sync.Map
 	ResultRemove  sync.Map
+
+	NetInterface  string
+	NetCount      uint
+	NetUpdateTime float64
 )

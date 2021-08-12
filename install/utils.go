@@ -292,3 +292,23 @@ func PingFile(path string) (string, error) {
 	value, errJson := json.Marshal(pingMap)
 	return string(value), errJson
 }
+
+func ReadLines(filename string) ([]string, error) {
+	f, err := os.Open(filename)
+	if err != nil {
+		return []string{""}, err
+	}
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+	var ret []string
+	r := bufio.NewReader(f)
+	for {
+		line, err := r.ReadString('\n')
+		if err != nil {
+			break
+		}
+		ret = append(ret, strings.Trim(line, "\n"))
+	}
+	return ret, nil
+}
