@@ -30,7 +30,7 @@ func BuildWork() {
 	// 自定义配置
 	ws.SetConfig(&wsc.Config{
 		WriteWait:         10 * time.Second,
-		MaxMessageSize:    20480,
+		MaxMessageSize:    512 * 1024,	// 512KB
 		MinRecTime:        2 * time.Second,
 		MaxRecTime:        30 * time.Second,
 		RecFactor:         1.5,
