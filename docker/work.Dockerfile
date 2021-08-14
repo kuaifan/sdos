@@ -14,7 +14,7 @@ RUN git clone https://github.com/kuaifan/sdos.git && \
 
 FROM --platform=$TARGETPLATFORM alpine:${ALPINE_VERSION}
 
-RUN apk add --update --no-cache wireguard-tools tcpdump git make ipset dnsmasq tini curl mtr jq
+RUN apk add --update --no-cache wireguard-tools tcpdump git make ipset dnsmasq tini curl fping mtr jq
 
 RUN git clone https://gitee.com/yenkeia/wondershaper.git && \
     cd wondershaper/ && \
