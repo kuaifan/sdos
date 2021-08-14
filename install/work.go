@@ -30,7 +30,7 @@ func BuildWork() {
 	// 自定义配置
 	ws.SetConfig(&wsc.Config{
 		WriteWait:         10 * time.Second,
-		MaxMessageSize:    512 * 1024,	// 512KB
+		MaxMessageSize:    512 * 1024, // 512KB
 		MinRecTime:        2 * time.Second,
 		MaxRecTime:        30 * time.Second,
 		RecFactor:         1.5,
@@ -197,10 +197,10 @@ func handleMessageReceived(ws *wsc.Wsc, message string) {
 		}
 		if data["cmd"] != nil {
 			cmd, _ := data["cmd"].(string)
-			messageCmd, messageErr := handleMessageCmd(cmd)
+			stdout, stderr, cmderr := handleMessageCmd(cmd)
 			if data["callback"] != nil {
-				if messageErr == nil {
-					_ = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","callback":"%s","data":"%s"}`, data["callback"], base64Encode(messageCmd)))
+				if cmderr == nil {
+					_ = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","callback":"%s","data":{"stdout":"%s","stderr":"%s"}}`, data["callback"], base64Encode(stdout), base64Encode(stderr)))
 				}
 			}
 		}
@@ -313,13 +313,13 @@ func handleMessageNic(nicDir string, nicName string) {
 }
 
 // 运行自定义脚本
-func handleMessageCmd(data string) (string, error) {
+func handleMessageCmd(data string) (string, string, error) {
 	cmd := fmt.Sprintf("cd /usr/sdwan/work && %s", data)
-	stdout, _, err := RunCommand("-c", cmd)
+	stdout, stderr, err := RunCommand("-c", cmd)
 	if err != nil {
 		logger.Error("Run cmd error: %s", err)
 	} else {
 		logger.Info("Run cmd success: %s", cmd)
 	}
-	return stdout, err
+	return stdout, stderr, err
 }
