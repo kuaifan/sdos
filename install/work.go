@@ -198,9 +198,9 @@ func handleMessageReceived(ws *wsc.Wsc, message string) {
 		if data["cmd"] != nil {
 			cmd, _ := data["cmd"].(string)
 			messageCmd, messageErr := handleMessageCmd(cmd)
-			if data["cmdReturn"] != nil {
-				if messageErr != nil {
-					_ = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","return":"%s","data":"%s"}`, data["cmdReturn"], base64Encode(messageCmd)))
+			if data["callback"] != nil {
+				if messageErr == nil {
+					_ = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","callback":"%s","data":"%s"}`, data["callback"], base64Encode(messageCmd)))
 				}
 			}
 		}
