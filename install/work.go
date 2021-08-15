@@ -197,7 +197,7 @@ func handleMessageReceived(ws *wsc.Wsc, message string) {
 		}
 		if data["cmd"] != nil {
 			cmd, _ := data["cmd"].(string)
-			stdout, stderr, cmderr := handleMessageCmd(cmd, data["nolog"])
+			stdout, stderr, cmderr := handleMessageCmd(cmd, data["log"] != "no")
 			if data["callback"] != nil {
 				errStr := ""
 				if cmderr != nil {
@@ -315,10 +315,10 @@ func handleMessageNic(nicDir string, nicName string) {
 }
 
 // 运行自定义脚本
-func handleMessageCmd(data string, nolog interface{}) (string, string, error) {
+func handleMessageCmd(data string, addLog bool) (string, string, error) {
 	cmd := fmt.Sprintf("cd /usr/sdwan/work && %s", data)
 	stdout, stderr, err := RunCommand("-c", cmd)
-	if nolog == nil {
+	if addLog {
 		if err != nil {
 			logger.Error("Run cmd error: [%s] %s", data, err)
 		} else {
