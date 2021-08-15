@@ -199,9 +199,11 @@ func handleMessageReceived(ws *wsc.Wsc, message string) {
 			cmd, _ := data["cmd"].(string)
 			stdout, stderr, cmderr := handleMessageCmd(cmd)
 			if data["callback"] != nil {
-				if cmderr == nil {
-					_ = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","callback":"%s","data":{"stdout":"%s","stderr":"%s"}}`, data["callback"], base64Encode(stdout), base64Encode(stderr)))
+				errStr := ""
+				if cmderr != nil {
+					errStr = cmderr.Error()
 				}
+				_ = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","callback":"%s","data":{"stdout":"%s","stderr":"%s","err":"%s"}}`, data["callback"], base64Encode(stdout), base64Encode(stderr), base64Encode(errStr)))
 			}
 		}
 		if data["type"] == "nodenic" && data["nicDir"] != nil && data["nicName"] != nil {
