@@ -319,9 +319,9 @@ func handleMessageCmd(data string) (string, string, error) {
 	cmd := fmt.Sprintf("cd /usr/sdwan/work && %s", data)
 	stdout, stderr, err := RunCommand("-c", cmd)
 	if err != nil {
-		logger.Error("Run cmd error: %s", err)
+		logger.Error("Run cmd error: [%s] %s", cmd, err)
 	} else {
-		logger.Info("Run cmd success: %s", cmd)
+		logger.Info("Run cmd success: [%s]", cmd)
 	}
 	return stdout, stderr, err
 }
