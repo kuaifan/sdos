@@ -269,14 +269,23 @@ func InArray(item string, items []string) bool {
 }
 
 func PingFile(path string) (string, error) {
-	cmd := fmt.Sprintf("fping -A -u -q -4 -t 2000 -c 5 -f %s", path)
-	_, result, err := RunCommand("-c", cmd)
+	result, err := PingFileMap(path)
 	if err != nil {
 		return "", err
 	}
+	value, errJson := json.Marshal(result)
+	return string(value), errJson
+}
+
+func PingFileMap(path string) (map[string]float64, error) {
+	cmd := fmt.Sprintf("fping -A -u -q -4 -t 2000 -c 5 -f %s", path)
+	_, result, err := RunCommand("-c", cmd)
+	if result == "" && err != nil {
+		return nil, err
+	}
 	spaceRe, errRe := regexp.Compile(`[/:]`)
 	if errRe != nil {
-		return "", err
+		return nil, err
 	}
 	var pingMap = make(map[string]float64)
 	scanner := bufio.NewScanner(strings.NewReader(result))
@@ -289,8 +298,7 @@ func PingFile(path string) (string, error) {
 			pingMap[strings.TrimSpace(s[0])] = 0
 		}
 	}
-	value, errJson := json.Marshal(pingMap)
-	return string(value), errJson
+	return pingMap, nil
 }
 
 func ReadLines(filename string) ([]string, error) {
@@ -304,8 +312,8 @@ func ReadLines(filename string) ([]string, error) {
 	var ret []string
 	r := bufio.NewReader(f)
 	for {
-		line, err := r.ReadString('\n')
-		if err != nil {
+		line, readErr := r.ReadString('\n')
+		if readErr != nil {
 			break
 		}
 		ret = append(ret, strings.Trim(line, "\n"))

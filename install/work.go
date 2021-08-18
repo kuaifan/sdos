@@ -14,8 +14,13 @@ import (
 	"time"
 )
 
-var connectRand = ""
-var wireguardTransfers = make(map[string]*Transfer)
+var (
+	connectRand string
+	wireguardTransfers = make(map[string]*Transfer)
+
+	monitorRand string
+	monitorResult = make(map[string]string)
+)
 
 //BuildWork is
 func BuildWork() {
@@ -112,10 +117,10 @@ func timedTask(ws *wsc.Wsc) error {
 			logger.Debug("The ips file doesn’t exist")
 			return nil
 		}
-		logger.Debug("start oping...")
+		logger.Debug("start ping...")
 		result, err := PingFile(fileName)
 		if err != nil {
-			logger.Debug("Run oping error: %s", err)
+			logger.Debug("Ping error: %s", err)
 			return nil
 		}
 		sendMessage = fmt.Sprintf(`{"type":"node","action":"ping","data":"%s"}`, base64Encode(result))
@@ -190,26 +195,37 @@ func handleWireguardTransfer(data string) string {
 // 处理消息
 func handleMessageReceived(ws *wsc.Wsc, message string) {
 	var data map[string]interface{}
-	if err := json.Unmarshal([]byte(message), &data); err == nil {
-		if data["file"] != nil {
-			file, _ := data["file"].(string)
-			handleMessageFile(file)
-		}
-		if data["cmd"] != nil {
-			cmd, _ := data["cmd"].(string)
-			stdout, stderr, cmderr := handleMessageCmd(cmd, data["log"] != "no")
-			if data["callback"] != nil {
-				errStr := ""
-				if cmderr != nil {
-					errStr = cmderr.Error()
-				}
-				_ = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","callback":"%s","data":{"stdout":"%s","stderr":"%s","err":"%s"}}`, data["callback"], base64Encode(stdout), base64Encode(stderr), base64Encode(errStr)))
+	if ok := json.Unmarshal([]byte(message), &data); ok == nil {
+		content, _ := data["content"].(string)
+		if data["type"] == "nodework:file" {
+			// 保存文件
+			handleMessageFile(content)
+		} else if data["type"] == "nodework:nic" {
+			// 保存文件
+			handleMessageFile(content)
+			// 删除没用的网卡
+			if data["dir"] != nil && data["names"] != nil {
+				dir, _ := data["dir"].(string)
+				names, _ := data["names"].(string)
+				handleDeleteUnusedNic(dir, names)
 			}
-		}
-		if data["type"] == "nodenic" && data["nicDir"] != nil && data["nicName"] != nil {
-			nicDir, _ := data["nicDir"].(string)
-			nicName, _ := data["nicName"].(string)
-			handleMessageNic(nicDir, nicName)
+		} else if data["type"] == "nodework:cmd" {
+			// 执行命令
+			stdout, stderr, err := handleMessageCmd(content, data["log"] != "no")
+			if data["callback"] != nil {
+				cmderr := ""
+				if err != nil {
+					cmderr = err.Error()
+				}
+				err = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","callback":"%s","data":{"stdout":"%s","stderr":"%s","err":"%s"}}`, data["callback"], base64Encode(stdout), base64Encode(stderr), base64Encode(cmderr)))
+				if err != nil {
+					logger.Debug("Send cmd callback error: %s", err)
+				}
+			}
+		} else if data["type"] == "nodework:monitorip" {
+			// 监听ip状态
+			monitorRand = RandString(6)
+			go handleMessageMonitorIp(ws, monitorRand, content)
 		}
 	}
 }
@@ -291,7 +307,7 @@ func handleMessageFile(data string) {
 }
 
 // 删除没用的网卡
-func handleMessageNic(nicDir string, nicName string) {
+func handleDeleteUnusedNic(nicDir string, nicName string) {
 	path := fmt.Sprintf("/usr/sdwan/work/%s", nicDir)
 	nics := strings.Split(nicName, ",")
 
@@ -326,4 +342,56 @@ func handleMessageCmd(data string, addLog bool) (string, string, error) {
 		}
 	}
 	return stdout, stderr, err
+}
+
+// 监听ip通或不通上报
+func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
+	fileName := fmt.Sprintf("/tmp/monitorip_%s.txt", rand)
+	var fileByte = []byte(content)
+	err := ioutil.WriteFile(fileName, fileByte, 0666)
+	if err != nil {
+		logger.Error("[MonitorIp] [%s] WriteFile error: [%s] %s", rand, fileName, err)
+		return
+	}
+	//
+	for {
+		if rand != monitorRand {
+			logger.Debug("[MonitorIp] [%s] Jump thread", rand)
+			return
+		}
+		result, pingErr := PingFileMap(fileName)
+		if pingErr != nil {
+			logger.Debug("[MonitorIp] [%s] Ping error: %s", rand, pingErr)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		var status string
+		var report = make(map[string]string)
+		for ip, ping := range result {
+			status = "reject"
+			if ping > 0 {
+				status = "accept"
+			}
+			if monitorResult[ip] != status {
+				monitorResult[ip] = status
+				report[ip] = status
+			}
+		}
+		if len(report) > 0 {
+			reportValue, jsonErr := json.Marshal(report)
+			if jsonErr != nil {
+				logger.Debug("[MonitorIp] [%s] Marshal error: %s", rand, jsonErr)
+				for ip := range report {
+					monitorResult[ip] = ""
+				}
+			}
+			sendErr := ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"monitorip","data":"%s"}`, base64Encode(string(reportValue))))
+			if sendErr != nil {
+				logger.Debug("[MonitorIp] [%s] Send error: %s", rand, sendErr)
+				for ip := range report {
+					monitorResult[ip] = ""
+				}
+			}
+		}
+	}
 }
