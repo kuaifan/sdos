@@ -356,10 +356,11 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 	//
 	for {
 		if rand != monitorRand {
+			_ = os.Remove(fileName)
 			logger.Debug("[MonitorIp] [%s] Jump thread", rand)
 			return
 		}
-		result, pingErr := PingFileMap(fileName)
+		result, pingErr := PingFileMap(fileName, 2000, 3)
 		if pingErr != nil {
 			logger.Debug("[MonitorIp] [%s] Ping error: %s", rand, pingErr)
 			time.Sleep(2 * time.Second)

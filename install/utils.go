@@ -269,7 +269,7 @@ func InArray(item string, items []string) bool {
 }
 
 func PingFile(path string) (string, error) {
-	result, err := PingFileMap(path)
+	result, err := PingFileMap(path, 2000, 5)
 	if err != nil {
 		return "", err
 	}
@@ -277,8 +277,8 @@ func PingFile(path string) (string, error) {
 	return string(value), errJson
 }
 
-func PingFileMap(path string) (map[string]float64, error) {
-	cmd := fmt.Sprintf("fping -A -u -q -4 -t 2000 -c 5 -f %s", path)
+func PingFileMap(path string, timeout int, count int) (map[string]float64, error) {
+	cmd := fmt.Sprintf("fping -A -u -q -4 -t %d -c %d -f %s", timeout, count, path)
 	_, result, err := RunCommand("-c", cmd)
 	if result == "" && err != nil {
 		return nil, err
