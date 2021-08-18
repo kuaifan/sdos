@@ -365,16 +365,16 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 			time.Sleep(2 * time.Second)
 			continue
 		}
-		var status string
+		var state string
 		var report = make(map[string]string)
 		for ip, ping := range result {
-			status = "reject"
+			state = "reject"
 			if ping > 0 {
-				status = "accept"
+				state = "accept"
 			}
-			if monitorResult[ip] != status {
-				monitorResult[ip] = status
-				report[ip] = status
+			if monitorResult[ip] != state {
+				monitorResult[ip] = state
+				report[ip] = state
 			}
 		}
 		if len(report) > 0 {
