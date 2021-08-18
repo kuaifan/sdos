@@ -45,5 +45,5 @@ func init() {
 	removeCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "Multi nodes ex. 192.168.0.5-192.168.0.5")
 	removeCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
 	removeCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh")
-	removeCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Release server url, \"http://\" or \"https://\" prefix.")
+	removeCmd.Flags().StringVar(&install.ReportUrl, "report-url", "", "Report url, \"http://\" or \"https://\" prefix.")
 }

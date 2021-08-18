@@ -40,14 +40,14 @@ func (s *SdosInstaller) InstallNodes() {
 			}
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/utils", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/utils install")
-			publishInstall(node, nodeName)
+			reportInstall(node, nodeName)
 		}(node)
 	}
 	wg.Wait()
 	ResultInstall.Range(resultInstallWalk)
 }
 
-func publishInstall(node, nodeName string) {
+func reportInstall(node, nodeName string) {
 	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", "")
 	if res == "success" {
 		if Mtu == "" {
@@ -67,7 +67,7 @@ func publishInstall(node, nodeName string) {
 				"tk":        ServerToken,
 				"timestamp": timestamp,
 			}).
-			Post(ServerUrl)
+			Post(ReportUrl)
 		if err != nil || resp == nil {
 			logger.Error("[%s] install error %s", node, err)
 		} else {

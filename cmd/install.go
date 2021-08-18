@@ -30,6 +30,9 @@ var installCmd = &cobra.Command{
 			}
 			os.Exit(0)
 		}
+		if install.ReportUrl == "" {
+			install.ReportUrl = install.ServerUrl
+		}
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		beforeNodes := install.ParseIPs(install.NodeIPs)
@@ -48,6 +51,7 @@ func init() {
 	installCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh")
 	installCmd.Flags().StringVar(&install.Mtu, "mtu", "", "Maximum Transmission Unit")
 	installCmd.Flags().StringVar(&install.ManageImage, "manage-image", "", "Image of Management")
-	installCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Release server url, \"http://\" or \"https://\" prefix.")
+	installCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Server url, \"http://\" or \"https://\" prefix.")
+	installCmd.Flags().StringVar(&install.ReportUrl, "report-url", "", "Report url, \"http://\" or \"https://\" prefix, default to server-url.")
 	installCmd.Flags().BoolVar(&install.InReset, "reset", false, "Remove before installation")
 }

@@ -18,6 +18,7 @@ var (
 	NodeIPs     []string
 	ManageImage string
 	ServerUrl   string
+	ReportUrl   string
 	ServerToken string
 	Mtu         string
 	InReset     bool

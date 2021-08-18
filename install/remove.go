@@ -37,14 +37,14 @@ func (s *SdosInstaller) RemoveNodes() {
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/utils", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/utils remove")
 			_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
-			publishRemove(node, nodeName)
+			reportRemove(node, nodeName)
 		}(node)
 	}
 	wg.Wait()
 	ResultRemove.Range(resultRemoveWalk)
 }
 
-func publishRemove(node string, nodeName string) {
+func reportRemove(node string, nodeName string) {
 	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", "")
 	if res == "success" {
 		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
@@ -55,7 +55,7 @@ func publishRemove(node string, nodeName string) {
 				"ip":        RemoveIpPort(node),
 				"timestamp": timestamp,
 			}).
-			Post(ServerUrl)
+			Post(ReportUrl)
 		if err != nil || resp == nil {
 			logger.Error("[%s] remove error %s", node, err)
 		} else {
