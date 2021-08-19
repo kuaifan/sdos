@@ -369,14 +369,15 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 		var state string
 		var record *Monitor
 		var report = make(map[string]*Monitor)
+		var issue = time.Now().Unix() / 10
 		for ip, ping := range result {
 			state = "reject"
 			if ping > 0 {
 				state = "accept"
 			}
 			record = monitorRecord[ip]
-			if record == nil || record.State != state || ComputePing(record.Ping, ping) {
-				report[ip] = &Monitor{State: state, Ping: ping}
+			if record == nil || record.State != state || (ComputePing(record.Ping, ping) && issue != record.Issue) {
+				report[ip] = &Monitor{State: state, Ping: ping, Issue: issue}
 				monitorRecord[ip] = report[ip]
 			}
 		}
