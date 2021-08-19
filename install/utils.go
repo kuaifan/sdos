@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"math/rand"
 	"net"
@@ -319,4 +320,24 @@ func ReadLines(filename string) ([]string, error) {
 		ret = append(ret, strings.Trim(line, "\n"))
 	}
 	return ret, nil
+}
+
+func ComputePing(var1, var2 float64) bool {
+	diff := math.Abs(var1 - var2)
+	if diff < 5 {
+		return false
+	}
+	if diff >= 30 {
+		return true
+	}
+	var multiple float64
+	if var1 > var2 {
+		multiple = var1 / var2
+	} else {
+		multiple = var2 / var1
+	}
+	if multiple < 1.1 {
+		return false
+	}
+	return true
 }

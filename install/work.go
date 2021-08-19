@@ -7,7 +7,6 @@ import (
 	"github.com/kuaifan/sdos/pkg/logger"
 	"github.com/togettoyou/wsc"
 	"io/ioutil"
-	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -376,7 +375,7 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 				state = "accept"
 			}
 			record = monitorRecord[ip]
-			if record == nil || record.State != state || math.Abs(record.Ping - ping) > 5 {
+			if record == nil || record.State != state || ComputePing(record.Ping, ping) {
 				report[ip] = &Monitor{State: state, Ping: ping}
 				monitorRecord[ip] = report[ip]
 			}
