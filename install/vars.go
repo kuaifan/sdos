@@ -5,13 +5,18 @@ import (
 	"sync"
 )
 
-type Transfer struct {
+type Wireguard struct {
 	Name         string
 	Public       string
 	Received     int64
 	ReceivedDiff int64
 	Sent         int64
 	SentDiff     int64
+}
+
+type Monitor struct {
+	State string
+	Ping  float64
 }
 
 var (

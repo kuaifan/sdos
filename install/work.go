@@ -7,6 +7,7 @@ import (
 	"github.com/kuaifan/sdos/pkg/logger"
 	"github.com/togettoyou/wsc"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -16,10 +17,10 @@ import (
 
 var (
 	connectRand string
-	wireguardTransfers = make(map[string]*Transfer)
+	wireguardTransfers = make(map[string]*Wireguard)
 
 	monitorRand string
-	monitorResult = make(map[string]string)
+	monitorRecord = make(map[string]*Monitor)
 )
 
 //BuildWork is
@@ -148,7 +149,7 @@ func handleWireguardTransfer(data string) string {
 	var array []string
 	for scanner.Scan() {
 		context := strings.Fields(scanner.Text())
-		t := &Transfer{}
+		t := &Wireguard{}
 		t.Name = context[0]
 		t.Public = context[1]
 		t.Received, _ = strconv.ParseInt(context[2], 10, 64)
@@ -344,7 +345,7 @@ func handleMessageCmd(data string, addLog bool) (string, string, error) {
 	return stdout, stderr, err
 }
 
-// 监听ip通或不通上报
+// 监听ip通或不通上报（ping值变化超过5也上报）
 func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 	fileName := fmt.Sprintf("/tmp/monitorip_%s.txt", rand)
 	var fileByte = []byte(content)
@@ -367,15 +368,17 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 			continue
 		}
 		var state string
-		var report = make(map[string]string)
+		var record *Monitor
+		var report = make(map[string]*Monitor)
 		for ip, ping := range result {
 			state = "reject"
 			if ping > 0 {
 				state = "accept"
 			}
-			if monitorResult[ip] != state {
-				monitorResult[ip] = state
-				report[ip] = state
+			record = monitorRecord[ip]
+			if record == nil || record.State != state || math.Abs(record.Ping - ping) > 5 {
+				report[ip] = &Monitor{State: state, Ping: ping}
+				monitorRecord[ip] = report[ip]
 			}
 		}
 		if len(report) > 0 {
@@ -383,15 +386,19 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 			if jsonErr != nil {
 				logger.Debug("[MonitorIp] [%s] Marshal error: %s", rand, jsonErr)
 				for ip := range report {
-					monitorResult[ip] = ""
+					delete(monitorRecord, ip)
 				}
 			}
-			sendErr := ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"monitorip","data":"%s"}`, base64Encode(string(reportValue))))
-			if sendErr != nil {
-				logger.Debug("[MonitorIp] [%s] Send error: %s", rand, sendErr)
-				for ip := range report {
-					monitorResult[ip] = ""
+			if ws != nil {
+				sendErr := ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"monitorip","data":"%s"}`, base64Encode(string(reportValue))))
+				if sendErr != nil {
+					logger.Debug("[MonitorIp] [%s] Send error: %s", rand, sendErr)
+					for ip := range report {
+						delete(monitorRecord, ip)
+					}
 				}
+			} else {
+				logger.Debug("[MonitorIp] record: %s", string(reportValue))
 			}
 		}
 	}
