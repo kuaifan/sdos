@@ -284,7 +284,8 @@ func PingFileMap(path string, timeout int, count int) (map[string]float64, error
 	if result == "" && err != nil {
 		return nil, err
 	}
-	spaceRe, errRe := regexp.Compile(`[/:]`)
+	result = strings.Replace(result, " ", "", -1)
+	spaceRe, errRe := regexp.Compile(`[/:=]`)
 	if errRe != nil {
 		return nil, err
 	}
@@ -294,9 +295,9 @@ func PingFileMap(path string, timeout int, count int) (map[string]float64, error
 		s := spaceRe.Split(scanner.Text(), -1)
 		if len(s) > 9 {
 			float, _ := strconv.ParseFloat(s[9], 64)
-			pingMap[strings.TrimSpace(s[0])] = float
+			pingMap[s[0]] = float
 		} else {
-			pingMap[strings.TrimSpace(s[0])] = 0
+			pingMap[s[0]] = 0
 		}
 	}
 	return pingMap, nil
