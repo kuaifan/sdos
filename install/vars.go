@@ -17,7 +17,7 @@ type Wireguard struct {
 type Monitor struct {
 	State string
 	Ping  float64
-	Issue int64
+	Unix  int64
 }
 
 var (

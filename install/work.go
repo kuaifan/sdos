@@ -111,8 +111,14 @@ func timedTask(ws *wsc.Wsc) error {
 	nodeMode := os.Getenv("NODE_MODE")
 	sendMessage := ""
 	if nodeMode == "manage" {
+		// docker-compose
+		fileName := fmt.Sprintf("/usr/sdwan/work/docker-compose.yml")
+		if Exists(fileName) {
+			cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", filepath.Dir(fileName))
+			_, _, _ = RunCommand("-c", cmd)
+		}
 		// ping 信息
-		fileName := "/usr/sdwan/work/ips"
+		fileName = "/usr/sdwan/work/ips"
 		if !Exists(fileName) {
 			logger.Debug("The ips file doesn’t exist")
 			return nil
@@ -369,15 +375,15 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 		var state string
 		var record *Monitor
 		var report = make(map[string]*Monitor)
-		var issue = time.Now().Unix() / 10
+		var unix = time.Now().Unix()
 		for ip, ping := range result {
 			state = "reject"
 			if ping > 0 {
 				state = "accept"
 			}
 			record = monitorRecord[ip]
-			if record == nil || record.State != state || (ComputePing(record.Ping, ping) && issue != record.Issue) {
-				report[ip] = &Monitor{State: state, Ping: ping, Issue: issue}
+			if record == nil || record.State != state || unix - record.Unix >= 90 || (unix - record.Unix >= 10 && ComputePing(record.Ping, ping)) {
+				report[ip] = &Monitor{State: state, Ping: ping, Unix: unix}
 				monitorRecord[ip] = report[ip]
 			}
 		}

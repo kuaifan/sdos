@@ -328,7 +328,7 @@ func ComputePing(var1, var2 float64) bool {
 	if diff < 5 {
 		return false
 	}
-	if diff >= 30 {
+	if diff >= 50 {
 		return true
 	}
 	var multiple float64
