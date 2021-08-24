@@ -7,6 +7,7 @@ import (
 	"github.com/kuaifan/sdos/pkg/logger"
 	"github.com/togettoyou/wsc"
 	"io/ioutil"
+	"net"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -352,8 +353,25 @@ func handleMessageCmd(data string, addLog bool) (string, string, error) {
 
 // 监听ip通或不通上报（ping值变化超过5也上报）
 func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
+	var fileText []string
+	array := strings.Split(content, ",")
+	for _, value := range array {
+		arr := strings.Split(value, ":")
+		address := net.ParseIP(arr[0])
+		if address == nil {
+			continue
+		}
+		ip := address.String()
+		if len(arr) >= 4 {
+			state := arr[1]
+			ping, _ := strconv.ParseFloat(arr[2], 64)
+			unix, _ := strconv.ParseInt(arr[3], 10, 64)
+			monitorRecord[ip] = &Monitor{State: state, Ping: ping, Unix: unix}
+		}
+		fileText = append(fileText, ip)
+	}
 	fileName := fmt.Sprintf("/tmp/monitorip_%s.txt", rand)
-	var fileByte = []byte(content)
+	var fileByte = []byte(strings.Join(fileText, "\n"))
 	err := ioutil.WriteFile(fileName, fileByte, 0666)
 	if err != nil {
 		logger.Error("[MonitorIp] [%s] WriteFile error: [%s] %s", rand, fileName, err)
@@ -382,7 +400,7 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 				state = "accept"
 			}
 			record = monitorRecord[ip]
-			if record == nil || record.State != state || unix - record.Unix >= 90 || (unix - record.Unix >= 10 && ComputePing(record.Ping, ping)) {
+			if record == nil || record.State != state || unix - record.Unix >= 600 || (unix - record.Unix >= 10 && ComputePing(record.Ping, ping)) {
 				report[ip] = &Monitor{State: state, Ping: ping, Unix: unix}
 				monitorRecord[ip] = report[ip]
 			}
