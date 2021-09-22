@@ -397,9 +397,15 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 		for ip, ping := range result {
 			state = "reject"
 			if ping > 0 {
-				state = "accept"
+				state = "accept"	// ping值大于0表示线路通
 			}
 			record = monitorRecord[ip]
+			/**
+			1、记录没有
+			2、状态改变（通 不通 发生改变
+			3、大于10分钟
+			4、大于10秒钟且（与上次ping值相差大于等于50或与上次相差1.1倍）
+			 */
 			if record == nil || record.State != state || unix - record.Unix >= 600 || (unix - record.Unix >= 10 && ComputePing(record.Ping, ping)) {
 				report[ip] = &Monitor{State: state, Ping: ping, Unix: unix}
 				monitorRecord[ip] = report[ip]

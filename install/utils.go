@@ -278,6 +278,7 @@ func PingFile(path string) (string, error) {
 	return string(value), errJson
 }
 
+// PingFileMap 遍历ping文件内ip，并返回ping键值（最小）
 func PingFileMap(path string, timeout int, count int) (map[string]float64, error) {
 	cmd := fmt.Sprintf("fping -A -u -q -4 -t %d -c %d -f %s", timeout, count, path)
 	_, result, err := RunCommand("-c", cmd)
