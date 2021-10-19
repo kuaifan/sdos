@@ -42,6 +42,18 @@ is_root() {
     fi
 }
 
+add_swap() {
+    local swap=$(echo "$1"| awk '{print int($0)}')
+    if [ "$swap" -gt "0" ]; then
+        [ "$(swapon --show | grep 'sdwanfile')" ] && swapoff /sdwanfile;
+        dd if=/dev/zero of=/sdwanfile bs=1M count="$swap"
+        chmod 600 /sdwanfile
+        mkswap /sdwanfile
+        swapon /sdwanfile
+        [ -z "$(cat /etc/fstab | grep '/sdwanfile')" ] && echo "/sdwanfile swap swap defaults 0 0" >> /etc/fstab
+    fi
+}
+
 check_system() {
     if [[ "${ID}" == "centos" && ${VERSION_ID} -ge 7 ]]; then
         echo > /dev/null
@@ -114,6 +126,7 @@ remove_alias() {
 echo "error" > /tmp/sdwan_install
 
 if [ "$1" = "install" ]; then
+    add_swap "{{.SWAP_FILE}}"
     check_system
     check_docker
     cd "$(dirname $0)"

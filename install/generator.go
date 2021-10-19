@@ -28,6 +28,7 @@ func BaseUtils(nodeName string, node string) string {
 	envMap["NODE_IP"] = RemoveIpPort(node)
 	envMap["NODE_TOKEN"] = ServerToken
 	envMap["NODE_PASSWORD"] = SSHConfig.GetPassword(node)
+	envMap["SWAP_FILE"] = SwapFile
 	return FromTemplateContent(sb.String(), envMap)
 }
 

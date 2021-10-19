@@ -53,5 +53,6 @@ func init() {
 	installCmd.Flags().StringVar(&install.ManageImage, "manage-image", "", "Image of Management")
 	installCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Server url, \"http://\" or \"https://\" prefix.")
 	installCmd.Flags().StringVar(&install.ReportUrl, "report-url", "", "Report url, \"http://\" or \"https://\" prefix, default to server-url.")
+	installCmd.Flags().StringVar(&install.SwapFile, "swap", "", "Add swap partition, Unit MB")
 	installCmd.Flags().BoolVar(&install.InReset, "reset", false, "Remove before installation")
 }

@@ -25,6 +25,7 @@ var (
 	ManageImage string
 	ServerUrl   string
 	ReportUrl   string
+	SwapFile    string
 	ServerToken string
 	Mtu         string
 	InReset     bool
