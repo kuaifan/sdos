@@ -283,31 +283,34 @@ func handleMessageFile(data string) {
 			continue
 		}
 		if arr[1] == "nic" {
+			logger.Info("Run nic start: [%s] [%s install]", contentKey, fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
 			_, _, err = RunCommand(fileName, "install")
 			if err != nil {
-				logger.Error("Run nic error: [%s install] %s", fileName, err)
+				logger.Error("Run nic error: [%s] [%s install] %s", contentKey, fileName, err)
 				continue
 			} else {
-				logger.Info("Run nic success: [%s install]", fileName)
+				logger.Info("Run nic success: [%s] [%s install]", contentKey, fileName)
 			}
 		} else if arr[1] == "exec" {
+			logger.Info("Run file start: [%s] [%s]", contentKey, fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
 			_, _, err = RunCommand(fileName)
 			if err != nil {
-				logger.Error("Run file error: [%s] %s", fileName, err)
+				logger.Error("Run file error: [%s] [%s] %s", contentKey, fileName, err)
 				continue
 			} else {
-				logger.Info("Run file success: [%s]", fileName)
+				logger.Info("Run file success: [%s] [%s]", contentKey, fileName)
 			}
 		} else if arr[1] == "yml" {
+			logger.Info("Run yml start: [%s] [%s]", contentKey, fileName)
 			cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", fileDir)
 			_, _, err = RunCommand("-c", cmd)
 			if err != nil {
-				logger.Error("Run yml error: [%s] %s", fileName, err)
+				logger.Error("Run yml error: [%s] [%s] %s", contentKey, fileName, err)
 				continue
 			} else {
-				logger.Info("Run yml success: [%s]", fileName)
+				logger.Info("Run yml success: [%s] [%s]", contentKey, fileName)
 			}
 		}
 	}
