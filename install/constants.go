@@ -16,6 +16,7 @@ services:
       NODE_NAME: "{{.NODE_NAME}}"
       NODE_TOKEN: "{{.NODE_TOKEN}}"
     restart: unless-stopped
+    network_mode: "host"
 `)
 
 const baseUtils = string(`#!/bin/bash

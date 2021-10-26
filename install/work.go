@@ -118,19 +118,23 @@ func timedTask(ws *wsc.Wsc) error {
 			cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", filepath.Dir(fileName))
 			_, _, _ = RunCommand("-c", cmd)
 		}
-		// ping 信息
-		fileName = "/usr/sdwan/work/ips"
-		if !Exists(fileName) {
-			logger.Debug("The ips file doesn’t exist")
-			return nil
+		// 公网 ping
+		sendErr := pingFileAndSend(ws, "/usr/sdwan/work/ips", "")
+		if sendErr != nil {
+			return sendErr
 		}
-		logger.Debug("start ping...")
-		result, err := PingFile(fileName)
-		if err != nil {
-			logger.Debug("Ping error: %s", err)
-			return nil
+		// 专线 ping
+		dirPath := "/usr/sdwan/work/vpc_ip"
+		if IsDir(dirPath) {
+			files := GetIpsFiles(dirPath)
+			if files != nil {
+				for _, file := range files {
+					go func(file string) {
+						_ = pingFileAndSend(ws, fmt.Sprintf("%s/%s", dirPath, file), file)
+					}(file)
+				}
+			}
 		}
-		sendMessage = fmt.Sprintf(`{"type":"node","action":"ping","data":"%s"}`, base64Encode(result))
 	} else {
 		// wg 流量
 		result, _, err := RunCommand("-c", "wg show all transfer")
@@ -147,6 +151,22 @@ func timedTask(ws *wsc.Wsc) error {
 		return ws.SendTextMessage(sendMessage)
 	}
 	return nil
+}
+
+// ping 文件并发送
+func pingFileAndSend(ws *wsc.Wsc, fileName string, source string) error {
+	if !Exists(fileName) {
+		logger.Debug("File no exist [%s]", fileName)
+		return nil
+	}
+	logger.Debug("Start ping [%s]", fileName)
+	result, err := PingFile(fileName, source)
+	if err != nil {
+		logger.Debug("Ping error [%s]: %s", fileName, err)
+		return nil
+	}
+	sendMessage := fmt.Sprintf(`{"type":"node","action":"ping","data":"%s","source":"%s"}`, base64Encode(result), source)
+	return ws.SendTextMessage(sendMessage)
 }
 
 // 处理Wireguard Transfers
@@ -387,7 +407,7 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 			logger.Debug("[MonitorIp] [%s] Jump thread", rand)
 			return
 		}
-		result, pingErr := PingFileMap(fileName, 2000, 4)
+		result, pingErr := PingFileMap(fileName, "", 2000, 4)
 		if pingErr != nil {
 			logger.Debug("[MonitorIp] [%s] Ping error: %s", rand, pingErr)
 			time.Sleep(2 * time.Second)

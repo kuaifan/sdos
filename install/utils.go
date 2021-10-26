@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/big"
 	"math/rand"
@@ -269,8 +270,8 @@ func InArray(item string, items []string) bool {
 	return false
 }
 
-func PingFile(path string) (string, error) {
-	result, err := PingFileMap(path, 2000, 5)
+func PingFile(path string, source string) (string, error) {
+	result, err := PingFileMap(path, source, 2000, 5)
 	if err != nil {
 		return "", err
 	}
@@ -279,8 +280,11 @@ func PingFile(path string) (string, error) {
 }
 
 // PingFileMap 遍历ping文件内ip，并返回ping键值（最小）
-func PingFileMap(path string, timeout int, count int) (map[string]float64, error) {
+func PingFileMap(path string, source string, timeout int, count int) (map[string]float64, error) {
 	cmd := fmt.Sprintf("fping -A -u -q -4 -t %d -c %d -f %s", timeout, count, path)
+	if source != "" {
+		cmd = fmt.Sprintf("fping -A -u -q -4 -S %s -t %d -c %d -f %s", source, timeout, count, path)
+	}
 	_, result, err := RunCommand("-c", cmd)
 	if result == "" && err != nil {
 		return nil, err
@@ -342,4 +346,25 @@ func ComputePing(var1, var2 float64) bool {
 		return false
 	}
 	return true
+}
+
+// GetIpsFiles 获取指定目录下的所有ips文件
+func GetIpsFiles(dirPath string) []string {
+	dir, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		return nil
+	}
+	var files []string
+	for _, fi := range dir {
+		if !fi.IsDir() {
+			ok := strings.HasSuffix(fi.Name(), ".ips")
+			if ok {
+				ip := strings.TrimSuffix(fi.Name(), ".ips")
+				if stringToIP(ip) != nil {
+					files = append(files, ip)
+				}
+			}
+		}
+	}
+	return files
 }
