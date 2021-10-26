@@ -130,7 +130,7 @@ func timedTask(ws *wsc.Wsc) error {
 			if files != nil {
 				for _, file := range files {
 					go func(file string) {
-						_ = pingFileAndSend(ws, fmt.Sprintf("%s/%s", dirPath, file), file)
+						_ = pingFileAndSend(ws, fmt.Sprintf("%s/%s.ips", dirPath, file), file)
 					}(file)
 				}
 			}
