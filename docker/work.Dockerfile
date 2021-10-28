@@ -14,17 +14,14 @@ RUN git clone https://github.com/kuaifan/sdos.git && \
 
 FROM --platform=$TARGETPLATFORM alpine:${ALPINE_VERSION}
 
-RUN apk add --update --no-cache wireguard-tools tcpdump git make ipset dnsmasq tini curl fping mtr jq
+ARG TARGETPLATFORM
+
+RUN apk add --update --no-cache wireguard-tools tcpdump git make ipset dnsmasq tini curl fping mtr jq tzdata ca-certificates
 
 RUN git clone https://gitee.com/yenkeia/wondershaper.git && \
     cd wondershaper/ && \
     make install && \
     touch /var/log/dnsmasq.log
-
-RUN mkdir /opt/udp2raw && \
-    mkdir /opt/udp2raw/logs && \
-    wget https://github.com/wangyu-/udp2raw-tunnel/releases/download/20200818.0/udp2raw_binaries.tar.gz && \
-    tar zxvf udp2raw_binaries.tar.gz  -C /opt/udp2raw/
 
 RUN mkdir /usr/sdwan
 WORKDIR /usr/sdwan
@@ -37,6 +34,15 @@ COPY ./conf/sysctl.conf /etc/sysctl.conf
 
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+COPY xray/xray.sh /usr/sdwan/xray.sh
+RUN set -ex \
+	&& mkdir -p /var/log/xray /usr/share/xray \
+	&& chmod +x /usr/sdwan/xray.sh \
+	&& /usr/sdwan/xray.sh "${TARGETPLATFORM}" \
+	&& rm -fv /usr/sdwan/xray.sh \
+	&& wget -O /usr/share/xray/geosite.dat https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat \
+	&& wget -O /usr/share/xray/geoip.dat https://github.com/v2fly/geoip/releases/latest/download/geoip.dat
 
 ENTRYPOINT ["/entrypoint.sh"]
 
