@@ -30,6 +30,17 @@ var installCmd = &cobra.Command{
 			}
 			os.Exit(0)
 		}
+		if install.ServerDomain != "" {
+			if len(install.NodeIPs) > 1 {
+				logger.Error("Only one host is supported when filling in the domain name.")
+				os.Exit(0)
+			}
+			ip, _ := net.LookupHost(install.ServerDomain)
+			if install.StringsContains(ip, install.NodeIPs[0]) == -1 {
+				logger.Error("Domain name [%s] resolution results [%s], inconsistent with server IP [%s].", install.ServerDomain, ip, install.NodeIPs[0])
+				os.Exit(0)
+			}
+		}
 		if install.ReportUrl == "" {
 			install.ReportUrl = install.ServerUrl
 		}
@@ -52,6 +63,7 @@ func init() {
 	installCmd.Flags().StringVar(&install.Mtu, "mtu", "", "Maximum Transmission Unit")
 	installCmd.Flags().StringVar(&install.ManageImage, "manage-image", "", "Image of Management")
 	installCmd.Flags().StringVar(&install.ServerUrl, "server-url", "", "Server url, \"http://\" or \"https://\" prefix.")
+	installCmd.Flags().StringVar(&install.ServerDomain, "server-domain", "", "Server domain, example: w1.abc.com")
 	installCmd.Flags().StringVar(&install.ReportUrl, "report-url", "", "Report url, \"http://\" or \"https://\" prefix, default to server-url.")
 	installCmd.Flags().StringVar(&install.SwapFile, "swap", "", "Add swap partition, Unit MB")
 	installCmd.Flags().BoolVar(&install.InReset, "reset", false, "Remove before installation")

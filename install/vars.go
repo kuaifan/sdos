@@ -21,14 +21,15 @@ type Monitor struct {
 }
 
 var (
-	NodeIPs     []string
-	ManageImage string
-	ServerUrl   string
-	ReportUrl   string
-	SwapFile    string
-	ServerToken string
-	Mtu         string
-	InReset     bool
+	NodeIPs      []string
+	ManageImage  string
+	ServerDomain string
+	ServerUrl    string
+	ReportUrl    string
+	SwapFile     string
+	ServerToken  string
+	Mtu          string
+	InReset      bool
 
 	SSHConfig sshutil.SSH
 

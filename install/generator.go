@@ -24,6 +24,7 @@ func BaseUtils(nodeName string, node string) string {
 	sb.Write([]byte(baseUtils))
 	var envMap = make(map[string]interface{})
 	envMap["SERVER_URL"] = ServerUrl
+	envMap["SERVER_DOMAIN"] = ServerDomain
 	envMap["NODE_NAME"] = nodeName
 	envMap["NODE_IP"] = RemoveIpPort(node)
 	envMap["NODE_TOKEN"] = ServerToken

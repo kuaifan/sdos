@@ -35,6 +35,16 @@ CmdPath=$0
 
 source '/etc/os-release' > /dev/null
 
+judge() {
+    if [[ 0 -eq $? ]]; then
+        echo -e "${OK} ${GreenBG} $1 完成 ${Font}"
+        sleep 1
+    else
+        echo -e "${Error} ${RedBG} $1 失败 ${Font}"
+        exit 1
+    fi
+}
+
 is_root() {
     if [ 0 != $UID ]; then
         echo -e "${Error} ${RedBG} 当前用户不是root用户，请切换到root用户后重新执行脚本 ${Font}"
@@ -53,6 +63,77 @@ add_swap() {
         swapon /sdwanfile
         [ -z "$(cat /etc/fstab | grep '/sdwanfile')" ] && echo "/sdwanfile swap swap defaults 0 0" >> /etc/fstab
     fi
+}
+
+add_ssl() {
+    local domain=$1
+    if [[ "${ID}" == "centos" ]]; then
+        yum install socat nc -y
+    else
+        apt install socat netcat -y
+    fi
+    judge "安装 SSL 证书生成脚本依赖"
+
+    curl https://get.acme.sh | sh
+    judge "安装 SSL 证书生成脚本"
+
+    dirPath="/root/.sdwan/acme/${domain}"
+    mkdir -p "${dirPath}"
+
+    if "$HOME"/.acme.sh/acme.sh --issue -d "${domain}" -w "${dirPath}" --standalone -k ec-256 --force --test; then
+        echo -e "${OK} ${GreenBG} SSL 证书测试签发成功，开始正式签发 ${Font}"
+        rm -rf "$HOME/.acme.sh/${domain}_ecc"
+        sleep 2
+    else
+        echo -e "${Error} ${RedBG} SSL 证书测试签发失败 ${Font}"
+        rm -rf "$HOME/.acme.sh/${domain}_ecc"
+        exit 1
+    fi
+
+    if "$HOME"/.acme.sh/acme.sh --issue -d "${domain}" -w "${dirPath}" --standalone -k ec-256 --force; then
+        echo -e "${OK} ${GreenBG} SSL 证书生成成功 ${Font}"
+        sleep 2
+        if "$HOME"/.acme.sh/acme.sh --installcert -d "${domain}" --fullchainpath "${dirPath}/site.crt" --keypath "${dirPath}/site.key" --ecc --force; then
+            echo -e "${OK} ${GreenBG} 证书配置成功 ${Font}"
+            sleep 2
+        fi
+    else
+        echo -e "${Error} ${RedBG} SSL 证书生成失败 ${Font}"
+        rm -rf "$HOME/.acme.sh/${domain}_ecc"
+        exit 1
+    fi
+
+    cat > "${dirPath}/ssl.conf" <<EOF
+server_name ${domain};
+listen 443 ssl http2;
+
+ssl_certificate       ${dirPath}/site.crt;
+ssl_certificate_key   ${dirPath}/site.key;
+ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
+ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;
+ssl_prefer_server_ciphers on;
+ssl_session_cache shared:SSL:10m;
+ssl_session_timeout 10m;
+error_page 497  https://\$host\$request_uri;
+EOF
+
+    cat > "${dirPath}/update.sh" <<EOF
+#!/usr/bin/env bash
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:~/bin
+export PATH
+
+"/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" &> /dev/null
+"/root/.acme.sh"/acme.sh --installcert -d ${domain} --fullchainpath ${dirPath}/site.crt --keypath ${dirPath}/site.key --ecc
+EOF
+    chmod +x "${dirPath}/update.sh"
+    if [[ $(crontab -l | grep -c "ssl_update.sh") -lt 1 ]]; then
+      if [[ "${ID}" == "centos" ]]; then
+          sed -i "/acme.sh/c 0 3 * * 0 bash ${dirPath}/update.sh" /var/spool/cron/root
+      else
+          sed -i "/acme.sh/c 0 3 * * 0 bash ${dirPath}/update.sh" /var/spool/cron/crontabs/root
+      fi
+    fi
+    judge "ssl cron 计划任务更新"
 }
 
 check_system() {
@@ -128,6 +209,7 @@ echo "error" > /tmp/sdwan_install
 
 if [ "$1" = "install" ]; then
     add_swap "{{.SWAP_FILE}}"
+    add_ssl "{{.SERVER_DOMAIN}}"
     check_system
     check_docker
     cd "$(dirname $0)"
