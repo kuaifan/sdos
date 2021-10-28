@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/kuaifan/sdos/pkg/logger"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
 // YmdHis 返回示例：2021-08-05 00:00:01
@@ -379,4 +380,22 @@ func StringsContains(array []string, val string) (index int) {
 		}
 	}
 	return
+}
+
+// KillProcess 根据名字杀死进程
+func KillProcess(name string) error {
+	processes, err := process.Processes()
+	if err != nil {
+		return err
+	}
+	for _, p := range processes {
+		n, err := p.Name()
+		if err != nil {
+			return err
+		}
+		if n == name {
+			return p.Kill()
+		}
+	}
+	return fmt.Errorf("process not found")
 }
