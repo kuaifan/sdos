@@ -332,17 +332,17 @@ func handleMessageFile(data string) {
 			} else {
 				logger.Info("Run yml success: [%s] [%s]", contentKey, fileName)
 			}
-		} else if arr[1] == "vmess" {
+		} else if arr[1] == "xray" {
 			_ = KillProcess("xray")
 			time.Sleep(2 * time.Second)
-			logger.Info("Run vmess start: [%s] [%s]", contentKey, fileName)
+			logger.Info("Run xray start: [%s] [%s]", contentKey, fileName)
 			cmd := fmt.Sprintf("/usr/bin/xray -config %s > /dev/null 2>&1 &", fileName)
 			_, _, err = RunCommand("-c", cmd)
 			if err != nil {
-				logger.Error("Run vmess error: [%s] [%s] %s", contentKey, fileName, err)
+				logger.Error("Run xray error: [%s] [%s] %s", contentKey, fileName, err)
 				continue
 			} else {
-				logger.Info("Run vmess success: [%s] [%s]", contentKey, fileName)
+				logger.Info("Run xray success: [%s] [%s]", contentKey, fileName)
 			}
 		}
 	}
