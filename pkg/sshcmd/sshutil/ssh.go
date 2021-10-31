@@ -143,12 +143,12 @@ func (ss *SSH) CmdToStringNoLog(host, cmd, spilt string) string {
 	return ""
 }
 
-func base64Encode(data string) string {
+func Base64Encode(data string) string {
 	sEnc := base64.StdEncoding.EncodeToString([]byte(data))
 	return fmt.Sprintf(sEnc)
 }
 
 func (ss *SSH) SaveFile(node string, path string, content string) error {
-	cmd := fmt.Sprintf(`echo -n "%s" | base64 -d > %s && chmod +x %s`, base64Encode(content), path, path)
+	cmd := fmt.Sprintf(`echo -n "%s" | base64 -d > %s && chmod +x %s`, Base64Encode(content), path, path)
 	return ss.CmdAsync(node, cmd, fmt.Sprintf("Save file %s", path))
 }

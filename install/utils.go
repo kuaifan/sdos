@@ -112,6 +112,12 @@ func RandString(len int) string {
 	return string(bs)
 }
 
+// RandNum 生成随机数
+func RandNum(min, max int) int {
+	rand.Seed(time.Now().Unix())
+	return rand.Intn(max-min) + min
+}
+
 // Cmp compares two IPs, returning the usual ordering:
 // a < b : -1
 // a == b : 0
@@ -235,12 +241,12 @@ func GetRemoteHostName(hostIP string) string {
 	return strings.ToLower(hostName)
 }
 
-func base64Encode(data string) string {
+func Base64Encode(data string) string {
 	sEnc := base64.StdEncoding.EncodeToString([]byte(data))
 	return fmt.Sprintf(sEnc)
 }
 
-func base64Decode(data string) string {
+func Base64Decode(data string) string {
 	uDec, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
 		logger.Error("Error decoding string: %s ", err.Error())

@@ -144,7 +144,7 @@ func timedTask(ws *wsc.Wsc) error {
 		}
 		value := handleWireguardTransfer(result)
 		if value != "" {
-			sendMessage = fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, base64Encode(value))
+			sendMessage = fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, Base64Encode(value))
 		}
 	}
 	if sendMessage != "" {
@@ -165,7 +165,7 @@ func pingFileAndSend(ws *wsc.Wsc, fileName string, source string) error {
 		logger.Debug("Ping error [%s]: %s", fileName, err)
 		return nil
 	}
-	sendMessage := fmt.Sprintf(`{"type":"node","action":"ping","data":"%s","source":"%s"}`, base64Encode(result), source)
+	sendMessage := fmt.Sprintf(`{"type":"node","action":"ping","data":"%s","source":"%s"}`, Base64Encode(result), source)
 	return ws.SendTextMessage(sendMessage)
 }
 
@@ -244,7 +244,7 @@ func handleMessageReceived(ws *wsc.Wsc, message string) {
 				if err != nil {
 					cmderr = err.Error()
 				}
-				err = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","callback":"%s","data":{"stdout":"%s","stderr":"%s","err":"%s"}}`, data["callback"], base64Encode(stdout), base64Encode(stderr), base64Encode(cmderr)))
+				err = ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"cmd","callback":"%s","data":{"stdout":"%s","stderr":"%s","err":"%s"}}`, data["callback"], Base64Encode(stdout), Base64Encode(stderr), Base64Encode(cmderr)))
 				if err != nil {
 					logger.Debug("Send cmd callback error: %s", err)
 				}
@@ -278,9 +278,9 @@ func handleMessageFile(data string) {
 			}
 		}
 		if len(arr) > 2 {
-			fileContent = base64Decode(arr[2])
+			fileContent = Base64Decode(arr[2])
 		} else {
-			fileContent = base64Decode(arr[1])
+			fileContent = Base64Decode(arr[1])
 		}
 		if fileContent == "" {
 			logger.Warn("File empty: %s", fileName)
@@ -296,7 +296,7 @@ func handleMessageFile(data string) {
 		}
 		FileMd5.Store(fileKey, contentKey)
 		//
-		var fileByte = []byte(fileContent)
+		var fileByte = []byte(WorkFileContent(fileContent))
 		err = ioutil.WriteFile(fileName, fileByte, 0666)
 		if err != nil {
 			logger.Error("WriteFile error: [%s] %s", fileName, err)
@@ -455,7 +455,7 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 				}
 			}
 			if ws != nil {
-				sendErr := ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"monitorip","data":"%s"}`, base64Encode(string(reportValue))))
+				sendErr := ws.SendTextMessage(fmt.Sprintf(`{"type":"node","action":"monitorip","data":"%s"}`, Base64Encode(string(reportValue))))
 				if sendErr != nil {
 					logger.Debug("[MonitorIp] [%s] Send error: %s", rand, sendErr)
 					for ip := range report {

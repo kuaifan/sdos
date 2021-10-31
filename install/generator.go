@@ -33,6 +33,14 @@ func BaseUtils(nodeName string, node string) string {
 	return FromTemplateContent(sb.String(), envMap)
 }
 
+func WorkFileContent(content string) string {
+	var sb strings.Builder
+	sb.Write([]byte(content))
+	var envMap = make(map[string]interface{})
+	envMap["RANDOM_PORT"] = RandNum(20001, 30000)
+	return FromTemplateContent(sb.String(), envMap)
+}
+
 func FromTemplateContent(templateContent string, envMap map[string]interface{}) string {
 	tmpl, err := template.New("text").Parse(templateContent)
 	defer func() {

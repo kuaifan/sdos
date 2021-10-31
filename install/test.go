@@ -23,7 +23,7 @@ func BuildTest() {
 			logger.Debug("Run oping error: %s", err)
 			return
 		}
-		sendMessage = fmt.Sprintf(`{"type":"node","action":"ping","data":"%s"}`, base64Encode(result));
+		sendMessage = fmt.Sprintf(`{"type":"node","action":"ping","data":"%s"}`, Base64Encode(result));
 	} else {
 		// wg 流量
 		result, _, err := RunCommand("-c", "wg show all transfer")
@@ -33,7 +33,7 @@ func BuildTest() {
 		}
 		value := handleWireguardTransfer(result)
 		if value != "" {
-			sendMessage = fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, base64Encode(value));
+			sendMessage = fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, Base64Encode(value));
 		}
 	}
 
