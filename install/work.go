@@ -21,6 +21,8 @@ var (
 
 	monitorRand string
 	monitorRecord = make(map[string]*Monitor)
+
+	daemonMap = make(map[string]string)
 )
 
 //BuildWork is
@@ -332,17 +334,31 @@ func handleMessageFile(data string) {
 			} else {
 				logger.Info("Run yml success: [%s] [%s]", contentKey, fileName)
 			}
+		} else if arr[1] == "sockd" {
+			_ = KillProcess("sockd")
+			time.Sleep(2 * time.Second)
+			logger.Info("Run sockd start: [%s] [%s]", contentKey, fileName)
+			cmd := fmt.Sprintf("sockd -f %s > /dev/null 2>&1 &", fileName)
+			_, _, err = RunCommand("-c", cmd)
+			if err != nil {
+				logger.Error("Run sockd error: [%s] [%s] %s", contentKey, fileName, err)
+				continue
+			} else {
+				logger.Info("Run sockd success: [%s] [%s]", contentKey, fileName)
+				daemonStart("sockd", file)
+			}
 		} else if arr[1] == "xray" {
 			_ = KillProcess("xray")
 			time.Sleep(2 * time.Second)
 			logger.Info("Run xray start: [%s] [%s]", contentKey, fileName)
-			cmd := fmt.Sprintf("/usr/bin/xray -config %s > /dev/null 2>&1 &", fileName)
+			cmd := fmt.Sprintf("xray run -c %s > /dev/null 2>&1 &", fileName)
 			_, _, err = RunCommand("-c", cmd)
 			if err != nil {
 				logger.Error("Run xray error: [%s] [%s] %s", contentKey, fileName, err)
 				continue
 			} else {
 				logger.Info("Run xray success: [%s] [%s]", contentKey, fileName)
+				daemonStart("xray", file)
 			}
 		}
 	}
@@ -467,4 +483,28 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 			}
 		}
 	}
+}
+
+// 守护进程
+func daemonStart(name string, file string) {
+	// 每10秒检测一次
+	rand := RandString(6)
+	daemonMap[name] = rand
+	go func() {
+		t := time.NewTicker(10 * time.Second)
+		for {
+			select {
+			case <-t.C:
+				if daemonMap[name] != rand {
+					return
+				}
+				cmd := fmt.Sprintf("ps -ef | grep '%s' | grep -v 'grep'", name)
+				result, _, _ := RunCommand("-c", cmd)
+				if len(result) == 0 {
+					handleMessageFile(file)
+					return
+				}
+			}
+		}
+	}()
 }

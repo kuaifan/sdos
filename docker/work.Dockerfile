@@ -16,7 +16,7 @@ FROM --platform=$TARGETPLATFORM alpine:${ALPINE_VERSION}
 
 ARG TARGETPLATFORM
 
-RUN apk add --update --no-cache wireguard-tools tcpdump git make ipset dnsmasq tini curl fping mtr jq tzdata ca-certificates
+RUN apk add --update --no-cache wireguard-tools tcpdump git make ipset dnsmasq tini curl fping mtr jq tzdata ca-certificates dante-server
 
 RUN git clone https://gitee.com/yenkeia/wondershaper.git && \
     cd wondershaper/ && \
