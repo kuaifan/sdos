@@ -298,7 +298,7 @@ func handleMessageFile(data string) {
 		}
 		FileMd5.Store(fileKey, contentKey)
 		//
-		var fileByte = []byte(WorkFileContent(fileContent))
+		var fileByte = []byte(fileContent)
 		err = ioutil.WriteFile(fileName, fileByte, 0666)
 		if err != nil {
 			logger.Error("WriteFile error: [%s] %s", fileName, err)
