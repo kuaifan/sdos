@@ -332,11 +332,23 @@ func handleMessageFile(data string) {
 			} else {
 				logger.Info("Run yml success: [%s] [%s]", contentKey, fileName)
 			}
+		} else if arr[1] == "sockd" {
+			_ = KillProcess("sockd")
+			time.Sleep(2 * time.Second)
+			logger.Info("Run sockd start: [%s] [%s]", contentKey, fileName)
+			cmd := fmt.Sprintf("sockd -f %s > /dev/null 2>&1 &", fileName)
+			_, _, err = RunCommand("-c", cmd)
+			if err != nil {
+				logger.Error("Run sockd error: [%s] [%s] %s", contentKey, fileName, err)
+				continue
+			} else {
+				logger.Info("Run sockd success: [%s] [%s]", contentKey, fileName)
+			}
 		} else if arr[1] == "xray" {
 			_ = KillProcess("xray")
 			time.Sleep(2 * time.Second)
 			logger.Info("Run xray start: [%s] [%s]", contentKey, fileName)
-			cmd := fmt.Sprintf("/usr/bin/xray -config %s > /dev/null 2>&1 &", fileName)
+			cmd := fmt.Sprintf("xray run -c %s > /dev/null 2>&1 &", fileName)
 			_, _, err = RunCommand("-c", cmd)
 			if err != nil {
 				logger.Error("Run xray error: [%s] [%s] %s", contentKey, fileName, err)
