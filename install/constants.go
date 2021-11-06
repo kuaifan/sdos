@@ -142,7 +142,7 @@ add_alias() {
     cat > ~/.bashrc_docker <<-EOF
 dockeralias()
 {
-    local var=$1
+    local var=\$1
     if [ "\$var" == "" ] || [ "\$var" == "ls" ]; then
         shift
         docker ps --format "table {{"{{"}}.ID{{"}}"}}\t{{"{{"}}.Image{{"}}"}}\t{{"{{"}}.Command{{"}}"}}\t{{"{{"}}.RunningFor{{"}}"}}\t{{"{{"}}.Status{{"}}"}}\t{{"{{"}}.Names{{"}}"}}"
