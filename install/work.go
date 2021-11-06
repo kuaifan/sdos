@@ -25,10 +25,7 @@ var (
 	daemonMap = make(map[string]string)
 
 	manageState   *State
-	manageStateMap []*State
-
 	wglanNetIoNic *NetIoNic
-	wglanNetIoMap []*NetIoNic
 )
 
 //BuildWork is
@@ -102,9 +99,9 @@ func BuildWork() {
 func onConnected(ws *wsc.Wsc)  {
 	connectRand = RandString(6)
 	go func() {
-		// 每5秒任务
+		// 每10秒任务
 		r := connectRand
-		t := time.NewTicker(5 * time.Second)
+		t := time.NewTicker(10 * time.Second)
 		for {
 			select {
 			case <-t.C:
@@ -149,14 +146,8 @@ func timedTaskA(ws *wsc.Wsc) error {
 	sendMessage := ""
 	if nodeMode == "manage" {
 		manageState = GetManageState(manageState)
-		if manageState == nil {
-			manageStateMap = []*State{}
-		} else {
-			manageStateMap = append(manageStateMap, manageState)
-		}
-		if len(manageStateMap) >= 2 {
-			value, err := json.Marshal(manageStateMap)
-			manageStateMap = []*State{}
+		if manageState != nil {
+			value, err := json.Marshal(manageState)
 			if err != nil {
 				logger.Error("State manage: %s", err)
 			} else {
@@ -165,14 +156,8 @@ func timedTaskA(ws *wsc.Wsc) error {
 		}
 	} else if nodeMode == "speed_in" {
 		wglanNetIoNic = GetNetIoNic("wglan", wglanNetIoNic)
-		if wglanNetIoNic == nil {
-			wglanNetIoMap = []*NetIoNic{}
-		} else {
-			wglanNetIoMap = append(wglanNetIoMap, wglanNetIoNic)
-		}
-		if len(wglanNetIoMap) >= 2 {
-			value, err := json.Marshal(wglanNetIoMap)
-			wglanNetIoMap = []*NetIoNic{}
+		if wglanNetIoNic != nil {
+			value, err := json.Marshal(wglanNetIoNic)
 			if err != nil {
 				logger.Error("NetIoNic wglan: %s", err)
 			} else {

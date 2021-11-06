@@ -142,15 +142,20 @@ add_alias() {
     cat > ~/.bashrc_docker <<-EOF
 dockeralias()
 {
-    if [ "\$1" == "" ] || [ "\$1" == "ls" ]; then
+    local var=$1
+    if [ "\$var" == "" ] || [ "\$var" == "ls" ]; then
         shift
         docker ps --format "table {{"{{"}}.ID{{"}}"}}\t{{"{{"}}.Image{{"}}"}}\t{{"{{"}}.Command{{"}}"}}\t{{"{{"}}.RunningFor{{"}}"}}\t{{"{{"}}.Status{{"}}"}}\t{{"{{"}}.Names{{"}}"}}"
-    elif [ "\$1" == "sh" ]; then
+    elif [ "\$var" == "sh" ]; then
         shift
         docker exec -it \$@ /bin/sh
-    elif [ "\$1" == "bash" ]; then
+    elif [ "\$var" == "bash" ]; then
         shift
         docker exec -it \$@ /bin/bash
+    elif [ "\$var" == "sdwan-manage" ] || [ "\$var" == "sdwan" ]  || [ "\$var" == "manage" ] || [ "\$var" == "m" ]; then
+        docker exec -it sdwan-manage /bin/bash
+    elif [ "\${var:0:6}" == "sdwan-" ]; then
+        docker exec -it \$@ /bin/sh
     else
         docker \$@
     fi
