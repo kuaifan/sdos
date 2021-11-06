@@ -24,8 +24,8 @@ var (
 
 	daemonMap = make(map[string]string)
 
-	manageStatus   *Status
-	manageStatuMap []*Status
+	manageState   *State
+	manageStateMap []*State
 
 	wglanNetIoNic *NetIoNic
 	wglanNetIoMap []*NetIoNic
@@ -148,19 +148,19 @@ func timedTaskA(ws *wsc.Wsc) error {
 	nodeMode := os.Getenv("NODE_MODE")
 	sendMessage := ""
 	if nodeMode == "manage" {
-		manageStatus = GetManageStatus(manageStatus)
-		if manageStatus == nil {
-			manageStatuMap = []*Status{}
+		manageState = GetManageState(manageState)
+		if manageState == nil {
+			manageStateMap = []*State{}
 		} else {
-			manageStatuMap = append(manageStatuMap, manageStatus)
+			manageStateMap = append(manageStateMap, manageState)
 		}
-		if len(manageStatuMap) >= 2 {
-			value, err := json.Marshal(manageStatuMap)
-			manageStatuMap = []*Status{}
+		if len(manageStateMap) >= 2 {
+			value, err := json.Marshal(manageStateMap)
+			manageStateMap = []*State{}
 			if err != nil {
-				logger.Error("Status manage: %s", err)
+				logger.Error("State manage: %s", err)
 			} else {
-				sendMessage = fmt.Sprintf(`{"type":"node","action":"status","data":"%s"}`, Base64Encode(string(value)))
+				sendMessage = fmt.Sprintf(`{"type":"node","action":"state","data":"%s"}`, Base64Encode(string(value)))
 			}
 		}
 	} else if nodeMode == "speed_in" {

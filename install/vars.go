@@ -29,7 +29,7 @@ type NetIoNic struct {
 	Recv uint64
 }
 
-type Status struct {
+type State struct {
 	T   time.Time
 	Cpu float64
 	Mem struct {

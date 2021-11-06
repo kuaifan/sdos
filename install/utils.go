@@ -447,10 +447,10 @@ func GetNetIoNic(nicName string, lastNetIoNic *NetIoNic) *NetIoNic {
 	return nil
 }
 
-// GetManageStatus 获取主容器的状态
-func GetManageStatus(lastStatus *Status) *Status {
+// GetManageState 获取主容器的状态
+func GetManageState(lastState *State) *State {
 	now := time.Now()
-	status := &Status{
+	state := &State{
 		T: now,
 	}
 
@@ -458,45 +458,45 @@ func GetManageStatus(lastStatus *Status) *Status {
 	if err != nil {
 		logger.Warn("get cpu percent failed:", err)
 	} else {
-		status.Cpu = percents[0]
+		state.Cpu = percents[0]
 	}
 
 	upTime, err := host.Uptime()
 	if err != nil {
 		logger.Warn("get uptime failed:", err)
 	} else {
-		status.Uptime = upTime
+		state.Uptime = upTime
 	}
 
 	memInfo, err := mem.VirtualMemory()
 	if err != nil {
 		logger.Warn("get virtual memory failed:", err)
 	} else {
-		status.Mem.Current = memInfo.Used
-		status.Mem.Total = memInfo.Total
+		state.Mem.Current = memInfo.Used
+		state.Mem.Total = memInfo.Total
 	}
 
 	swapInfo, err := mem.SwapMemory()
 	if err != nil {
 		logger.Warn("get swap memory failed:", err)
 	} else {
-		status.Swap.Current = swapInfo.Used
-		status.Swap.Total = swapInfo.Total
+		state.Swap.Current = swapInfo.Used
+		state.Swap.Total = swapInfo.Total
 	}
 
 	distInfo, err := disk.Usage("/")
 	if err != nil {
 		logger.Warn("get dist usage failed:", err)
 	} else {
-		status.Disk.Current = distInfo.Used
-		status.Disk.Total = distInfo.Total
+		state.Disk.Current = distInfo.Used
+		state.Disk.Total = distInfo.Total
 	}
 
 	avgState, err := load.Avg()
 	if err != nil {
 		logger.Warn("get load avg failed:", err)
 	} else {
-		status.Loads = []float64{avgState.Load1, avgState.Load5, avgState.Load15}
+		state.Loads = []float64{avgState.Load1, avgState.Load5, avgState.Load15}
 	}
 
 	ioStats, err := gopsnet.IOCounters(false)
@@ -504,30 +504,30 @@ func GetManageStatus(lastStatus *Status) *Status {
 		logger.Warn("get io counters failed:", err)
 	} else if len(ioStats) > 0 {
 		ioStat := ioStats[0]
-		status.NetTraffic.Sent = ioStat.BytesSent
-		status.NetTraffic.Recv = ioStat.BytesRecv
+		state.NetTraffic.Sent = ioStat.BytesSent
+		state.NetTraffic.Recv = ioStat.BytesRecv
 
-		if lastStatus != nil {
-			duration := now.Sub(lastStatus.T)
+		if lastState != nil {
+			duration := now.Sub(lastState.T)
 			seconds := float64(duration) / float64(time.Second)
-			up := uint64(float64(status.NetTraffic.Sent-lastStatus.NetTraffic.Sent) / seconds)
-			down := uint64(float64(status.NetTraffic.Recv-lastStatus.NetTraffic.Recv) / seconds)
-			status.NetIO.Up = up
-			status.NetIO.Down = down
+			up := uint64(float64(state.NetTraffic.Sent-lastState.NetTraffic.Sent) / seconds)
+			down := uint64(float64(state.NetTraffic.Recv-lastState.NetTraffic.Recv) / seconds)
+			state.NetIO.Up = up
+			state.NetIO.Down = down
 		}
 	} else {
 		logger.Warn("can not find io counters")
 	}
 
-	status.TcpCount, err = sys.GetTCPCount()
+	state.TcpCount, err = sys.GetTCPCount()
 	if err != nil {
 		logger.Warn("get tcp connections failed:", err)
 	}
 
-	status.UdpCount, err = sys.GetUDPCount()
+	state.UdpCount, err = sys.GetUDPCount()
 	if err != nil {
 		logger.Warn("get udp connections failed:", err)
 	}
 
-	return status
+	return state
 }
