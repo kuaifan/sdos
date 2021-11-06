@@ -16,13 +16,19 @@ import (
 )
 
 var (
-	connectRand string
+	connectRand        string
 	wireguardTransfers = make(map[string]*Wireguard)
 
-	monitorRand string
+	monitorRand   string
 	monitorRecord = make(map[string]*Monitor)
 
 	daemonMap = make(map[string]string)
+
+	manageStatus   *Status
+	manageStatuMap []*Status
+
+	wglanNetIoNic *NetIoNic
+	wglanNetIoMap []*NetIoNic
 )
 
 //BuildWork is
@@ -48,24 +54,7 @@ func BuildWork() {
 	ws.OnConnected(func() {
 		logger.Debug("OnConnected: ", ws.WebSocket.Url)
 		logger.SetWebsocket(ws)
-		connectRand = RandString(6)
-		// 连接成功后，每50秒发送消息
-		go func() {
-			r := connectRand
-			t := time.NewTicker(50 * time.Second)
-			for {
-				select {
-				case <-t.C:
-					if r != connectRand {
-						return
-					}
-					err := timedTask(ws)
-					if err == wsc.CloseErr {
-						return
-					}
-				}
-			}
-		}()
+		onConnected(ws)
 	})
 	ws.OnConnectError(func(err error) {
 		logger.Debug("OnConnectError: ", err.Error())
@@ -109,8 +98,96 @@ func BuildWork() {
 	}
 }
 
-// 定时任务
-func timedTask(ws *wsc.Wsc) error {
+// 连接成功
+func onConnected(ws *wsc.Wsc)  {
+	connectRand = RandString(6)
+	go func() {
+		// 每5秒任务
+		r := connectRand
+		t := time.NewTicker(5 * time.Second)
+		for {
+			select {
+			case <-t.C:
+				if r != connectRand {
+					return
+				}
+				err := timedTaskA(ws)
+				if err != nil {
+					logger.Error("TimedTaskA: %s", err)
+				}
+				if err == wsc.CloseErr {
+					return
+				}
+			}
+		}
+	}()
+	go func() {
+		// 每50秒任务
+		r := connectRand
+		t := time.NewTicker(50 * time.Second)
+		for {
+			select {
+			case <-t.C:
+				if r != connectRand {
+					return
+				}
+				err := timedTaskB(ws)
+				if err != nil {
+					logger.Error("TimedTaskB: %s", err)
+				}
+				if err == wsc.CloseErr {
+					return
+				}
+			}
+		}
+	}()
+}
+
+// 定时任务A（上报：系统状态、wglan网速）
+func timedTaskA(ws *wsc.Wsc) error {
+	nodeMode := os.Getenv("NODE_MODE")
+	sendMessage := ""
+	if nodeMode == "manage" {
+		manageStatus = GetManageStatus(manageStatus)
+		if manageStatus == nil {
+			manageStatuMap = []*Status{}
+		} else {
+			manageStatuMap = append(manageStatuMap, manageStatus)
+		}
+		if len(manageStatuMap) >= 2 {
+			value, err := json.Marshal(manageStatuMap)
+			manageStatuMap = []*Status{}
+			if err != nil {
+				logger.Error("Status manage: %s", err)
+			} else {
+				sendMessage = fmt.Sprintf(`{"type":"node","action":"status","data":"%s"}`, Base64Encode(string(value)))
+			}
+		}
+	} else if nodeMode == "speed_in" {
+		wglanNetIoNic = GetNetIoNic("wglan", wglanNetIoNic)
+		if wglanNetIoNic == nil {
+			wglanNetIoMap = []*NetIoNic{}
+		} else {
+			wglanNetIoMap = append(wglanNetIoMap, wglanNetIoNic)
+		}
+		if len(wglanNetIoMap) >= 2 {
+			value, err := json.Marshal(wglanNetIoMap)
+			wglanNetIoMap = []*NetIoNic{}
+			if err != nil {
+				logger.Error("NetIoNic wglan: %s", err)
+			} else {
+				sendMessage = fmt.Sprintf(`{"type":"node","action":"netio","data":"%s"}`, Base64Encode(string(value)))
+			}
+		}
+	}
+	if sendMessage != "" {
+		return ws.SendTextMessage(sendMessage)
+	}
+	return nil
+}
+
+// 定时任务B（上报：ping结果、流量统计）
+func timedTaskB(ws *wsc.Wsc) error {
 	nodeMode := os.Getenv("NODE_MODE")
 	sendMessage := ""
 	if nodeMode == "manage" {

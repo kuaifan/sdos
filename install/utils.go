@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/kuaifan/sdos/pkg/sys"
 	"io/ioutil"
 	"math"
 	"math/big"
@@ -21,6 +22,12 @@ import (
 	"time"
 
 	"github.com/kuaifan/sdos/pkg/logger"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/load"
+	"github.com/shirou/gopsutil/mem"
+	gopsnet "github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/v3/process"
 )
 
@@ -404,4 +411,123 @@ func KillProcess(name string) error {
 		}
 	}
 	return fmt.Errorf("process not found")
+}
+
+// GetNetIoNic 获取指定网卡的网速
+func GetNetIoNic(nicName string, lastNetIoNic *NetIoNic) *NetIoNic {
+	ioStats, err := gopsnet.IOCounters(true)
+	if err != nil {
+		logger.Warn("get io counters failed:", err)
+	} else if len(ioStats) > 0 {
+		var netIoNic *NetIoNic
+		for _, stat := range ioStats {
+			if stat.Name == nicName {
+				now := time.Now()
+				netIoNic = &NetIoNic{
+					T: now,
+				}
+				netIoNic.Sent = stat.BytesSent
+				netIoNic.Recv = stat.BytesRecv
+
+				if lastNetIoNic != nil {
+					duration := now.Sub(lastNetIoNic.T)
+					seconds := float64(duration) / float64(time.Second)
+					up := uint64(float64(netIoNic.Sent-lastNetIoNic.Sent) / seconds)
+					down := uint64(float64(netIoNic.Recv-lastNetIoNic.Recv) / seconds)
+					netIoNic.Up = up
+					netIoNic.Down = down
+				}
+				break
+			}
+		}
+		return netIoNic
+	} else {
+		logger.Warn("can not find io counters")
+	}
+	return nil
+}
+
+// GetManageStatus 获取主容器的状态
+func GetManageStatus(lastStatus *Status) *Status {
+	now := time.Now()
+	status := &Status{
+		T: now,
+	}
+
+	percents, err := cpu.Percent(0, false)
+	if err != nil {
+		logger.Warn("get cpu percent failed:", err)
+	} else {
+		status.Cpu = percents[0]
+	}
+
+	upTime, err := host.Uptime()
+	if err != nil {
+		logger.Warn("get uptime failed:", err)
+	} else {
+		status.Uptime = upTime
+	}
+
+	memInfo, err := mem.VirtualMemory()
+	if err != nil {
+		logger.Warn("get virtual memory failed:", err)
+	} else {
+		status.Mem.Current = memInfo.Used
+		status.Mem.Total = memInfo.Total
+	}
+
+	swapInfo, err := mem.SwapMemory()
+	if err != nil {
+		logger.Warn("get swap memory failed:", err)
+	} else {
+		status.Swap.Current = swapInfo.Used
+		status.Swap.Total = swapInfo.Total
+	}
+
+	distInfo, err := disk.Usage("/")
+	if err != nil {
+		logger.Warn("get dist usage failed:", err)
+	} else {
+		status.Disk.Current = distInfo.Used
+		status.Disk.Total = distInfo.Total
+	}
+
+	avgState, err := load.Avg()
+	if err != nil {
+		logger.Warn("get load avg failed:", err)
+	} else {
+		status.Loads = []float64{avgState.Load1, avgState.Load5, avgState.Load15}
+	}
+
+	ioStats, err := gopsnet.IOCounters(false)
+	if err != nil {
+		logger.Warn("get io counters failed:", err)
+	} else if len(ioStats) > 0 {
+		ioStat := ioStats[0]
+		status.NetTraffic.Sent = ioStat.BytesSent
+		status.NetTraffic.Recv = ioStat.BytesRecv
+
+		if lastStatus != nil {
+			duration := now.Sub(lastStatus.T)
+			seconds := float64(duration) / float64(time.Second)
+			up := uint64(float64(status.NetTraffic.Sent-lastStatus.NetTraffic.Sent) / seconds)
+			down := uint64(float64(status.NetTraffic.Recv-lastStatus.NetTraffic.Recv) / seconds)
+			status.NetIO.Up = up
+			status.NetIO.Down = down
+		}
+	} else {
+		logger.Warn("can not find io counters")
+	}
+
+	status.TcpCount, err = sys.GetTCPCount()
+	if err != nil {
+		logger.Warn("get tcp connections failed:", err)
+	}
+
+	status.UdpCount, err = sys.GetUDPCount()
+	if err != nil {
+		logger.Warn("get udp connections failed:", err)
+	}
+
+	return status
 }
