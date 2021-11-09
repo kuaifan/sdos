@@ -110,7 +110,7 @@ func onConnected(ws *wsc.Wsc)  {
 				}
 				err := timedTaskA(ws)
 				if err != nil {
-					logger.Error("TimedTaskA: %s", err)
+					logger.Warn("TimedTaskA: %s", err)
 				}
 				if err == wsc.CloseErr {
 					return
@@ -130,7 +130,7 @@ func onConnected(ws *wsc.Wsc)  {
 				}
 				err := timedTaskB(ws)
 				if err != nil {
-					logger.Error("TimedTaskB: %s", err)
+					logger.Warn("TimedTaskB: %s", err)
 				}
 				if err == wsc.CloseErr {
 					return

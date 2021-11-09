@@ -101,7 +101,7 @@ func VersionToIntAll(version string) int {
 func IpFormat(host string) string {
 	ipAndPort := strings.Split(host, ":")
 	if len(ipAndPort) != 2 {
-		logger.Error("invalied host fomat [%s], must like 172.0.0.2:22", host)
+		logger.Warn("invalied host fomat [%s], must like 172.0.0.2:22", host)
 		os.Exit(1)
 	}
 	return ipAndPort[0]
@@ -134,7 +134,7 @@ func Cmp(a, b net.IP) int {
 	bb := ipToInt(b)
 
 	if aa == nil || bb == nil {
-		logger.Error("ip range %s-%s is invalid", a.String(), b.String())
+		logger.Warn("ip range %s-%s is invalid", a.String(), b.String())
 		os.Exit(-1)
 	}
 	return aa.Cmp(bb)
@@ -234,7 +234,7 @@ func DecodeIPs(ips []string) []string {
 			}
 		} else {
 			if stringToIP(ip) == nil {
-				logger.Error("ip [%s] is invalid", ip)
+				logger.Warn("ip [%s] is invalid", ip)
 				os.Exit(1)
 			}
 			res = append(res, fmt.Sprintf("%s:%s", ip, port))
@@ -256,7 +256,7 @@ func Base64Encode(data string) string {
 func Base64Decode(data string) string {
 	uDec, err := base64.StdEncoding.DecodeString(data)
 	if err != nil {
-		logger.Error("Error decoding string: %s ", err.Error())
+		logger.Warn("Error decoding string: %s ", err.Error())
 		return ""
 	}
 	return string(uDec)
