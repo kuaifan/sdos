@@ -447,6 +447,48 @@ func GetNetIoNic(nicName string, lastNetIoNic *NetIoNic) *NetIoNic {
 	return nil
 }
 
+// GetNetIoInNic 获取入口容器的网速
+func GetNetIoInNic(lastNetIoNic *NetIoNic) *NetIoNic {
+	ioStats, err := gopsnet.IOCounters(true)
+	if err != nil {
+		logger.Warn("get io counters failed:", err)
+	} else if len(ioStats) > 0 {
+		stat := gopsnet.IOCountersStat{
+			Name: "all",
+		}
+		for _, nic := range ioStats {
+			if nic.Name == "wgcenter" || strings.HasSuffix(nic.Name, "wg2s_") {
+				stat.BytesRecv += nic.BytesRecv
+				stat.PacketsRecv += nic.PacketsRecv
+				stat.Errin += nic.Errin
+				stat.Dropin += nic.Dropin
+				stat.BytesSent += nic.BytesSent
+				stat.PacketsSent += nic.PacketsSent
+				stat.Errout += nic.Errout
+				stat.Dropout += nic.Dropout
+			}
+		}
+		now := time.Now()
+		netIoNic := &NetIoNic{
+			T: now,
+			Sent: stat.BytesSent,
+			Recv: stat.BytesRecv,
+		}
+		if lastNetIoNic != nil {
+			duration := now.Sub(lastNetIoNic.T)
+			seconds := float64(duration) / float64(time.Second)
+			up := uint64(float64(netIoNic.Sent-lastNetIoNic.Sent) / seconds)
+			down := uint64(float64(netIoNic.Recv-lastNetIoNic.Recv) / seconds)
+			netIoNic.Up = up
+			netIoNic.Down = down
+		}
+		return netIoNic
+	} else {
+		logger.Warn("can not find io counters")
+	}
+	return nil
+}
+
 // GetManageState 获取主容器的状态
 func GetManageState(lastState *State) *State {
 	now := time.Now()

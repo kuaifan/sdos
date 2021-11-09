@@ -25,7 +25,7 @@ var (
 	daemonMap = make(map[string]string)
 
 	manageState   *State
-	wglanNetIoNic *NetIoNic
+	netIoInNic *NetIoNic
 )
 
 //BuildWork is
@@ -155,11 +155,11 @@ func timedTaskA(ws *wsc.Wsc) error {
 			}
 		}
 	} else if nodeMode == "speed_in" {
-		wglanNetIoNic = GetNetIoNic("wglan", wglanNetIoNic)
-		if wglanNetIoNic != nil {
-			value, err := json.Marshal(wglanNetIoNic)
+		netIoInNic = GetNetIoInNic(netIoInNic)
+		if netIoInNic != nil {
+			value, err := json.Marshal(netIoInNic)
 			if err != nil {
-				logger.Error("NetIoNic wglan: %s", err)
+				logger.Error("NetIoInNic: %s", err)
 			} else {
 				sendMessage = fmt.Sprintf(`{"type":"node","action":"netio","data":"%s"}`, Base64Encode(string(value)))
 			}
