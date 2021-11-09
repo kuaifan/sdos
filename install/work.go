@@ -140,7 +140,7 @@ func onConnected(ws *wsc.Wsc)  {
 	}()
 }
 
-// 定时任务A（上报：系统状态、wglan网速）
+// 定时任务A（上报：系统状态、入口网速）
 func timedTaskA(ws *wsc.Wsc) error {
 	nodeMode := os.Getenv("NODE_MODE")
 	sendMessage := ""
@@ -199,8 +199,8 @@ func timedTaskB(ws *wsc.Wsc) error {
 				}
 			}
 		}
-	} else {
-		// wg 流量
+	} else if nodeMode != "speed_in" {
+		// wg 流量（不统计入口容器）
 		result, _, err := RunCommand("-c", "wg show all transfer")
 		if err != nil {
 			logger.Debug("Run wg show error: %s", err)
