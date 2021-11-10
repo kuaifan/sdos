@@ -73,8 +73,8 @@ func reportInstall(node, nodeName string) {
 			crtContent string
 		)
 		if ServerDomain != "" && ServerKey == "" {
-			keyContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.key", ServerDomain), "")
-			crtContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.crt", ServerDomain), "")
+			keyContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.key", ServerDomain), "\n")
+			crtContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.crt", ServerDomain), "\n")
 			if !strings.Contains(keyContent, "END RSA PRIVATE KEY") {
 				logger.Error("[%s] [%s] key error %s", node, ServerDomain)
 				keyContent = ""
