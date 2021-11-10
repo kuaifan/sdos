@@ -1,12 +1,12 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"net"
 	"os"
 
 	"github.com/kuaifan/sdos/install"
-	"github.com/kuaifan/sdos/pkg/logger"
 )
 
 // installCmd represents the install command
@@ -23,7 +23,7 @@ var installCmd = &cobra.Command{
 			}
 		}
 		if len(install.NodeIPs) == 0 || install.ManageImage == "" || install.ServerUrl == "" {
-			logger.Error("node / manage-image / server-url required.")
+			install.Error("node / manage-image / server-url required.")
 			err := cmd.Help()
 			if err != nil {
 				return
@@ -32,32 +32,32 @@ var installCmd = &cobra.Command{
 		}
 		if install.ServerKey != "" {
 			if install.ServerCrt == "" {
-				logger.Error("Key exist, crt required")
+				install.Error("Key exist, crt required")
 				os.Exit(0)
 			}
 			if install.ServerDomain == "" {
-				logger.Error("Key exist, domain required")
+				install.Error("Key exist, domain required")
 				os.Exit(0)
 			}
 		}
 		if install.ServerCrt != "" {
 			if install.ServerKey == "" {
-				logger.Error("Crt exist, key required")
+				install.Error("Crt exist, key required")
 				os.Exit(0)
 			}
 			if install.ServerDomain == "" {
-				logger.Error("Crt exist, domain required")
+				install.Error("Crt exist, domain required")
 				os.Exit(0)
 			}
 		}
 		if install.ServerDomain != "" && install.ServerKey == "" {
 			if len(install.NodeIPs) > 1 {
-				logger.Error("Only one host is supported when filling in the domain name.")
+				install.Error("Only one host is supported when filling in the domain name.")
 				os.Exit(0)
 			}
 			ip, _ := net.LookupHost(install.ServerDomain)
 			if install.StringsContains(ip, install.NodeIPs[0]) == -1 {
-				logger.Error("Domain name [%s] resolution results [%s], inconsistent with server IP [%s].", install.ServerDomain, ip, install.NodeIPs[0])
+				install.Error(fmt.Sprintf("Domain name [%s] resolution results [%s], inconsistent with server IP [%s].", install.ServerDomain, ip, install.NodeIPs[0]))
 				os.Exit(0)
 			}
 		}
