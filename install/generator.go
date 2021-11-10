@@ -25,6 +25,11 @@ func BaseUtils(nodeName string, node string) string {
 	var envMap = make(map[string]interface{})
 	envMap["SERVER_URL"] = ServerUrl
 	envMap["SERVER_DOMAIN"] = ServerDomain
+	if ServerKey == "" {
+		envMap["CERTIFICATE_AUTO"] = "yes"
+	} else {
+		envMap["CERTIFICATE_AUTO"] = "no"
+	}
 	envMap["NODE_NAME"] = nodeName
 	envMap["NODE_IP"] = RemoveIpPort(node)
 	envMap["NODE_TOKEN"] = ServerToken

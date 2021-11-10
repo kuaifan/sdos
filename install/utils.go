@@ -70,6 +70,15 @@ func IsFile(path string) bool {
 	return !IsDir(path)
 }
 
+// ReadFile 读取文件
+func ReadFile(path string) string {
+	content ,err :=ioutil.ReadFile(path)
+	if err !=nil {
+		panic(err)
+	}
+	return string(content)
+}
+
 // VersionToInt v1.15.6  => 115
 func VersionToInt(version string) int {
 	// v1.15.6  => 1.15.6

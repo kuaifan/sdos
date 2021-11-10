@@ -1,6 +1,7 @@
 package install
 
 import (
+	"fmt"
 	"github.com/kuaifan/sdos/pkg/logger"
 	"github.com/nahid/gohttp"
 	"strconv"
@@ -55,6 +56,14 @@ func reportInstall(node, nodeName string) {
 		if Mtu == "" {
 			Mtu = "1360"
 		}
+		var (
+			keyContent string
+			crtContent string
+		)
+		if ServerDomain != "" && ServerKey == "" {
+			keyContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.key", ServerDomain), "")
+			crtContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.crt", ServerDomain), "")
+		}
 		nodeIp, nodePort := GetIpAndPort(node)
 		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 		resp, err := gohttp.NewRequest().
@@ -67,6 +76,8 @@ func reportInstall(node, nodeName string) {
 				"user":      SSHConfig.User,
 				"pw":        SSHConfig.GetPassword(node),
 				"tk":        ServerToken,
+				"key":       keyContent,
+				"crt":       crtContent,
 				"timestamp": timestamp,
 			}).
 			Post(ReportUrl)

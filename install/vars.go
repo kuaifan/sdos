@@ -62,6 +62,8 @@ var (
 	NodeIPs      []string
 	ManageImage  string
 	ServerDomain string
+	ServerKey    string
+	ServerCrt    string
 	ServerUrl    string
 	ReportUrl    string
 	SwapFile     string

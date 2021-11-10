@@ -83,20 +83,6 @@ add_ssl() {
     /root/.acme.sh/acme.sh --register-account -m admin@admin.com
     /root/.acme.sh/acme.sh --issue -d "${domain}" --standalone
     /root/.acme.sh/acme.sh --installcert -d "${domain}" --key-file "${sslPath}/site.key" --fullchain-file "${sslPath}/site.crt"
-
-    cat > "${sslPath}/nginx.conf" <<EOF
-server_name ${domain};
-listen 443 ssl http2;
-
-ssl_certificate       ${sslPath}/site.crt;
-ssl_certificate_key   ${sslPath}/site.key;
-ssl_protocols TLSv1.1 TLSv1.2 TLSv1.3;
-ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;
-ssl_prefer_server_ciphers on;
-ssl_session_cache shared:SSL:10m;
-ssl_session_timeout 10m;
-error_page 497  https://\$host\$request_uri;
-EOF
 }
 
 check_system() {
@@ -177,7 +163,9 @@ echo "error" > /tmp/sdwan_install
 
 if [ "$1" = "install" ]; then
     add_swap "{{.SWAP_FILE}}"
-    add_ssl "{{.SERVER_DOMAIN}}"
+    if [ -n "{{.SERVER_DOMAIN}}" ] && [ "{{.CERTIFICATE_AUTO}}" = "yes" ]; then
+        add_ssl "{{.SERVER_DOMAIN}}"
+    fi
     check_system
     check_docker
     cd "$(dirname $0)"
