@@ -69,8 +69,8 @@ func reportInstall(node, nodeName string) {
 			Mtu = "1360"
 		}
 		var (
-			keyContent string
-			crtContent string
+			keyContent = ""
+			crtContent = ""
 		)
 		if ServerDomain != "" && ServerKey == "" {
 			keyContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.key", ServerDomain), "\n")
