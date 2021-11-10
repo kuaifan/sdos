@@ -30,11 +30,6 @@ var installCmd = &cobra.Command{
 			}
 			os.Exit(0)
 		}
-		logger.Debug("--------")
-		logger.Debug(install.ServerKey)
-		logger.Debug(install.ServerCrt)
-		logger.Debug(install.ServerDomain)
-		logger.Debug("========")
 		if install.ServerKey != "" {
 			if install.ServerCrt == "" {
 				logger.Error("Key exist, crt required")
