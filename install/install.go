@@ -5,6 +5,7 @@ import (
 	"github.com/kuaifan/sdos/pkg/logger"
 	"github.com/nahid/gohttp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -38,6 +39,17 @@ func (s *SdosInstaller) InstallNodes() {
 				_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/utils remove")
 				_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
 			}
+			if ServerDomain != "" {
+				_ = SSHConfig.CmdAsync(node, fmt.Sprintf("mkdir -p /root/.sdwan/ssl/%s/", ServerDomain))
+				if ServerKey != "" {
+					keyCmd := fmt.Sprintf("wget -N --no-check-certificate %s -O /root/.sdwan/ssl/%s/site.key", ServerKey, ServerDomain)
+					_ = SSHConfig.CmdAsync(node, keyCmd)
+				}
+				if ServerCrt != "" {
+					crtCmd := fmt.Sprintf("wget -N --no-check-certificate %s -O /root/.sdwan/ssl/%s/site.crt", ServerCrt, ServerDomain)
+					_ = SSHConfig.CmdAsync(node, crtCmd)
+				}
+			}
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/work/")
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/deploy/")
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/docker-compose.yml", DockerCompose(nodeName, node))
@@ -63,22 +75,31 @@ func reportInstall(node, nodeName string) {
 		if ServerDomain != "" && ServerKey == "" {
 			keyContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.key", ServerDomain), "")
 			crtContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.crt", ServerDomain), "")
+			if !strings.Contains(keyContent, "END RSA PRIVATE KEY") {
+				logger.Error("[%s] [%s] key error %s", node, ServerDomain)
+				keyContent = ""
+			}
+			if !strings.Contains(crtContent, "END CERTIFICATE") {
+				logger.Error("[%s] [%s] crt error %s", node, ServerDomain)
+				crtContent = ""
+			}
 		}
 		nodeIp, nodePort := GetIpAndPort(node)
 		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 		resp, err := gohttp.NewRequest().
 			FormData(map[string]string{
-				"action":    "install",
-				"ip":        nodeIp,
-				"name":      nodeName,
-				"mtu":       Mtu,
-				"port":      nodePort,
-				"user":      SSHConfig.User,
-				"pw":        SSHConfig.GetPassword(node),
-				"tk":        ServerToken,
-				"key":       keyContent,
-				"crt":       crtContent,
-				"timestamp": timestamp,
+				"action":     "install",
+				"ip":         nodeIp,
+				"name":       nodeName,
+				"mtu":        Mtu,
+				"port":       nodePort,
+				"user":       SSHConfig.User,
+				"pw":         SSHConfig.GetPassword(node),
+				"tk":         ServerToken,
+				"domain":     ServerDomain,
+				"domain_key": keyContent,
+				"domain_crt": crtContent,
+				"timestamp":  timestamp,
 			}).
 			Post(ReportUrl)
 		if err != nil || resp == nil {
