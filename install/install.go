@@ -121,6 +121,9 @@ func walk(key interface{}, value interface{}) bool {
 	if value.(string) == "success" {
 		logger.Info("[%s] install %s", key, value)
 	} else {
+		if value == "" {
+			value = "error"
+		}
 		Error(fmt.Sprintf("[%s] install %s", key, value))
 	}
 	return true
