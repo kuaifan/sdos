@@ -55,14 +55,14 @@ func (s *SdosInstaller) InstallNodes() {
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/docker-compose.yml", DockerCompose(nodeName, node))
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy/utils", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy/utils install")
-			reportInstall(node, nodeName)
+			done(node, nodeName)
 		}(node)
 	}
 	wg.Wait()
-	ResultInstall.Range(resultInstallWalk)
+	ResultInstall.Range(walk)
 }
 
-func reportInstall(node, nodeName string) {
+func done(node, nodeName string) {
 	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", "")
 	if res == "success" {
 		if Mtu == "" {
@@ -117,11 +117,31 @@ func reportInstall(node, nodeName string) {
 	}
 }
 
-func resultInstallWalk(key interface{}, value interface{}) bool {
+func walk(key interface{}, value interface{}) bool {
 	if value.(string) == "success" {
 		logger.Info("[%s] install %s", key, value)
 	} else {
-		logger.Error("[%s] install %s", key, value)
+		if value == "" {
+			value = "error"
+		}
+		Error(fmt.Sprintf("[%s] install %s", key, value))
 	}
 	return true
+}
+
+func Error(error string) {
+	logger.Error(error)
+	nodes := ParseIPs(NodeIPs)
+	for _, node := range nodes {
+		nodeIp, _ := GetIpAndPort(node)
+		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+		_, _ = gohttp.NewRequest().
+			FormData(map[string]string{
+				"action":    "error",
+				"ip":        nodeIp,
+				"error":     error,
+				"timestamp": timestamp,
+			}).
+			Post(ReportUrl)
+	}
 }
