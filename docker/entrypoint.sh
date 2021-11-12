@@ -22,6 +22,8 @@ if [ "$NODE_MODE" != "manage" ]; then
     dnsmasq &> /dev/null
 fi
 
+mkdir -p /tmp/.sdwan/work
+
 while true; do
     sleep 10
     check_work > /dev/null 2>&1 &

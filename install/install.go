@@ -62,7 +62,7 @@ func (s *SdosInstaller) InstallNodes() {
 }
 
 func done(node, nodeName string) {
-	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", "")
+	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/.sdwan_install", "")
 	if res == "success" {
 		if Mtu == "" {
 			Mtu = "1360"

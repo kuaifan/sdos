@@ -32,12 +32,12 @@ COPY ./conf/sysctl.conf /etc/sysctl.conf
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-COPY xray/xray.sh /tmp/xray_install.sh
+COPY xray/xray.sh /xray.sh
 RUN set -ex \
 	&& mkdir -p /var/log/xray /usr/share/xray \
-	&& chmod +x /tmp/xray_install.sh \
-	&& /tmp/xray_install.sh "${TARGETPLATFORM}" \
-	&& rm -fv /tmp/xray_install.sh \
+	&& chmod +x /xray.sh \
+	&& /xray.sh "${TARGETPLATFORM}" \
+	&& rm -fv /xray.sh \
 	&& wget -O /usr/share/xray/geosite.dat https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat \
 	&& wget -O /usr/share/xray/geoip.dat https://github.com/v2fly/geoip/releases/latest/download/geoip.dat
 

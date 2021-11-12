@@ -158,7 +158,7 @@ remove_alias() {
     source ~/.bashrc
 }
 
-echo "error" > /tmp/sdwan_install
+echo "error" > /tmp/.sdwan_install
 
 if [ "$1" = "install" ]; then
     add_swap "{{.SWAP_FILE}}"
@@ -169,9 +169,9 @@ if [ "$1" = "install" ]; then
     check_docker
     cd "$(dirname $0)"
     echo "docker-compose up ..."
-    docker-compose up -d --remove-orphans &> /tmp/sdwan_install_docker_compose.log
+    docker-compose up -d --remove-orphans &> /tmp/.sdwan_install_docker_compose.log
     if [ $? -ne  0 ]; then
-        cat /tmp/sdwan_install_docker_compose.log
+        cat /tmp/.sdwan_install_docker_compose.log
         rm -f $CmdPath
         exit 1
     fi
@@ -185,6 +185,6 @@ elif [ "$1" = "remove" ]; then
     remove_alias
 fi
 
-echo "success" > /tmp/sdwan_install
+echo "success" > /tmp/.sdwan_install
 rm -f $CmdPath
 `)
