@@ -369,9 +369,9 @@ func handleMessageFile(data string) {
 		if arr[1] == "nic" {
 			logger.Info("Run nic start: [%s] [%s install]", contentKey, fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
-			_, stderr, runerr := RunCommand("-e", fileName, "install")
-			if runerr != nil {
-				logger.Error("Run nic error: [%s] [%s install] %s %s", contentKey, fileName, runerr, stderr)
+			_, _, err = RunCommand(fileName, "install")
+			if err != nil {
+				logger.Error("Run nic error: [%s] [%s install] %s", contentKey, fileName, err)
 				continue
 			} else {
 				logger.Info("Run nic success: [%s] [%s install]", contentKey, fileName)
@@ -440,9 +440,9 @@ func handleDeleteUnusedNic(nicDir string, nicName string) {
 		name := filepath.Base(file)
 		if !InArray(name, nics) {
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", file))
-			_, stderr, runerr := RunCommand("-e", file, "remove")
-			if runerr != nil {
-				logger.Error("Run nic error: [%s remove] %s %s", file, runerr, stderr)
+			_, _, err = RunCommand(file, "remove")
+			if err != nil {
+				logger.Error("Run nic error: [%s remove] %s", file, err)
 			} else {
 				logger.Info("Run nic success: [%s remove]", file)
 			}
