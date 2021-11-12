@@ -398,7 +398,7 @@ func handleMessageFile(data string) {
 			}
 		} else if arr[1] == "nginx" {
 			logger.Info("Run nginx start: [%s] [%s]", contentKey, fileName)
-			_, _, err = RunCommand("docker exec -it sdwan-speed-nginx /bin/sh -c 'nginx -s reload'")
+			_, _, err = RunCommand("-c", "docker-compose exec sdwan-speed-nginx /bin/sh -c 'nginx -s reload'")
 			if err != nil {
 				logger.Error("Run nginx error: [%s] [%s] %s", contentKey, fileName, err)
 				continue
