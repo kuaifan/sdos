@@ -14,7 +14,7 @@ check_work() {
     local url=`_wsurl`
     local exist=`ps -ef | grep 'sdos work' | grep -v 'grep'`
     [ -n "$url" ] && [ -z "$exist" ] && {
-        nohup sdos work --server-url="${url}?action=nodework&nodemode=${NODE_MODE}&nodename=${NODE_NAME}&nodetoken=${NODE_TOKEN}" > /dev/null 2>&1 &
+        nohup sdos work --server-url="${url}?action=nodework&nodemode=${NODE_MODE}&nodename=${NODE_NAME}&nodetoken=${NODE_TOKEN}&hostname=${HOSTNAME}" > /dev/null 2>&1 &
     }
 }
 

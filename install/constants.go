@@ -68,9 +68,9 @@ add_swap() {
 add_ssl() {
     local domain=$1
     if [[ "${ID}" == "centos" ]]; then
-        yum install -y curl socat
+        yum update && yum install -y curl socat
     else
-        apt install -y curl socat
+        apt update && apt install -y curl socat
     fi
     judge "安装 SSL 证书生成脚本依赖"
 
