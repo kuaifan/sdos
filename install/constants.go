@@ -178,10 +178,13 @@ if [ "$1" = "install" ]; then
     echo "docker-compose up ... done"
     add_alias
 elif [ "$1" = "remove" ]; then
-    ll=$(docker ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^sdwan-" | awk '{print $2}')
-    ii=$(docker images --format "table {{"{{"}}.Repository{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^kuaifan/sdwan" | awk '{print $2}')
-    [ -n "$ll" ] && docker rm -f $ll &> /dev/null
-    [ -n "$ii" ] && docker rmi -f $ii &> /dev/null
+    docker --version &> /dev/null
+    if [ $? -eq  0 ]; then
+        ll=$(docker ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^sdwan-" | awk '{print $2}')
+        ii=$(docker images --format "table {{"{{"}}.Repository{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep "^kuaifan/sdwan" | awk '{print $2}')
+        [ -n "$ll" ] && docker rm -f $ll &> /dev/null
+        [ -n "$ii" ] && docker rmi -f $ii &> /dev/null
+    fi
     remove_alias
 fi
 

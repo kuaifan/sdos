@@ -35,8 +35,8 @@ func (s *SdosInstaller) InstallNodes() {
 			nodeName := GetRemoteHostName(node)
 			if InReset {
 				_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/")
-				_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy", BaseUtils(nodeName, node))
-				_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy remove")
+				_ = SSHConfig.SaveFile(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
+				_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base remove")
 				_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
 			}
 			if ServerDomain != "" {
@@ -52,8 +52,8 @@ func (s *SdosInstaller) InstallNodes() {
 			}
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/")
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/docker-compose.yml", DockerCompose(nodeName, node))
-			_ = SSHConfig.SaveFile(node, "/root/.sdwan/deploy", BaseUtils(nodeName, node))
-			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/deploy install")
+			_ = SSHConfig.SaveFile(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
+			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base install")
 			done(node, nodeName)
 		}(node)
 	}
