@@ -7,6 +7,7 @@ services:
     image: "{{.MANAGE_IMAGE}}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.sdwan/share:/root/.sdwan/share
       - /usr/bin/docker:/usr/bin/docker
       - /etc/localtime:/etc/localtime:ro
     environment:
