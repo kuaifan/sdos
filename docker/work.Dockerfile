@@ -23,9 +23,6 @@ RUN git clone https://gitee.com/yenkeia/wondershaper.git && \
     make install && \
     touch /var/log/dnsmasq.log
 
-RUN mkdir /sdwan
-WORKDIR /sdwan
-
 COPY --from=builder /go/sdos/sdos /usr/bin/
 COPY ./conf/dnsmasq.conf /etc/dnsmasq.conf
 COPY ./conf/resolv.conf /etc/resolv.conf
@@ -35,12 +32,12 @@ COPY ./conf/sysctl.conf /etc/sysctl.conf
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-COPY xray/xray.sh /sdwan/xray.sh
+COPY xray/xray.sh /tmp/xray_install.sh
 RUN set -ex \
 	&& mkdir -p /var/log/xray /usr/share/xray \
-	&& chmod +x /sdwan/xray.sh \
-	&& /sdwan/xray.sh "${TARGETPLATFORM}" \
-	&& rm -fv /sdwan/xray.sh \
+	&& chmod +x /tmp/xray_install.sh \
+	&& /tmp/xray_install.sh "${TARGETPLATFORM}" \
+	&& rm -fv /tmp/xray_install.sh \
 	&& wget -O /usr/share/xray/geosite.dat https://github.com/v2fly/domain-list-community/releases/latest/download/dlc.dat \
 	&& wget -O /usr/share/xray/geoip.dat https://github.com/v2fly/geoip/releases/latest/download/geoip.dat
 
