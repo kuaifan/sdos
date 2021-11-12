@@ -6,9 +6,9 @@ services:
     container_name: "sdwan-manage"
     image: "{{.MANAGE_IMAGE}}"
     volumes:
+      - /root/.sdwan/share:/tmp/.sdwan/work/share
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
-      - /root/.sdwan/share:/tmp/.sdwan/work/share
       - /etc/localtime:/etc/localtime:ro
     environment:
       SERVER_URL: "{{.SERVER_URL}}"
