@@ -8,7 +8,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
-      - /root/.sdwan/work:/usr/sdwan/work
       - /etc/localtime:/etc/localtime:ro
     environment:
       SERVER_URL: "{{.SERVER_URL}}"

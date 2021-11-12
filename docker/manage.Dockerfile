@@ -23,8 +23,8 @@ RUN wget --no-check-certificate https://github.com/docker/compose/releases/downl
     chmod +x /usr/local/bin/docker-compose && \
     ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
-RUN mkdir /usr/sdwan
-WORKDIR /usr/sdwan
+RUN mkdir /sdwan
+WORKDIR /sdwan
 
 COPY --from=builder /go/sdos/sdos /usr/bin/
 

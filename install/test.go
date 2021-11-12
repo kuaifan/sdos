@@ -14,7 +14,7 @@ func BuildTest() {
 	sendMessage := ""
 	if nodeMode == "manage" {
 		// ping 信息
-		fileName := "/usr/sdwan/work/ips"
+		fileName := "/tmp/work/ips"
 		if !Exists(fileName) {
 			return
 		}

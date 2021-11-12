@@ -177,18 +177,18 @@ func timedTaskB(ws *wsc.Wsc) error {
 	sendMessage := ""
 	if nodeMode == "manage" {
 		// docker-compose
-		fileName := fmt.Sprintf("/usr/sdwan/work/docker-compose.yml")
+		fileName := fmt.Sprintf("/tmp/work/docker-compose.yml")
 		if Exists(fileName) {
 			cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", filepath.Dir(fileName))
 			_, _, _ = RunCommand("-c", cmd)
 		}
 		// 公网 ping
-		sendErr := pingFileAndSend(ws, "/usr/sdwan/work/ips", "")
+		sendErr := pingFileAndSend(ws, "/tmp/work/ips", "")
 		if sendErr != nil {
 			return sendErr
 		}
 		// 专线 ping
-		dirPath := "/usr/sdwan/work/vpc_ip"
+		dirPath := "/tmp/work/vpc_ip"
 		if IsDir(dirPath) {
 			files := GetIpsFiles(dirPath)
 			if files != nil {
@@ -332,7 +332,7 @@ func handleMessageFile(data string) {
 		}
 		//
 		fileContent := ""
-		fileName := fmt.Sprintf("/usr/sdwan/work/%s", arr[0])
+		fileName := fmt.Sprintf("/tmp/work/%s", arr[0])
 		fileDir := filepath.Dir(fileName)
 		if !Exists(fileDir) {
 			err = os.MkdirAll(fileDir, os.ModePerm)
@@ -407,7 +407,7 @@ func handleMessageFile(data string) {
 				continue
 			} else {
 				logger.Info("Run sockd success: [%s] [%s]", contentKey, fileName)
-				daemonStart("sockd", file)
+				daemonStart(arr[1], file)
 			}
 		} else if arr[1] == "xray" {
 			_ = KillProcess("xray")
@@ -420,7 +420,7 @@ func handleMessageFile(data string) {
 				continue
 			} else {
 				logger.Info("Run xray success: [%s] [%s]", contentKey, fileName)
-				daemonStart("xray", file)
+				daemonStart(arr[1], file)
 			}
 		}
 	}
@@ -428,7 +428,7 @@ func handleMessageFile(data string) {
 
 // 删除没用的网卡
 func handleDeleteUnusedNic(nicDir string, nicName string) {
-	path := fmt.Sprintf("/usr/sdwan/work/%s", nicDir)
+	path := fmt.Sprintf("/tmp/work/%s", nicDir)
 	nics := strings.Split(nicName, ",")
 
 	files, err := filepath.Glob(filepath.Join(path, "*"))
@@ -452,7 +452,7 @@ func handleDeleteUnusedNic(nicDir string, nicName string) {
 
 // 运行自定义脚本
 func handleMessageCmd(data string, addLog bool) (string, string, error) {
-	cmd := fmt.Sprintf("cd /usr/sdwan/work && %s", data)
+	cmd := fmt.Sprintf("cd /tmp/work && %s", data)
 	stdout, stderr, err := RunCommand("-c", cmd)
 	if addLog {
 		if err != nil {
