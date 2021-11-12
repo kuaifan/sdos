@@ -34,7 +34,7 @@ func BuildWork() {
 		logger.Error("System env is error")
 		os.Exit(1)
 	}
-	_ = logger.SetLogger(`{"File":{"filename":"/tmp/.sdwan/logger.log","level":"TRAC","daily":true,"maxlines":100000,"maxsize":10,"maxdays":3,"append":true,"permit":"0660"}}`)
+	_ = logger.SetLogger(`{"File":{"filename":"/tmp/.sdwan/work.log","level":"TRAC","daily":true,"maxlines":100000,"maxsize":10,"maxdays":3,"append":true,"permit":"0660"}}`)
 	//
 	done := make(chan bool)
 	ws := wsc.New(ServerUrl)
