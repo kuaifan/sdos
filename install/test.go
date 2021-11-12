@@ -11,6 +11,19 @@ func BuildTest() {
 	nodeMode := os.Getenv("NODE_MODE")
 	logger.Debug("NODE_MODE: %s", nodeMode)
 
+	test1()
+}
+
+func test2()  {
+	fileName := "/tmp/.sdwan/work/nic/wgcenter"
+	stdout, stderr, err := RunCommand("-e", fileName, "install")
+	logger.Info("stdout: %s", stdout)
+	logger.Info("stderr: %s", stderr)
+	logger.Info("err: %s", err)
+}
+
+func test1() {
+	nodeMode := os.Getenv("NODE_MODE")
 	sendMessage := ""
 	if nodeMode == "manage" {
 		// ping 信息
