@@ -396,6 +396,15 @@ func handleMessageFile(data string) {
 			} else {
 				logger.Info("Run yml success: [%s] [%s]", contentKey, fileName)
 			}
+		} else if arr[1] == "nginx" {
+			logger.Info("Run nginx start: [%s] [%s]", contentKey, fileName)
+			_, _, err = RunCommand("docker exec -it sdwan-speed-nginx /bin/sh -c 'nginx -s reload'")
+			if err != nil {
+				logger.Error("Run nginx error: [%s] [%s] %s", contentKey, fileName, err)
+				continue
+			} else {
+				logger.Info("Run nginx success: [%s] [%s]", contentKey, fileName)
+			}
 		} else if arr[1] == "sockd" {
 			_ = KillProcess("sockd")
 			time.Sleep(2 * time.Second)
