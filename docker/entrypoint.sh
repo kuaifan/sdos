@@ -18,12 +18,11 @@ check_work() {
     }
 }
 
-if [ "$NODE_MODE" != "manage" ]; then
-    dnsmasq &> /dev/null
-fi
-
-if [ "$NODE_MODE" == "speed_nginx" ]; then
-    mkdir -p /tmp/.sdwan/work/nginx/conf.d/
+if [ "$NODE_MODE" == "nginx" ]; then
+    /docker-entrypoint.sh
+    nginx -g "daemon off;" &
+elif [ "$NODE_MODE" != "manage" ]; then
+    dnsmasq &
 fi
 
 while true; do

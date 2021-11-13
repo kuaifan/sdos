@@ -15,6 +15,8 @@ RUN git clone https://github.com/kuaifan/sdos.git && \
 
 FROM --platform=$TARGETPLATFORM nginx:${NGINX_VERSION}
 
+RUN apk add --update --no-cache bash
+
 COPY --from=builder /go/sdos/sdos /usr/bin/
 COPY ./conf/nginx.conf /etc/nginx/nginx.conf
 
