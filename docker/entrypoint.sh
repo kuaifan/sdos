@@ -22,7 +22,9 @@ if [ "$NODE_MODE" != "manage" ]; then
     dnsmasq &> /dev/null
 fi
 
-mkdir -p /tmp/.sdwan/work
+if [ "$NODE_MODE" == "speed_nginx" ]; then
+    mkdir -p /tmp/.sdwan/work/nginx/conf.d/
+fi
 
 while true; do
     sleep 10
