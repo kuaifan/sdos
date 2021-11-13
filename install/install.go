@@ -39,16 +39,10 @@ func (s *SdosInstaller) InstallNodes() {
 				_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base remove")
 				_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
 			}
-			if ServerDomain != "" {
+			if ServerKey != "" {
 				_ = SSHConfig.CmdAsync(node, fmt.Sprintf("mkdir -p /root/.sdwan/ssl/%s/", ServerDomain))
-				if ServerKey != "" {
-					keyCmd := fmt.Sprintf("wget -N --no-check-certificate %s -O /root/.sdwan/ssl/%s/site.key", ServerKey, ServerDomain)
-					_ = SSHConfig.CmdAsync(node, keyCmd)
-				}
-				if ServerCrt != "" {
-					crtCmd := fmt.Sprintf("wget -N --no-check-certificate %s -O /root/.sdwan/ssl/%s/site.crt", ServerCrt, ServerDomain)
-					_ = SSHConfig.CmdAsync(node, crtCmd)
-				}
+				_ = SSHConfig.CmdAsync(node, fmt.Sprintf("wget -N --no-check-certificate '%s' -O /root/.sdwan/ssl/%s/site.key", ServerKey, ServerDomain))
+				_ = SSHConfig.CmdAsync(node, fmt.Sprintf("wget -N --no-check-certificate '%s' -O /root/.sdwan/ssl/%s/site.crt", ServerCrt, ServerDomain))
 			}
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/")
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/docker-compose.yml", DockerCompose(nodeName, node))
@@ -71,15 +65,15 @@ func done(node, nodeName string) {
 			keyContent = ""
 			crtContent = ""
 		)
-		if ServerDomain != "" && ServerKey == "" {
+		if ServerDomain != "" {
 			keyContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.key", ServerDomain), "\n")
 			crtContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.crt", ServerDomain), "\n")
-			if !strings.Contains(keyContent, "END RSA PRIVATE KEY") {
-				logger.Error("[%s] [%s] key error %s", node, ServerDomain)
+			if !strings.Contains(keyContent, "PRIVATE KEY") {
+				logger.Error("[%s] [%s] read key error %s", node, ServerDomain)
 				keyContent = ""
 			}
 			if !strings.Contains(crtContent, "END CERTIFICATE") {
-				logger.Error("[%s] [%s] crt error %s", node, ServerDomain)
+				logger.Error("[%s] [%s] read crt error %s", node, ServerDomain)
 				crtContent = ""
 			}
 		}
