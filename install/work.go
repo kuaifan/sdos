@@ -398,7 +398,7 @@ func handleMessageFile(data string) {
 			}
 		} else if arr[1] == "nginx" {
 			logger.Info("Run nginx start: [%s] [%s]", contentKey, fileName)
-			_, _, err = RunCommand("-c", "docker-compose exec sdwan-speed-nginx /bin/sh -c 'nginx -s reload'")
+			_, _, err = RunCommand("-c", "nginx -s reload")
 			if err != nil {
 				logger.Error("Run nginx error: [%s] [%s] %s", contentKey, fileName, err)
 				continue
@@ -407,7 +407,7 @@ func handleMessageFile(data string) {
 			}
 		} else if arr[1] == "sockd" {
 			_ = KillProcess("sockd")
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 			logger.Info("Run sockd start: [%s] [%s]", contentKey, fileName)
 			cmd := fmt.Sprintf("sockd -f %s > /dev/null 2>&1 &", fileName)
 			_, _, err = RunCommand("-c", cmd)
@@ -420,7 +420,7 @@ func handleMessageFile(data string) {
 			}
 		} else if arr[1] == "xray" {
 			_ = KillProcess("xray")
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 			logger.Info("Run xray start: [%s] [%s]", contentKey, fileName)
 			cmd := fmt.Sprintf("xray run -c %s > /dev/null 2>&1 &", fileName)
 			_, _, err = RunCommand("-c", cmd)
