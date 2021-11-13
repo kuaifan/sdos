@@ -199,8 +199,8 @@ func timedTaskB(ws *wsc.Wsc) error {
 				}
 			}
 		}
-	} else if nodeMode != "speed_in" {
-		// wg 流量（不统计入口容器）
+	} else if !InArray(nodeMode, []string{"nginx", "speed_in"}) {
+		// wg 流量（不统计：nginx容器、speed_in入口容器）
 		result, _, err := RunCommand("-c", "wg show all transfer")
 		if err != nil {
 			logger.Debug("Run wg show error: %s", err)
