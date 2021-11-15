@@ -199,8 +199,8 @@ func timedTaskB(ws *wsc.Wsc) error {
 				}
 			}
 		}
-	} else if !InArray(nodeMode, []string{"nginx", "speed_in"}) {
-		// wg 流量（不统计：nginx容器、speed_in入口容器）
+	} else if InArray(nodeMode, []string{"speed_out", "speed_filter", "speed_next"}) {
+		// wg 流量（仅统计：默认出口、分流出口、转发出口）
 		result, _, err := RunCommand("-c", "wg show all transfer")
 		if err != nil {
 			logger.Debug("Run wg show error: %s", err)
