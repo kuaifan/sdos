@@ -200,6 +200,7 @@ if [ "$1" = "install" ]; then
     fi
     echo "docker-compose up ... done"
     add_alias
+    add_iptables
 elif [ "$1" = "remove" ]; then
     docker --version &> /dev/null
     if [ $? -eq  0 ]; then
