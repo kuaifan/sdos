@@ -360,6 +360,7 @@ func handleMessageFile(data string) {
 		}
 		FileMd5.Store(fileKey, contentKey)
 		//
+		var stderr string
 		var fileByte = []byte(fileContent)
 		err = ioutil.WriteFile(fileName, fileByte, 0666)
 		if err != nil {
@@ -367,68 +368,68 @@ func handleMessageFile(data string) {
 			continue
 		}
 		if arr[1] == "nic" {
-			logger.Info("Run nic start: [%s] [%s install]", contentKey, fileName)
+			logger.Info("Run nic start: [%s install]", fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
-			_, _, err = RunCommand(fileName, "install")
+			_, stderr, err = RunCommand(fileName, "install")
 			if err != nil {
-				logger.Error("Run nic error: [%s] [%s install] %s", contentKey, fileName, err)
+				logger.Error("Run nic error: [%s install] %s %s", fileName, err, stderr)
 				continue
 			} else {
-				logger.Info("Run nic success: [%s] [%s install]", contentKey, fileName)
+				logger.Info("Run nic success: [%s install]", fileName)
 			}
 		} else if arr[1] == "exec" {
-			logger.Info("Run file start: [%s] [%s]", contentKey, fileName)
+			logger.Info("Run file start: [%s]", fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
-			_, _, err = RunCommand(fileName)
+			_, stderr, err = RunCommand(fileName)
 			if err != nil {
-				logger.Error("Run file error: [%s] [%s] %s", contentKey, fileName, err)
+				logger.Error("Run file error: [%s] %s %s", fileName, err, stderr)
 				continue
 			} else {
-				logger.Info("Run file success: [%s] [%s]", contentKey, fileName)
+				logger.Info("Run file success: [%s]", fileName)
 			}
 		} else if arr[1] == "yml" {
-			logger.Info("Run yml start: [%s] [%s]", contentKey, fileName)
+			logger.Info("Run yml start: [%s]", fileName)
 			cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", fileDir)
-			_, _, err = RunCommand("-c", cmd)
+			_, stderr, err = RunCommand("-c", cmd)
 			if err != nil {
-				logger.Error("Run yml error: [%s] [%s] %s", contentKey, fileName, err)
+				logger.Error("Run yml error: [%s] %s %s", fileName, err, stderr)
 				continue
 			} else {
-				logger.Info("Run yml success: [%s] [%s]", contentKey, fileName)
+				logger.Info("Run yml success: [%s]", fileName)
 			}
 		} else if arr[1] == "nginx" {
-			logger.Info("Run nginx start: [%s] [%s]", contentKey, fileName)
-			_, _, err = RunCommand("-c", "nginx -s reload")
+			logger.Info("Run nginx start: [%s]", fileName)
+			_, stderr, err = RunCommand("-c", "nginx -s reload")
 			if err != nil {
-				logger.Error("Run nginx error: [%s] [%s] %s", contentKey, fileName, err)
+				logger.Error("Run nginx error: [%s] %s %s", fileName, err, stderr)
 				continue
 			} else {
-				logger.Info("Run nginx success: [%s] [%s]", contentKey, fileName)
+				logger.Info("Run nginx success: [%s]", fileName)
 			}
 		} else if arr[1] == "sockd" {
 			_ = KillProcess("sockd")
 			time.Sleep(1 * time.Second)
-			logger.Info("Run sockd start: [%s] [%s]", contentKey, fileName)
+			logger.Info("Run sockd start: [%s]", fileName)
 			cmd := fmt.Sprintf("sockd -f %s > /dev/null 2>&1 &", fileName)
-			_, _, err = RunCommand("-c", cmd)
+			_, stderr, err = RunCommand("-c", cmd)
 			if err != nil {
-				logger.Error("Run sockd error: [%s] [%s] %s", contentKey, fileName, err)
+				logger.Error("Run sockd error: [%s] %s %s", fileName, err, stderr)
 				continue
 			} else {
-				logger.Info("Run sockd success: [%s] [%s]", contentKey, fileName)
+				logger.Info("Run sockd success: [%s]", fileName)
 				daemonStart(arr[1], file)
 			}
 		} else if arr[1] == "xray" {
 			_ = KillProcess("xray")
 			time.Sleep(1 * time.Second)
-			logger.Info("Run xray start: [%s] [%s]", contentKey, fileName)
+			logger.Info("Run xray start: [%s]", fileName)
 			cmd := fmt.Sprintf("xray run -c %s > /dev/null 2>&1 &", fileName)
-			_, _, err = RunCommand("-c", cmd)
+			_, stderr, err = RunCommand("-c", cmd)
 			if err != nil {
-				logger.Error("Run xray error: [%s] [%s] %s", contentKey, fileName, err)
+				logger.Error("Run xray error: [%s] %s %s", fileName, err, stderr)
 				continue
 			} else {
-				logger.Info("Run xray success: [%s] [%s]", contentKey, fileName)
+				logger.Info("Run xray success: [%s]", fileName)
 				daemonStart(arr[1], file)
 			}
 		}
@@ -440,6 +441,7 @@ func handleDeleteUnusedNic(nicDir string, nicName string) {
 	path := fmt.Sprintf("/tmp/.sdwan/work/%s", nicDir)
 	nics := strings.Split(nicName, ",")
 
+	var stderr string
 	files, err := filepath.Glob(filepath.Join(path, "*"))
 	if err != nil {
 		logger.Error(err)
@@ -449,9 +451,9 @@ func handleDeleteUnusedNic(nicDir string, nicName string) {
 		name := filepath.Base(file)
 		if !InArray(name, nics) {
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", file))
-			_, _, err = RunCommand(file, "remove")
+			_, stderr, err = RunCommand(file, "remove")
 			if err != nil {
-				logger.Error("Run nic error: [%s remove] %s", file, err)
+				logger.Error("Run nic error: [%s remove] %s %s", file, err, stderr)
 			} else {
 				logger.Info("Run nic success: [%s remove]", file)
 			}
