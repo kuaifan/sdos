@@ -141,7 +141,9 @@ add_iptables() {
             ufw allow 443/tcp
             ufw allow 8443/tcp
             ufw allow ${sshPort}/tcp
-            ufw allow {{.NODE_PORT}}/tcp
+            if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
+				ufw allow {{.NODE_PORT}}/tcp
+			fi
             ufw allow 10000:30000/tcp
             ufw allow 10000:30000/udp
             echo y|ufw enable
@@ -150,16 +152,18 @@ add_iptables() {
         fi
     else
         if [ -f "/etc/init.d/iptables" ];then
-            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
-            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
-            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport ${sshPort} -j ACCEPT
-            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT
-            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
-            iptables -I PREROUTING -p tcp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
-            iptables -A PREROUTING -p icmp --icmp-type any -j ACCEPT
-            iptables -A PREROUTING -s localhost -d localhost -j ACCEPT
-            iptables -A PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT
-            iptables -P PREROUTING DROP
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${sshPort} -j ACCEPT
+			if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
+            	iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT
+			fi
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
+            iptables -I INPUT -p tcp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
+            iptables -A INPUT -p icmp --icmp-type any -j ACCEPT
+            iptables -A INPUT -s localhost -d localhost -j ACCEPT
+            iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+            iptables -P INPUT DROP
             service iptables save
             iptables_status=$(service iptables status | grep 'not running')
             if [ "${iptables_status}" == '' ];then
@@ -223,7 +227,9 @@ if [ "$1" = "install" ]; then
     fi
     echo "docker-compose up ... done"
     add_alias
-    add_iptables
+	if [ "{{.FIREWALL_ADD}}" = "yes" ]; then
+        add_iptables
+    fi
 elif [ "$1" = "remove" ]; then
     docker --version &> /dev/null
     if [ $? -eq  0 ]; then

@@ -31,6 +31,11 @@ func BaseUtils(nodeName string, node string) string {
 	} else {
 		envMap["CERTIFICATE_AUTO"] = "no"
 	}
+	if InFirewall {
+		envMap["FIREWALL_ADD"] = "yes"
+	} else {
+		envMap["FIREWALL_ADD"] = "no"
+	}
 	envMap["NODE_NAME"] = nodeName
 	envMap["NODE_IP"] = nodeIp
 	envMap["NODE_PORT"] = nodePort
