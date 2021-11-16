@@ -35,6 +35,12 @@ CmdPath=$0
 
 source '/etc/os-release' > /dev/null
 
+if [ -f "/usr/bin/yum" ] && [ -d "/etc/yum.repos.d" ]; then
+    PM="yum"
+elif [ -f "/usr/bin/apt-get" ] && [ -f "/usr/bin/dpkg" ]; then
+    PM="apt-get"        
+fi
+
 judge() {
     if [[ 0 -eq $? ]]; then
         echo -e "${OK} ${GreenBG} $1 完成 ${Font}"
@@ -70,10 +76,10 @@ add_swap() {
 
 add_ssl() {
     local domain=$1
-    if [[ "${ID}" == "centos" ]]; then
+    if [ "${PM}" = "yum" ]; then
         yum update && yum install -y curl socat
-    else
-        apt update && apt install -y curl socat
+    elif [ "${PM}" = "apt-get" ]; then
+        apt-get update && apt-get install -y curl socat
     fi
     judge "安装 SSL 证书生成脚本依赖"
 
@@ -128,20 +134,37 @@ check_docker() {
 }
 
 add_iptables() {
-    if [ -f "/etc/init.d/iptables" ];then
-        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT
-        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
-        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
-        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
-        iptables -I INPUT -p tcp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
-        iptables -A INPUT -p icmp --icmp-type any -j ACCEPT
-        iptables -A INPUT -s localhost -d localhost -j ACCEPT
-        iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-        iptables -P INPUT DROP
-        service iptables save
-        iptables_status=$(service iptables status | grep 'not running')
-        if [ "${iptables_status}" == '' ];then
-            service iptables restart
+    sshPort=$(cat /etc/ssh/sshd_config | grep 'Port '|awk '{print $2}')
+    if [ "${PM}" = "apt-get" ]; then
+        apt-get install -y ufw
+        if [ -f "/usr/sbin/ufw" ];then
+            ufw allow 443/tcp
+            ufw allow 8443/tcp
+            ufw allow ${sshPort}/tcp
+            ufw allow {{.NODE_PORT}}/tcp
+            ufw allow 10000:30000/tcp
+            ufw allow 10000:30000/udp
+            echo y|ufw enable
+            ufw default deny
+            ufw reload
+        fi
+    else
+        if [ -f "/etc/init.d/iptables" ];then
+            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
+            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
+            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport ${sshPort} -j ACCEPT
+            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT
+            iptables -I PREROUTING -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
+            iptables -I PREROUTING -p tcp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
+            iptables -A PREROUTING -p icmp --icmp-type any -j ACCEPT
+            iptables -A PREROUTING -s localhost -d localhost -j ACCEPT
+            iptables -A PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT
+            iptables -P PREROUTING DROP
+            service iptables save
+            iptables_status=$(service iptables status | grep 'not running')
+            if [ "${iptables_status}" == '' ];then
+                service iptables restart
+            fi
         fi
     fi
 }
