@@ -23,6 +23,7 @@ func BaseUtils(nodeName string, node string) string {
 	var sb strings.Builder
 	sb.Write([]byte(baseUtils))
 	var envMap = make(map[string]interface{})
+	nodeIp, nodePort := GetIpAndPort(node)
 	envMap["SERVER_URL"] = ServerUrl
 	envMap["SERVER_DOMAIN"] = ServerDomain
 	if ServerKey == "" {
@@ -31,7 +32,8 @@ func BaseUtils(nodeName string, node string) string {
 		envMap["CERTIFICATE_AUTO"] = "no"
 	}
 	envMap["NODE_NAME"] = nodeName
-	envMap["NODE_IP"] = RemoveIpPort(node)
+	envMap["NODE_IP"] = nodeIp
+	envMap["NODE_PORT"] = nodePort
 	envMap["NODE_TOKEN"] = ServerToken
 	envMap["NODE_PASSWORD"] = SSHConfig.GetPassword(node)
 	envMap["SWAP_FILE"] = SwapFile

@@ -127,6 +127,25 @@ check_docker() {
     fi
 }
 
+add_iptables() {
+    if [ -f "/etc/init.d/iptables" ];then
+        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT
+        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
+        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
+        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
+        iptables -I INPUT -p tcp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
+        iptables -A INPUT -p icmp --icmp-type any -j ACCEPT
+        iptables -A INPUT -s localhost -d localhost -j ACCEPT
+        iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+        iptables -P INPUT DROP
+        service iptables save
+        iptables_status=$(service iptables status | grep 'not running')
+        if [ "${iptables_status}" == '' ];then
+            service iptables restart
+        fi
+    fi
+}
+
 add_alias() {
     cat > ~/.bashrc_docker <<-EOF
 dockeralias()
