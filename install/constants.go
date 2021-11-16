@@ -56,12 +56,15 @@ is_root() {
 add_swap() {
     local swap=$(echo "$1"| awk '{print int($0)}')
     if [ "$swap" -gt "0" ]; then
-        [ "$(swapon --show | grep 'sdwanfile')" ] && swapoff /sdwanfile;
-        dd if=/dev/zero of=/sdwanfile bs=1M count="$swap"
-        chmod 600 /sdwanfile
-        mkswap /sdwanfile
-        swapon /sdwanfile
-        [ -z "$(cat /etc/fstab | grep '/sdwanfile')" ] && echo "/sdwanfile swap swap defaults 0 0" >> /etc/fstab
+        if [ -z "$(swapon --show | grep 'sdwanfile')" ] || [ "$(cat /.sdwanfile_size)" != "$swap" ]; then
+            [ -n "$(swapon --show | grep 'sdwanfile')" ] && swapoff /sdwanfile;
+            dd if=/dev/zero of=/sdwanfile bs=1M count="$swap"
+            chmod 600 /sdwanfile
+            mkswap /sdwanfile
+            swapon /sdwanfile
+            echo "$swap" > /.sdwanfile_size
+            [ -z "$(cat /etc/fstab | grep '/sdwanfile')" ] && echo "/sdwanfile swap swap defaults 0 0" >> /etc/fstab
+        fi
     fi
 }
 
