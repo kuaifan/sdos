@@ -360,6 +360,13 @@ func handleMessageFile(data string) {
 		}
 		FileMd5.Store(fileKey, contentKey)
 		//
+		if arr[1] == "nic" && Exists(fileName) {
+			// 保存网卡文件先判断上次的文件是否存在，如果存在先remove
+			logger.Info("Remove old nic: [%s]", fileName)
+			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
+			_, _, _ = RunCommand(fileName, "remove")
+		}
+		//
 		var stderr string
 		var fileByte = []byte(fileContent)
 		err = ioutil.WriteFile(fileName, fileByte, 0666)
@@ -368,24 +375,24 @@ func handleMessageFile(data string) {
 			continue
 		}
 		if arr[1] == "nic" {
-			logger.Info("Run nic start: [%s install]", fileName)
+			logger.Info("Install nic start: [%s]", fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
 			_, stderr, err = RunCommand(fileName, "install")
 			if err != nil {
-				logger.Error("Run nic error: [%s install] %s %s", fileName, err, stderr)
+				logger.Error("Install nic error: [%s] %s %s", fileName, err, stderr)
 				continue
 			} else {
-				logger.Info("Run nic success: [%s install]", fileName)
+				logger.Info("Install nic success: [%s]", fileName)
 			}
 		} else if arr[1] == "exec" {
-			logger.Info("Run file start: [%s]", fileName)
+			logger.Info("Exec file start: [%s]", fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
 			_, stderr, err = RunCommand(fileName)
 			if err != nil {
-				logger.Error("Run file error: [%s] %s %s", fileName, err, stderr)
+				logger.Error("Exec file error: [%s] %s %s", fileName, err, stderr)
 				continue
 			} else {
-				logger.Info("Run file success: [%s]", fileName)
+				logger.Info("Exec file success: [%s]", fileName)
 			}
 		} else if arr[1] == "yml" {
 			logger.Info("Run yml start: [%s]", fileName)
@@ -453,9 +460,9 @@ func handleDeleteUnusedNic(nicDir string, nicName string) {
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", file))
 			_, stderr, err = RunCommand(file, "remove")
 			if err != nil {
-				logger.Error("Run nic error: [%s remove] %s %s", file, err, stderr)
+				logger.Error("Remove nic error: [%s] %s %s", file, err, stderr)
 			} else {
-				logger.Info("Run nic success: [%s remove]", file)
+				logger.Info("Remove nic success: [%s]", file)
 			}
 		}
 	}
