@@ -63,6 +63,13 @@ check_system() {
         rm -f $CmdPath
         exit 1
     fi
+    # 
+    if [ "${PM}" = "yum" ]; then
+        yum update && yum install -y curl socat
+    elif [ "${PM}" = "apt-get" ]; then
+        apt-get update && apt-get install -y curl socat
+    fi
+    judge "安装脚本依赖"
 }
 
 check_docker() {
@@ -107,13 +114,6 @@ add_swap() {
 
 add_ssl() {
     local domain=$1
-    if [ "${PM}" = "yum" ]; then
-        yum update && yum install -y curl socat
-    elif [ "${PM}" = "apt-get" ]; then
-        apt-get update && apt-get install -y curl socat
-    fi
-    judge "安装 SSL 证书生成脚本依赖"
-
     curl https://get.acme.sh | sh
     judge "安装 SSL 证书生成脚本"
 

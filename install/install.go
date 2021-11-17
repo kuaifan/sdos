@@ -48,14 +48,14 @@ func (s *SdosInstaller) InstallNodes() {
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/docker-compose.yml", DockerCompose(nodeName, node))
 			_ = SSHConfig.SaveFile(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base install")
-			done(node, nodeName)
+			installDone(node, nodeName)
 		}(node)
 	}
 	wg.Wait()
-	ResultInstall.Range(walk)
+	ResultInstall.Range(installWalk)
 }
 
-func done(node, nodeName string) {
+func installDone(node string, nodeName string) {
 	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/.sdwan_install", "")
 	if res == "success" {
 		if Mtu == "" {
@@ -110,7 +110,7 @@ func done(node, nodeName string) {
 	}
 }
 
-func walk(key interface{}, value interface{}) bool {
+func installWalk(key interface{}, value interface{}) bool {
 	if value.(string) == "success" {
 		logger.Info("[%s] install %s", key, value)
 	} else {
