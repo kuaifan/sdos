@@ -51,49 +51,6 @@ judge() {
     fi
 }
 
-is_root() {
-    if [ 0 != $UID ]; then
-        echo -e "${Error} ${RedBG} 当前用户不是root用户，请切换到root用户后重新执行脚本 ${Font}"
-        rm -f $CmdPath
-        exit 1
-    fi
-}
-
-add_swap() {
-    local swap=$(echo "$1"| awk '{print int($0)}')
-    if [ "$swap" -gt "0" ]; then
-        if [ -z "$(swapon --show | grep 'sdwanfile')" ] || [ "$(cat /.sdwanfile_size)" != "$swap" ]; then
-            [ -n "$(swapon --show | grep 'sdwanfile')" ] && swapoff /sdwanfile;
-            dd if=/dev/zero of=/sdwanfile bs=1M count="$swap"
-            chmod 600 /sdwanfile
-            mkswap /sdwanfile
-            swapon /sdwanfile
-            echo "$swap" > /.sdwanfile_size
-            [ -z "$(cat /etc/fstab | grep '/sdwanfile')" ] && echo "/sdwanfile swap swap defaults 0 0" >> /etc/fstab
-        fi
-    fi
-}
-
-add_ssl() {
-    local domain=$1
-    if [ "${PM}" = "yum" ]; then
-        yum update && yum install -y curl socat
-    elif [ "${PM}" = "apt-get" ]; then
-        apt-get update && apt-get install -y curl socat
-    fi
-    judge "安装 SSL 证书生成脚本依赖"
-
-    curl https://get.acme.sh | sh
-    judge "安装 SSL 证书生成脚本"
-
-    sslPath="/root/.sdwan/ssl/${domain}"
-    mkdir -p "${sslPath}"
-
-    /root/.acme.sh/acme.sh --register-account -m admin@admin.com
-    /root/.acme.sh/acme.sh --issue -d "${domain}" --standalone
-    /root/.acme.sh/acme.sh --installcert -d "${domain}" --key-file "${sslPath}/site.key" --fullchain-file "${sslPath}/site.crt"
-}
-
 check_system() {
     if [[ "${ID}" == "centos" && ${VERSION_ID} -ge 7 ]]; then
         echo > /dev/null
@@ -131,6 +88,41 @@ check_docker() {
         echo -e "${OK} Docker-compose安装完成！"
         service docker restart
     fi
+}
+
+add_swap() {
+    local swap=$(echo "$1"| awk '{print int($0)}')
+    if [ "$swap" -gt "0" ]; then
+        if [ -z "$(swapon --show | grep 'sdwanfile')" ] || [ "$(cat /.sdwanfile_size)" != "$swap" ]; then
+            [ -n "$(swapon --show | grep 'sdwanfile')" ] && swapoff /sdwanfile;
+            dd if=/dev/zero of=/sdwanfile bs=1M count="$swap"
+            chmod 600 /sdwanfile
+            mkswap /sdwanfile
+            swapon /sdwanfile
+            echo "$swap" > /.sdwanfile_size
+            [ -z "$(cat /etc/fstab | grep '/sdwanfile')" ] && echo "/sdwanfile swap swap defaults 0 0" >> /etc/fstab
+        fi
+    fi
+}
+
+add_ssl() {
+    local domain=$1
+    if [ "${PM}" = "yum" ]; then
+        yum update && yum install -y curl socat
+    elif [ "${PM}" = "apt-get" ]; then
+        apt-get update && apt-get install -y curl socat
+    fi
+    judge "安装 SSL 证书生成脚本依赖"
+
+    curl https://get.acme.sh | sh
+    judge "安装 SSL 证书生成脚本"
+
+    sslPath="/root/.sdwan/ssl/${domain}"
+    mkdir -p "${sslPath}"
+
+    /root/.acme.sh/acme.sh --register-account -m admin@admin.com
+    /root/.acme.sh/acme.sh --issue -d "${domain}" --standalone
+    /root/.acme.sh/acme.sh --installcert -d "${domain}" --key-file "${sslPath}/site.key" --fullchain-file "${sslPath}/site.crt"
 }
 
 add_iptables() {
@@ -211,10 +203,6 @@ remove_alias() {
 echo "error" > /tmp/.sdwan_install
 
 if [ "$1" = "install" ]; then
-    add_swap "{{.SWAP_FILE}}"
-    if [ -n "{{.SERVER_DOMAIN}}" ] && [ "{{.CERTIFICATE_AUTO}}" = "yes" ]; then
-        add_ssl "{{.SERVER_DOMAIN}}"
-    fi
     check_system
     check_docker
     cd "$(dirname $0)"
@@ -227,6 +215,10 @@ if [ "$1" = "install" ]; then
     fi
     echo "docker-compose up ... done"
     add_alias
+    add_swap "{{.SWAP_FILE}}"
+    if [ -n "{{.SERVER_DOMAIN}}" ] && [ "{{.CERTIFICATE_AUTO}}" = "yes" ]; then
+        add_ssl "{{.SERVER_DOMAIN}}"
+    fi
 	if [ "{{.FIREWALL_ADD}}" = "yes" ]; then
         add_iptables
     fi
