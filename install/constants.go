@@ -174,6 +174,10 @@ add_supervisor_config() {
     touch /root/.sdwan/work.sh
     cat > /root/.sdwan/work.sh <<-EOF
 #!/bin/bash
+SERVER_URL="{{.SERVER_URL}}"
+NODE_NAME="{{.NODE_NAME}}"
+NODE_TOKEN="{{.NODE_TOKEN}}"
+NODE_MODE="host"
 if [ -f "/root/.sdwan/share/sdos" ]; then
     host=$(echo "$SERVER_URL" | awk -F "/" '{print $3}')
     exi=$(echo "$SERVER_URL" | grep 'https://')
@@ -204,7 +208,6 @@ autorestart=true
 startretries=100
 user=root
 redirect_stderr=true
-environment=SERVER_URL={{.SERVER_URL}},NODE_NAME={{.NODE_NAME}},NODE_TOKEN={{.NODE_TOKEN}},NODE_MODE=host
 stdout_logfile=/var/log/supervisor/%(program_name)s.log
 EOF
     #
