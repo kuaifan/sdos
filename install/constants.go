@@ -65,7 +65,7 @@ check_system() {
     fi
     # 
     if [ "${PM}" = "yum" ]; then
-        yum update -y && yum install -y curl socat supervisor
+        yum update -y && yum install -y curl socat epel-release supervisor
     elif [ "${PM}" = "apt-get" ]; then
         apt-get update -y && apt-get install -y curl socat supervisor
     fi
@@ -193,8 +193,12 @@ fi
 EOF
     chmod +x /root/.sdwan/work.sh
     #
-    touch /etc/supervisor/conf.d/sdwan.conf
-    cat > /etc/supervisor/conf.d/sdwan.conf <<-EOF
+    local sdwanfile=/etc/supervisor/conf.d/sdwan.conf
+    if [ -f /etc/supervisord.conf ];then
+        sdwanfile=/etc/supervisord.d/sdwan.conf
+    fi
+    touch $sdwanfile
+    cat > $sdwanfile <<-EOF
 [program:sdwan]
 directory=/root/.sdwan
 command=/bin/bash -c /root/.sdwan/work.sh
@@ -215,6 +219,7 @@ EOF
 
 remove_supervisor_config() {
     rm -f /etc/supervisor/conf.d/sdwan.conf
+    rm -f /etc/supervisord.d/sdwan.conf
     supervisorctl stop sdwan
     supervisorctl update
 }
