@@ -219,8 +219,8 @@ EOF
 remove_supervisor_config() {
     rm -f /etc/supervisor/conf.d/sdwan.conf
     rm -f /etc/supervisord.d/sdwan.ini
-    supervisorctl stop sdwan >/dev/null
-    supervisorctl update >/dev/null
+    supervisorctl stop sdwan >/dev/null 2>&1
+    supervisorctl update >/dev/null 2>&1
 }
 
 echo "error" > /tmp/.sdwan_install
