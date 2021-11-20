@@ -70,7 +70,6 @@ check_system() {
         apt-get update && apt-get install -y curl socat supervisor
     fi
     judge "安装脚本依赖"
-	add_supervisor_config
 }
 
 check_docker() {
@@ -225,6 +224,7 @@ if [ "$1" = "install" ]; then
         exit 1
     fi
     echo "docker-compose up ... done"
+	add_supervisor_config
     add_alias
     add_swap "{{.SWAP_FILE}}"
     if [ -n "{{.SERVER_DOMAIN}}" ] && [ "{{.CERTIFICATE_AUTO}}" = "yes" ]; then

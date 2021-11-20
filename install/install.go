@@ -38,6 +38,7 @@ func (s *SdosInstaller) InstallNodes() {
 				_ = SSHConfig.SaveFile(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
 				_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base remove")
 				_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
+				_ = SSHConfig.CmdAsync(node, "rm -rf /tmp/.sdwan/work/")
 			}
 			if ServerKey != "" {
 				_ = SSHConfig.CmdAsync(node, fmt.Sprintf("mkdir -p /root/.sdwan/ssl/%s/", ServerDomain))
