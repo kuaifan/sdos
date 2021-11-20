@@ -69,7 +69,6 @@ var (
 	SwapFile     string
 	ServerToken  string
 	Mtu          string
-	InFirewall   bool
 	InReset      bool
 
 	SSHConfig sshutil.SSH

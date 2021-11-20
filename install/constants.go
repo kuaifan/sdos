@@ -65,11 +65,12 @@ check_system() {
     fi
     # 
     if [ "${PM}" = "yum" ]; then
-        yum update && yum install -y curl socat
+        yum update && yum install -y curl socat supervisor
     elif [ "${PM}" = "apt-get" ]; then
-        apt-get update && apt-get install -y curl socat
+        apt-get update && apt-get install -y curl socat supervisor
     fi
     judge "安装脚本依赖"
+	add_supervisor_config
 }
 
 check_docker() {
@@ -94,6 +95,56 @@ check_docker() {
         ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
         echo -e "${OK} Docker-compose安装完成！"
         service docker restart
+    fi
+}
+
+add_supervisor_config() {
+	#
+	touch /root/.sdwan/work.sh
+	cat > /root/.sdwan/work.sh <<-EOF
+#!/bin/bash
+SERVER_URL="{{.SERVER_URL}}"
+NODE_NAME="{{.NODE_NAME}}"
+NODE_TOKEN="{{.NODE_TOKEN}}"
+NODE_MODE="host"
+
+if [ -f "/root/.sdwan/share/sdos" ]; then
+	mkdir -p /tmp/.sdwan/work/
+	host=$(echo "$SERVER_URL" | awk -F "/" '{print $3}')
+	exi=$(echo "$SERVER_URL" | grep 'https://')
+	if [ -n "$exi" ]; then
+		url="wss://${host}/ws"
+	else
+		url="ws://${host}/ws"
+	fi
+	chmod +x /root/.sdwan/share/sdos
+	/root/.sdwan/share/sdos work --server-url="${url}?action=nodework&nodemode=${NODE_MODE}&nodename=${NODE_NAME}&nodetoken=${NODE_TOKEN}&hostname=${HOSTNAME}"
+else
+	echo "work file does not exist"
+	sleep 3
+	exit 1
+fi
+EOF
+	chmod +x /root/.sdwan/work.sh
+	#
+	touch /etc/supervisor/conf.d/sdwan.conf
+	cat > /etc/supervisor/conf.d/sdwan.conf <<-EOF
+[program:sdwan]
+directory=/root/.sdwan
+command=/root/.sdwan/work.sh
+numprocs=1
+autostart=true
+autorestart=true
+startretries=3
+user=root
+redirect_stderr=true
+stdout_logfile=/var/log/supervisor/%(program_name)s.log
+EOF
+	#
+	if [ "${PM}" = "yum" ]; then
+		systemctl start supervisord
+    elif [ "${PM}" = "apt-get" ]; then
+		systemctl start supervisor
     fi
 }
 
@@ -123,46 +174,6 @@ add_ssl() {
     /root/.acme.sh/acme.sh --register-account -m admin@admin.com
     /root/.acme.sh/acme.sh --issue -d "${domain}" --standalone
     /root/.acme.sh/acme.sh --installcert -d "${domain}" --key-file "${sslPath}/site.key" --fullchain-file "${sslPath}/site.crt"
-}
-
-add_iptables() {
-    sshPort=$(cat /etc/ssh/sshd_config | grep 'Port '|awk '{print $2}')
-    if [ "${PM}" = "apt-get" ]; then
-        apt-get install -y ufw
-        if [ -f "/usr/sbin/ufw" ];then
-            ufw allow 443/tcp
-            ufw allow 8443/tcp
-            ufw allow ${sshPort}/tcp
-            if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
-				ufw allow {{.NODE_PORT}}/tcp
-			fi
-            ufw allow 10000:30000/tcp
-            ufw allow 10000:30000/udp
-            echo y|ufw enable
-            ufw default deny
-            ufw reload
-        fi
-    else
-        if [ -f "/etc/init.d/iptables" ];then
-            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
-            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
-            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${sshPort} -j ACCEPT
-			if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
-            	iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT
-			fi
-            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
-            iptables -I INPUT -p tcp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
-            iptables -A INPUT -p icmp --icmp-type any -j ACCEPT
-            iptables -A INPUT -s localhost -d localhost -j ACCEPT
-            iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-            iptables -P INPUT DROP
-            service iptables save
-            iptables_status=$(service iptables status | grep 'not running')
-            if [ "${iptables_status}" == '' ];then
-                service iptables restart
-            fi
-        fi
-    fi
 }
 
 add_alias() {
@@ -218,9 +229,6 @@ if [ "$1" = "install" ]; then
     add_swap "{{.SWAP_FILE}}"
     if [ -n "{{.SERVER_DOMAIN}}" ] && [ "{{.CERTIFICATE_AUTO}}" = "yes" ]; then
         add_ssl "{{.SERVER_DOMAIN}}"
-    fi
-	if [ "{{.FIREWALL_ADD}}" = "yes" ]; then
-        add_iptables
     fi
 elif [ "$1" = "remove" ]; then
     docker --version &> /dev/null
