@@ -191,7 +191,7 @@ if [ -f "/root/.sdwan/share/sdos" ]; then
     /root/.sdwan/share/sdos work --server-url="${url}?action=nodework&nodemode=${NODE_MODE}&nodename=${NODE_NAME}&nodetoken=${NODE_TOKEN}&hostname=${HOSTNAME}"
 else
     echo "work file does not exist"
-    sleep 3
+    sleep 5
     exit 1
 fi
 EOF
@@ -208,6 +208,7 @@ autorestart=true
 startretries=100
 user=root
 redirect_stderr=true
+environment=SERVER_URL={{.SERVER_URL}},NODE_NAME={{.NODE_NAME}},NODE_TOKEN={{.NODE_TOKEN}},NODE_MODE=host
 stdout_logfile=/var/log/supervisor/%(program_name)s.log
 EOF
     #
