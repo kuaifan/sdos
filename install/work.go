@@ -360,9 +360,9 @@ func handleMessageFile(data string) {
 		}
 		FileMd5.Store(fileKey, contentKey)
 		//
-		if arr[1] == "nic" && Exists(fileName) {
-			// 保存网卡文件先判断上次的文件是否存在，如果存在先remove
-			logger.Info("Remove old nic: [%s]", fileName)
+		if InArray(arr[1], []string{"nic", "firewall"}) && Exists(fileName) {
+			// 先判断上次的文件是否存在，如果存在先 remove
+			logger.Info("Remove old %s: [%s]", arr[1], fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
 			_, _, _ = RunCommand(fileName, "remove")
 		}
@@ -374,15 +374,15 @@ func handleMessageFile(data string) {
 			logger.Error("WriteFile error: [%s] %s", fileName, err)
 			continue
 		}
-		if arr[1] == "nic" {
-			logger.Info("Install nic start: [%s]", fileName)
+		if InArray(arr[1], []string{"nic", "firewall"}) {
+			logger.Info("Install %s start: [%s]", arr[1], fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
 			_, stderr, err = RunCommand(fileName, "install")
 			if err != nil {
-				logger.Error("Install nic error: [%s] %s %s", fileName, err, stderr)
+				logger.Error("Install %s error: [%s] %s %s", arr[1], fileName, err, stderr)
 				continue
 			} else {
-				logger.Info("Install nic success: [%s]", fileName)
+				logger.Info("Install %s success: [%s]", arr[1], fileName)
 			}
 		} else if arr[1] == "exec" {
 			logger.Info("Exec file start: [%s]", fileName)
