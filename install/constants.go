@@ -65,9 +65,14 @@ check_system() {
     fi
     # 
     if [ "${PM}" = "yum" ]; then
-        yum update -y && yum install -y curl socat epel-release && yum install -y supervisor
+        yum update -y
+        yum install -y curl socat iptables-services epel-release
+        yum install -y supervisor   # 需要先装 epel-release 才能安装 supervisor
+        systemctl enable iptables
+        systemctl start iptables
     elif [ "${PM}" = "apt-get" ]; then
-        apt-get update -y && apt-get install -y curl socat supervisor
+        apt-get update -y
+        apt-get install -y curl socat ufw supervisor
     fi
     judge "安装脚本依赖"
 }
