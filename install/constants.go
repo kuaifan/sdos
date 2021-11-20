@@ -195,7 +195,7 @@ EOF
     #
     local sdwanfile=/etc/supervisor/conf.d/sdwan.conf
     if [ -f /etc/supervisord.conf ];then
-        sdwanfile=/etc/supervisord.d/sdwan.conf
+        sdwanfile=/etc/supervisord.d/sdwan.ini
     fi
     touch $sdwanfile
     cat > $sdwanfile <<-EOF
@@ -212,16 +212,15 @@ environment=SERVER_URL={{.SERVER_URL}},NODE_NAME={{.NODE_NAME}},NODE_TOKEN={{.NO
 stdout_logfile=/var/log/supervisor/%(program_name)s.log
 EOF
     #
-    if [ -z "$(supervisorctl update sdwan)" ];then
-        supervisorctl restart sdwan
-    fi
+    supervisorctl update sdwan >/dev/null
+    supervisorctl restart sdwan
 }
 
 remove_supervisor_config() {
     rm -f /etc/supervisor/conf.d/sdwan.conf
-    rm -f /etc/supervisord.d/sdwan.conf
-    supervisorctl stop sdwan
-    supervisorctl update
+    rm -f /etc/supervisord.d/sdwan.ini
+    supervisorctl stop sdwan >/dev/null
+    supervisorctl update >/dev/null
 }
 
 echo "error" > /tmp/.sdwan_install
