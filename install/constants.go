@@ -65,7 +65,7 @@ check_system() {
     fi
     # 
     if [ "${PM}" = "yum" ]; then
-        yum update -y && yum install -y curl socat epel-release supervisor
+        yum update -y && yum install -y curl socat epel-release && yum install -y supervisor
     elif [ "${PM}" = "apt-get" ]; then
         apt-get update -y && apt-get install -y curl socat supervisor
     fi
