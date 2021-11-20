@@ -205,7 +205,7 @@ startretries=100
 user=root
 redirect_stderr=true
 environment=SERVER_URL={{.SERVER_URL}},NODE_NAME={{.NODE_NAME}},NODE_TOKEN={{.NODE_TOKEN}},NODE_MODE=host
-stdout_logfile=/tmp/.sdwan/%(program_name)s.log
+stdout_logfile=/var/log/supervisor/%(program_name)s.log
 EOF
     #
     if [ -z "$(supervisorctl update sdwan)" ];then
