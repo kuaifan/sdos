@@ -174,21 +174,17 @@ add_supervisor_config() {
     touch /root/.sdwan/work.sh
     cat > /root/.sdwan/work.sh <<-EOF
 #!/bin/bash
-SERVER_URL="{{.SERVER_URL}}"
-NODE_NAME="{{.NODE_NAME}}"
-NODE_TOKEN="{{.NODE_TOKEN}}"
-NODE_MODE="host"
 if [ -f "/root/.sdwan/share/sdos" ]; then
-    host=$(echo "$SERVER_URL" | awk -F "/" '{print $3}')
-    exi=$(echo "$SERVER_URL" | grep 'https://')
-    if [ -n "$exi" ]; then
-        url="wss://${host}/ws"
+    host=\$(echo "\$SERVER_URL" | awk -F "/" '{print \$3}')
+    exi=\$(echo "\$SERVER_URL" | grep 'https://')
+    if [ -n "\$exi" ]; then
+        url="wss://\${host}/ws"
     else
-        url="ws://${host}/ws"
+        url="ws://\${host}/ws"
     fi
     mkdir -p /tmp/.sdwan/work/
     chmod +x /root/.sdwan/share/sdos
-    /root/.sdwan/share/sdos work --server-url="${url}?action=nodework&nodemode=${NODE_MODE}&nodename=${NODE_NAME}&nodetoken=${NODE_TOKEN}&hostname=${HOSTNAME}"
+    /root/.sdwan/share/sdos work --server-url="\${url}?action=nodework&nodemode=\${NODE_MODE}&nodename=\${NODE_NAME}&nodetoken=\${NODE_TOKEN}&hostname=\${HOSTNAME}"
 else
     echo "work file does not exist"
     sleep 5
