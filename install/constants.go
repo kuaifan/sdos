@@ -65,9 +65,9 @@ check_system() {
     fi
     # 
     if [ "${PM}" = "yum" ]; then
-        yum update && yum install -y curl socat supervisor
+        yum update -y && yum install -y curl socat supervisor
     elif [ "${PM}" = "apt-get" ]; then
-        apt-get update && apt-get install -y curl socat supervisor
+        apt-get update -y && apt-get install -y curl socat supervisor
     fi
     judge "安装脚本依赖"
 }
