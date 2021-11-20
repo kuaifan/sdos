@@ -18,7 +18,7 @@ ARG TARGETPLATFORM
 
 RUN apk add --update --no-cache bash wireguard-tools tcpdump git make ipset dnsmasq tini curl fping mtr jq tzdata ca-certificates dante-server
 
-RUN git clone https://gitee.com/yenkeia/wondershaper.git && \
+RUN git clone https://github.com/kuaifan/wondershaper.git && \
     cd wondershaper/ && \
     make install && \
     touch /var/log/dnsmasq.log
