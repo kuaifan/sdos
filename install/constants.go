@@ -97,56 +97,6 @@ check_docker() {
     fi
 }
 
-add_supervisor_config() {
-	#
-	touch /root/.sdwan/work.sh
-	cat > /root/.sdwan/work.sh <<-EOF
-#!/bin/bash
-SERVER_URL="{{.SERVER_URL}}"
-NODE_NAME="{{.NODE_NAME}}"
-NODE_TOKEN="{{.NODE_TOKEN}}"
-NODE_MODE="host"
-
-if [ -f "/root/.sdwan/share/sdos" ]; then
-	mkdir -p /tmp/.sdwan/work/
-	host=$(echo "$SERVER_URL" | awk -F "/" '{print $3}')
-	exi=$(echo "$SERVER_URL" | grep 'https://')
-	if [ -n "$exi" ]; then
-		url="wss://${host}/ws"
-	else
-		url="ws://${host}/ws"
-	fi
-	chmod +x /root/.sdwan/share/sdos
-	/root/.sdwan/share/sdos work --server-url="${url}?action=nodework&nodemode=${NODE_MODE}&nodename=${NODE_NAME}&nodetoken=${NODE_TOKEN}&hostname=${HOSTNAME}"
-else
-	echo "work file does not exist"
-	sleep 3
-	exit 1
-fi
-EOF
-	chmod +x /root/.sdwan/work.sh
-	#
-	touch /etc/supervisor/conf.d/sdwan.conf
-	cat > /etc/supervisor/conf.d/sdwan.conf <<-EOF
-[program:sdwan]
-directory=/root/.sdwan
-command=/root/.sdwan/work.sh
-numprocs=1
-autostart=true
-autorestart=true
-startretries=3
-user=root
-redirect_stderr=true
-stdout_logfile=/var/log/supervisor/%(program_name)s.log
-EOF
-	#
-	if [ "${PM}" = "yum" ]; then
-		systemctl start supervisord
-    elif [ "${PM}" = "apt-get" ]; then
-		systemctl start supervisor
-    fi
-}
-
 add_swap() {
     local swap=$(echo "$1"| awk '{print int($0)}')
     if [ "$swap" -gt "0" ]; then
@@ -176,7 +126,11 @@ add_ssl() {
 }
 
 add_alias() {
-    cat > ~/.bashrc_docker <<-EOF
+    cat > ~/.bashrc_sdwan <<-EOF
+export SERVER_URL="{{.SERVER_URL}}"
+export NODE_NAME="{{.NODE_NAME}}"
+export NODE_TOKEN="{{.NODE_TOKEN}}"
+export NODE_MODE="host"
 dockeralias()
 {
     local var=\$1
@@ -199,15 +153,73 @@ dockeralias()
 }
 alias d='dockeralias'
 EOF
-    sed -i "/bashrc_docker/d" ~/.bashrc
-    echo ". ~/.bashrc_docker" >> ~/.bashrc
+    sed -i "/bashrc_sdwan/d" ~/.bashrc
+    echo ". ~/.bashrc_sdwan" >> ~/.bashrc
     source ~/.bashrc
 }
 
 remove_alias() {
+    # disused
     rm -f ~/.bashrc_docker
     sed -i "/bashrc_docker/d" ~/.bashrc
+    # effective
+    rm -f ~/.bashrc_sdwan
+    sed -i "/bashrc_sdwan/d" ~/.bashrc
     source ~/.bashrc
+}
+
+add_supervisor_config() {
+    if [ "${PM}" = "yum" ]; then
+        systemctl start supervisord
+    elif [ "${PM}" = "apt-get" ]; then
+        systemctl start supervisor
+    fi
+    #
+    touch /root/.sdwan/work.sh
+    cat > /root/.sdwan/work.sh <<-EOF
+#!/bin/bash
+if [ -f "/root/.sdwan/share/sdos" ]; then
+    mkdir -p /tmp/.sdwan/work/
+    host=$(echo "$SERVER_URL" | awk -F "/" '{print $3}')
+    exi=$(echo "$SERVER_URL" | grep 'https://')
+    if [ -n "$exi" ]; then
+        url="wss://${host}/ws"
+    else
+        url="ws://${host}/ws"
+    fi
+    chmod +x /root/.sdwan/share/sdos
+    /root/.sdwan/share/sdos work --server-url="${url}?action=nodework&nodemode=${NODE_MODE}&nodename=${NODE_NAME}&nodetoken=${NODE_TOKEN}&hostname=${HOSTNAME}"
+else
+    echo "work file does not exist"
+    sleep 3
+    exit 1
+fi
+EOF
+    chmod +x /root/.sdwan/work.sh
+    #
+    touch /etc/supervisor/conf.d/sdwan.conf
+    cat > /etc/supervisor/conf.d/sdwan.conf <<-EOF
+[program:sdwan]
+directory=/root/.sdwan
+command=/root/.sdwan/work.sh
+numprocs=1
+autostart=true
+autorestart=true
+startretries=3
+user=root
+redirect_stderr=true
+stdout_logfile=/var/log/supervisor/%(program_name)s.log
+EOF
+    #
+    if [ -z "$(supervisorctl update sdwan)" ];then
+        supervisorctl restart sdwan
+    fi
+}
+
+remove_supervisor_config() {
+    rm -f /etc/supervisor/conf.d/sdwan.conf
+    supervisorctl stop sdwan
+    supervisorctl update
 }
 
 echo "error" > /tmp/.sdwan_install
@@ -224,7 +236,7 @@ if [ "$1" = "install" ]; then
         exit 1
     fi
     echo "docker-compose up ... done"
-	add_supervisor_config
+    add_supervisor_config
     add_alias
     add_swap "{{.SWAP_FILE}}"
     if [ -n "{{.SERVER_DOMAIN}}" ] && [ "{{.CERTIFICATE_AUTO}}" = "yes" ]; then
@@ -239,6 +251,7 @@ elif [ "$1" = "remove" ]; then
         [ -n "$ii" ] && docker rmi -f $ii &> /dev/null
     fi
     remove_alias
+    remove_supervisor_config
 fi
 
 echo "success" > /tmp/.sdwan_install
