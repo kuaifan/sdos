@@ -127,11 +127,7 @@ add_ssl() {
 
 add_alias() {
     cat > ~/.bashrc_sdwan <<-EOF
-export SERVER_URL="{{.SERVER_URL}}"
-export NODE_NAME="{{.NODE_NAME}}"
-export NODE_TOKEN="{{.NODE_TOKEN}}"
-export NODE_MODE="host"
-dockeralias()
+docker_alias()
 {
     local var=\$1
     if [ "\$var" == "" ] || [ "\$var" == "ls" ]; then
@@ -151,7 +147,7 @@ dockeralias()
         docker \$@
     fi
 }
-alias d='dockeralias'
+alias d='docker_alias'
 EOF
     sed -i "/bashrc_sdwan/d" ~/.bashrc
     echo ". ~/.bashrc_sdwan" >> ~/.bashrc
@@ -179,7 +175,6 @@ add_supervisor_config() {
     cat > /root/.sdwan/work.sh <<-EOF
 #!/bin/bash
 if [ -f "/root/.sdwan/share/sdos" ]; then
-    mkdir -p /tmp/.sdwan/work/
     host=$(echo "$SERVER_URL" | awk -F "/" '{print $3}')
     exi=$(echo "$SERVER_URL" | grep 'https://')
     if [ -n "$exi" ]; then
@@ -187,6 +182,7 @@ if [ -f "/root/.sdwan/share/sdos" ]; then
     else
         url="ws://${host}/ws"
     fi
+    mkdir -p /tmp/.sdwan/work/
     chmod +x /root/.sdwan/share/sdos
     /root/.sdwan/share/sdos work --server-url="${url}?action=nodework&nodemode=${NODE_MODE}&nodename=${NODE_NAME}&nodetoken=${NODE_TOKEN}&hostname=${HOSTNAME}"
 else
@@ -201,14 +197,15 @@ EOF
     cat > /etc/supervisor/conf.d/sdwan.conf <<-EOF
 [program:sdwan]
 directory=/root/.sdwan
-command=/root/.sdwan/work.sh
+command=/bin/bash -c /root/.sdwan/work.sh
 numprocs=1
 autostart=true
 autorestart=true
-startretries=3
+startretries=100
 user=root
 redirect_stderr=true
-stdout_logfile=/var/log/supervisor/%(program_name)s.log
+environment=SERVER_URL={{.SERVER_URL}},NODE_NAME={{.NODE_NAME}},NODE_TOKEN={{.NODE_TOKEN}},NODE_MODE=host
+stdout_logfile=/tmp/.sdwan/%(program_name)s.log
 EOF
     #
     if [ -z "$(supervisorctl update sdwan)" ];then
