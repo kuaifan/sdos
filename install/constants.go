@@ -172,15 +172,15 @@ add_iptables() {
             [ "${Centos8Check}" ] && yum reinstall python3-six -y
             systemctl enable firewalld
 			systemctl start firewalld
-            firewall-cmd --set-default-zone=public > /dev/null 2>&1
-			firewall-cmd --permanent --zone=public --add-port=80/tcp > /dev/null 2>&1
-			firewall-cmd --permanent --zone=public --add-port=443/tcp > /dev/null 2>&1
-			firewall-cmd --permanent --zone=public --add-port=8443/tcp > /dev/null 2>&1
-			firewall-cmd --permanent --zone=public --add-port=10000-30000/tcp > /dev/null 2>&1
-			firewall-cmd --permanent --zone=public --add-port=10000-30000/udp > /dev/null 2>&1
-			firewall-cmd --permanent --zone=public --add-port=${sshPort}/tcp > /dev/null 2>&1
+            firewall-cmd --set-default-zone=public
+			firewall-cmd --permanent --zone=public --add-port=80/tcp
+			firewall-cmd --permanent --zone=public --add-port=443/tcp
+			firewall-cmd --permanent --zone=public --add-port=8443/tcp
+			firewall-cmd --permanent --zone=public --add-port=10000-30000/tcp
+			firewall-cmd --permanent --zone=public --add-port=10000-30000/udp
+			firewall-cmd --permanent --zone=public --add-port=${sshPort}/tcp
             if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
-                firewall-cmd --permanent --zone=public --add-port={{.NODE_PORT}}/tcp > /dev/null 2>&1
+                firewall-cmd --permanent --zone=public --add-port={{.NODE_PORT}}/tcp
             fi
 			firewall-cmd --reload
         fi
