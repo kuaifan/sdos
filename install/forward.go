@@ -16,7 +16,13 @@ func BuildForward() {
 		} else {
 			ufwForwardDel()
 		}
-	} else if Exists("/usr/sbin/iptables") {
+	} else if Exists("/usr/sbin/firewalld") {
+		if FirewallConfig.Mode == "add" {
+			cmdForwardAdd()
+		} else {
+			cmdForwardDel()
+		}
+	} else if Exists("/etc/init.d/iptables") {
 		if ForwardConfig.Mode == "add" {
 			iptablesForwardAdd()
 		} else {
@@ -59,6 +65,39 @@ func ufwForwardDel() {
 		value = fmt.Sprintf("-A PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s\n-A POSTROUTING -d %s -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport, ForwardConfig.Eip)
 	}
 	WriteFile(ufwPath, strings.ReplaceAll(content, fmt.Sprintf("%s\n", value), ""))
+}
+
+func cmdForwardTemplate(mode string) string {
+	value := ""
+	if strings.Contains(ForwardConfig.Protocol, "/") {
+		tcp := fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-forward-port=port=\"%s\":proto=tcp:toaddr=\"%s\":toport=\"%s\"", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
+		udp := fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-forward-port=port=\"%s\":proto=udp:toaddr=\"%s\":toport=\"%s\"", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
+		value = fmt.Sprintf("%s && %s", tcp, udp)
+	} else {
+		value = fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-forward-port=port=\"%s\":proto=\"%s\":toaddr=\"%s\":toport=\"%s\"", ForwardConfig.Sport, ForwardConfig.Protocol, ForwardConfig.Eip, ForwardConfig.Eport)
+	}
+	if mode == "del" {
+		value = strings.ReplaceAll(value, "{MODE}", "remove")
+	} else {
+		value = strings.ReplaceAll(value, "{MODE}", "add")
+	}
+	return value
+}
+
+func cmdForwardAdd() {
+	cmd := cmdForwardTemplate("add")
+	_, s, err := RunCommand("-c", cmd)
+	if err != nil {
+		logger.Error(err, s)
+	}
+}
+
+func cmdForwardDel() {
+	cmd := cmdForwardTemplate("del")
+	_, s, err := RunCommand("-c", cmd)
+	if err != nil {
+		logger.Error(err, s)
+	}
 }
 
 func iptablesForwardTemplate(mode string) string {
