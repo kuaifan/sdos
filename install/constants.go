@@ -73,6 +73,8 @@ check_system() {
     elif [ "${PM}" = "apt-get" ]; then
         apt-get update -y
         apt-get install -y curl socat ufw supervisor
+        echo y|ufw enable
+        ufw reload
     fi
     judge "安装脚本依赖"
 }
