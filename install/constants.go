@@ -229,6 +229,7 @@ EOF
 remove_supervisor_config() {
     rm -f /etc/supervisor/conf.d/sdwan.conf
     rm -f /etc/supervisord.d/sdwan.ini
+    rm -rf /usr/bin/sdos
     supervisorctl stop sdwan >/dev/null 2>&1
     supervisorctl update >/dev/null 2>&1
 }
@@ -261,13 +262,6 @@ elif [ "$1" = "remove" ]; then
         [ -n "$ll" ] && docker rm -f $ll &> /dev/null
         [ -n "$ii" ] && docker rmi -f $ii &> /dev/null
     fi
-    port=$(ps -ef | grep 'sdos' | grep 'nodemode=host' | grep -v 'grep' | awk '{print $2}')
-    if [ -n "$port" ]; then
-        kill -9 $port
-        sleep 2
-    fi
-    rm -rf /usr/bin/sdos
-    rm -rf /usr/.sdwan/
     remove_alias
     remove_supervisor_config
 fi
