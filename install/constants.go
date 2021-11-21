@@ -63,17 +63,46 @@ check_system() {
         rm -f $CmdPath
         exit 1
     fi
-    # 
+    #
+    sshPort=$(cat /etc/ssh/sshd_config | grep 'Port '|awk '{print $2}')
     if [ "${PM}" = "yum" ]; then
         yum update -y
         yum install -y curl socat iptables-services epel-release
         yum install -y supervisor   # 需要先装 epel-release 才能安装 supervisor
-        systemctl enable iptables
-        systemctl start iptables
+        #
+        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
+        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
+        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
+        iptables -I INPUT -p tcp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
+        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${sshPort} -j ACCEPT
+        if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT
+        fi
+        iptables -A INPUT -p icmp --icmp-type any -j ACCEPT
+        iptables -A INPUT -s localhost -d localhost -j ACCEPT
+        iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+        iptables -P INPUT DROP
+        service iptables save
+        iptables_status=$(service iptables status | grep 'not running')
+        if [ "${iptables_status}" == '' ];then
+            service iptables restart
+        fi
     elif [ "${PM}" = "apt-get" ]; then
         apt-get update -y
         apt-get install -y curl socat ufw supervisor
+        #
+        ufw allow 80/tcp
+        ufw allow 443/tcp
+        ufw allow 8443/tcp
+        ufw allow 10000:30000/tcp
+        ufw allow 10000:30000/udp
+        ufw allow ${sshPort}/tcp
+        if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
+            ufw allow {{.NODE_PORT}}/tcp
+        fi
         echo y|ufw enable
+        ufw default deny
         ufw reload
     fi
     judge "安装脚本依赖"
