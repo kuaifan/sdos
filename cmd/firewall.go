@@ -4,6 +4,7 @@ import (
 	"github.com/kuaifan/sdos/install"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 )
 
 // firewallCmd represents the firewall command
@@ -11,6 +12,9 @@ var firewallCmd = &cobra.Command{
 	Use:   "firewall",
 	Short: "Only firewall",
 	PreRun: func(cmd *cobra.Command, args []string) {
+		install.FirewallConfig.Mode = strings.ToLower(install.FirewallConfig.Mode)
+		install.FirewallConfig.Type = strings.ToLower(install.FirewallConfig.Type)
+		install.FirewallConfig.Protocol = strings.ToLower(install.FirewallConfig.Protocol)
 		if install.FirewallConfig.Mode != "add" && install.FirewallConfig.Mode != "del" {
 			err := cmd.Help()
 			if err != nil {
