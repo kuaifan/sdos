@@ -74,7 +74,7 @@ check_system() {
         iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
         iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
         iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
-        iptables -I INPUT -p tcp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
+        iptables -I INPUT -p udp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
         iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${sshPort} -j ACCEPT
         if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
             iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT

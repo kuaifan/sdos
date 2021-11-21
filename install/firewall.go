@@ -76,7 +76,7 @@ func iptablesFirewallTemplate(mode string) string {
 	if FirewallConfig.Address == "" {
 		if strings.Contains(FirewallConfig.Protocol, "/") {
 			tcp := fmt.Sprintf("iptables {MODE} INPUT -p tcp -m state --state NEW -m tcp --dport %s -j %s", FirewallConfig.Ports, FirewallConfig.Type)
-			udp := fmt.Sprintf("iptables {MODE} INPUT -p udp -m state --state NEW -m tcp --dport %s -j %s", FirewallConfig.Ports, FirewallConfig.Type)
+			udp := fmt.Sprintf("iptables {MODE} INPUT -p udp -m state --state NEW -m udp --dport %s -j %s", FirewallConfig.Ports, FirewallConfig.Type)
 			value = fmt.Sprintf("%s && %s", tcp, udp)
 		} else {
 			value = fmt.Sprintf("iptables {MODE} INPUT -p tcp -m state --state NEW -m %s --dport %s -j %s", FirewallConfig.Protocol, FirewallConfig.Ports, FirewallConfig.Type)
