@@ -7,7 +7,7 @@ goldflags="-s -w -X 'main.CommitSha1=${COMMIT_SHA1}' -X 'main.BuildTime=${BUILD_
 if [ "$1" = "linux" ]; then
     env GOOS=linux GOARCH=amd64 go build -o sdos -ldflags "$goldflags" main.go && command -v upx &> /dev/null && upx sdos
 else
-    go build -o sdos -ldflags "$goldflags" main.go && command -v upx &> /dev/null && upx sdos
+    env CGO_ENABLED=0 go build -o sdos -ldflags "$goldflags" main.go && command -v upx &> /dev/null && upx sdos
 fi
 
 exit 0

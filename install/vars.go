@@ -58,6 +58,15 @@ type State struct {
 	}
 }
 
+type UFW struct {
+	Type     string
+	Sport    string
+	Dport    string
+	Dip      string
+	Protocol string
+	Path     string
+}
+
 var (
 	NodeIPs      []string
 	ManageImage  string
@@ -81,4 +90,6 @@ var (
 	NetInterface  string
 	NetCount      uint
 	NetUpdateTime float64
+
+	UFWConfig UFW
 )

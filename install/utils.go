@@ -72,11 +72,36 @@ func IsFile(path string) bool {
 
 // ReadFile 读取文件
 func ReadFile(path string) string {
-	content ,err :=ioutil.ReadFile(path)
-	if err !=nil {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
 		panic(err)
 	}
 	return string(content)
+}
+
+// WriteFile 保存文件
+func WriteFile(path string, content string) {
+	var fileByte = []byte(content)
+	err := ioutil.WriteFile(path, fileByte, 0666)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// SliceInsert 向数组插入内容
+func SliceInsert(s []string, index int, value string) []string {
+	rear := append([]string{}, s[index:]...)
+	return append(append(s[:index], value), rear...)
+}
+
+// FindIndex 查找数组位置
+func FindIndex(tab []string, value string) int {
+	for i, v := range tab {
+		if v == value {
+			return i
+		}
+	}
+	return -1
 }
 
 // VersionToInt v1.15.6  => 115
