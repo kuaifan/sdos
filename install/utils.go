@@ -277,6 +277,7 @@ func DecodeIPs(ips []string) []string {
 	return res
 }
 
+// GetRemoteHostName 获取主机名
 func GetRemoteHostName(hostIP string) string {
 	hostName := SSHConfig.CmdToStringNoLog(hostIP, "hostname", "")
 	return strings.ToLower(hostName)
@@ -296,6 +297,7 @@ func Base64Decode(data string) string {
 	return string(uDec)
 }
 
+// RandomString 随机字符串
 func RandomString(length int) string {
 	rand.Seed(time.Now().UnixNano())
 	b := make([]byte, length)
@@ -303,21 +305,14 @@ func RandomString(length int) string {
 	return fmt.Sprintf("%x", b)[:length]
 }
 
+// StringMd5 MD5
 func StringMd5(str string) string {
 	h := md5.New()
 	h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
 }
 
-func InArray(item string, items []string) bool {
-	for _, eachItem := range items {
-		if eachItem == item {
-			return true
-		}
-	}
-	return false
-}
-
+// PingFile ping文件
 func PingFile(path string, source string) (string, error) {
 	result, err := PingFileMap(path, source, 2000, 5)
 	if err != nil {
@@ -356,6 +351,7 @@ func PingFileMap(path string, source string, timeout int, count int) (map[string
 	return pingMap, nil
 }
 
+// ReadLines 按行读取文件
 func ReadLines(filename string) ([]string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -376,6 +372,7 @@ func ReadLines(filename string) ([]string, error) {
 	return ret, nil
 }
 
+// ComputePing 计算对比ping值
 func ComputePing(var1, var2 float64) bool {
 	diff := math.Abs(var1 - var2)
 	if diff < 5 {
@@ -427,6 +424,16 @@ func StringsContains(array []string, val string) (index int) {
 		}
 	}
 	return
+}
+
+// InArray 元素是否存在数组中
+func InArray(item string, items []string) bool {
+	for _, eachItem := range items {
+		if eachItem == item {
+			return true
+		}
+	}
+	return false
 }
 
 // KillProcess 根据名字杀死进程
@@ -606,4 +613,64 @@ func GetManageState(lastState *State) *State {
 	}
 
 	return state
+}
+
+// FirewallIsRuning 防火墙是否运行
+func FirewallIsRuning() bool {
+	if Exists("/usr/sbin/ufw") {
+		result, s, err := RunCommand("-c", "/usr/sbin/ufw status | grep \"Status\"")
+		if err != nil {
+			logger.Error(err, s)
+		}
+		if strings.Contains(result, "Status: active") {
+			return true
+		} else {
+			return false
+		}
+	} else if Exists("/usr/sbin/firewalld") {
+		result, s, err := RunCommand("-c", "firewall-cmd --state")
+		if err != nil {
+			logger.Error(err, s)
+		}
+		if result == "running" {
+			return true
+		} else {
+			return false
+		}
+	} else if Exists("/etc/init.d/iptables") {
+		result, s, err := RunCommand("-c", "/etc/init.d/iptables status")
+		if err != nil {
+			logger.Error(err, s)
+		}
+		if strings.Contains(result, "iptables: Firewall is not running") {
+			return false
+		} else {
+			return true
+		}
+	}
+	return false
+}
+
+// FirewallOperation 防火墙操作，支持：reload、restart、stop、start
+func FirewallOperation(name string) {
+	cmd := ""
+	if Exists("/usr/sbin/ufw") {
+		if name == "stop" {
+			cmd = "/usr/sbin/ufw disable"
+		} else if name == "start" {
+			cmd = "/usr/sbin/ufw enable"
+		} else if name == "reload" {
+			cmd = "/usr/sbin/ufw reload"
+		} else if name == "restart" {
+			cmd = "/usr/sbin/ufw disable && /usr/sbin/ufw ufw enable"
+		}
+	} else if Exists("/usr/sbin/firewalld") {
+		cmd = fmt.Sprintf("systemctl %s firewalld", name)
+	} else if Exists("/etc/init.d/iptables") {
+		cmd = fmt.Sprintf("service iptables %s", name)
+	}
+	_, s, err := RunCommand("-c", cmd)
+	if err != nil {
+		logger.Error(err, s)
+	}
 }

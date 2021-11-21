@@ -8,6 +8,19 @@ import (
 
 //BuildFirewall is
 func BuildFirewall() {
+	if FirewallConfig.Mode == "status" {
+		// 防火墙状态
+		if FirewallIsRuning() {
+			fmt.Println("running")
+		} else {
+			fmt.Println("stop")
+		}
+		return
+	} else if InArray(FirewallConfig.Mode, []string{"reload", "restart", "stop", "start"}) {
+		// 重载、重启、停止、启动
+		FirewallOperation(FirewallConfig.Mode)
+		return
+	}
 	if Exists("/usr/sbin/ufw") {
 		if FirewallConfig.Mode == "add" {
 			ufwFirewallAdd()
