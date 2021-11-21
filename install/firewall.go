@@ -16,6 +16,10 @@ func BuildFirewall() {
 			fmt.Println("stop")
 		}
 		return
+	} else if FirewallConfig.Mode == "save" {
+		// 重载防火墙配置
+		FirewallSave()
+		return
 	} else if InArray(FirewallConfig.Mode, []string{"reload", "restart", "stop", "start"}) {
 		// 重载、重启、停止、启动
 		FirewallOperation(FirewallConfig.Mode)

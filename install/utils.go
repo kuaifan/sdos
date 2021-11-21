@@ -674,3 +674,19 @@ func FirewallOperation(name string) {
 		logger.Error(err, s)
 	}
 }
+
+// FirewallSave 重载防火墙配置
+func FirewallSave() {
+	cmd := ""
+	if Exists("/usr/sbin/ufw") {
+		cmd = "/usr/sbin/ufw reload"
+	} else if Exists("/usr/sbin/firewalld") {
+		cmd = "firewall-cmd --reload"
+	} else if Exists("/etc/init.d/iptables") {
+		cmd = "/etc/init.d/iptables save && /etc/init.d/iptables restart"
+	}
+	_, s, err := RunCommand("-c", cmd)
+	if err != nil {
+		logger.Error(err, s)
+	}
+}
