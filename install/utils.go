@@ -632,7 +632,7 @@ func FirewallIsRuning() bool {
 		if err != nil {
 			logger.Error(err, s)
 		}
-		if result == "running" {
+		if strings.Contains(result, "running") {
 			return true
 		} else {
 			return false
