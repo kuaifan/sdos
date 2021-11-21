@@ -58,8 +58,16 @@ type State struct {
 	}
 }
 
-type Forward struct {
+type Firewall struct {
+	Mode     string
+	Ports    string
 	Type     string
+	Address  string
+	Protocol string
+}
+
+type Forward struct {
+	Mode     string
 	Sport    string
 	Eip      string
 	Eport    string
@@ -90,5 +98,6 @@ var (
 	NetCount      uint
 	NetUpdateTime float64
 
+	FirewallConfig Firewall
 	ForwardConfig Forward
 )

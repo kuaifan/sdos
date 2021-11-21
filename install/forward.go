@@ -11,21 +11,21 @@ var ufwPath = "/etc/ufw/before.rules"
 //BuildForward is
 func BuildForward() {
 	if Exists("/usr/sbin/ufw") {
-		if ForwardConfig.Type == "add" {
-			ufwAdd()
+		if ForwardConfig.Mode == "add" {
+			ufwForwardAdd()
 		} else {
-			ufwDel()
+			ufwForwardDel()
 		}
 	} else if Exists("/usr/sbin/iptables") {
-		if ForwardConfig.Type == "add" {
-			iptablesAdd()
+		if ForwardConfig.Mode == "add" {
+			iptablesForwardAdd()
 		} else {
-			iptablesDel()
+			iptablesForwardDel()
 		}
 	}
 }
 
-func ufwAdd() {
+func ufwForwardAdd() {
 	content := ReadFile(ufwPath)
 	if !strings.Contains(content, "*nat") {
 		content = fmt.Sprintf("*nat\n:PREROUTING ACCEPT [0:0]\n:POSTROUTING ACCEPT [0:0]\nCOMMIT\n%s", content)
@@ -46,7 +46,7 @@ func ufwAdd() {
 	WriteFile(ufwPath, strings.Join(array, "\n"))
 }
 
-func ufwDel() {
+func ufwForwardDel() {
 	content := ReadFile(ufwPath)
 	value := ""
 	if ForwardConfig.Eip == "" {
@@ -61,41 +61,43 @@ func ufwDel() {
 	WriteFile(ufwPath, strings.ReplaceAll(content, fmt.Sprintf("%s\n", value), ""))
 }
 
-func iptablesTemplate(mode string) string {
+func iptablesForwardTemplate(mode string) string {
 	value := ""
 	if ForwardConfig.Eip == "" {
 		if strings.Contains(ForwardConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("iptables -t nat -A PREROUTING -p tcp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Eport)
-			udp := fmt.Sprintf("iptables -t nat -A PREROUTING -p udp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Eport)
+			tcp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p tcp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Eport)
+			udp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p udp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Eport)
 			value = fmt.Sprintf("%s && %s", tcp, udp)
 		} else {
-			value = fmt.Sprintf("iptables -t nat -A PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eport)
+			value = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eport)
 		}
 	} else {
 		if strings.Contains(ForwardConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("iptables -t nat -A PREROUTING -p tcp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
-			udp := fmt.Sprintf("iptables -t nat -A PREROUTING -p udp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
-			value = fmt.Sprintf("%s && %s && iptables -t nat -A POSTROUTING -j MASQUERADE", tcp, udp)
+			tcp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p tcp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
+			udp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p udp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
+			value = fmt.Sprintf("%s && %s && iptables -t nat {MODE} POSTROUTING -j MASQUERADE", tcp, udp)
 		} else {
-			value = fmt.Sprintf("iptables -t nat -A PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s && iptables -t nat -A POSTROUTING -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
+			value = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s && iptables -t nat {MODE} POSTROUTING -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
 		}
 	}
 	if mode == "del" {
-		value = strings.ReplaceAll(value, "-A", "-D")
+		value = strings.ReplaceAll(value, "{MODE}", "-D")
+	} else {
+		value = strings.ReplaceAll(value, "{MODE}", "-A")
 	}
 	return value
 }
 
-func iptablesAdd() {
-	cmd := iptablesTemplate("add")
+func iptablesForwardAdd() {
+	cmd := iptablesForwardTemplate("add")
 	_, s, err := RunCommand("-c", cmd)
 	if err != nil {
 		logger.Error(err, s)
 	}
 }
 
-func iptablesDel() {
-	cmd := iptablesTemplate("del")
+func iptablesForwardDel() {
+	cmd := iptablesForwardTemplate("del")
 	_, s, err := RunCommand("-c", cmd)
 	if err != nil {
 		logger.Error(err, s)
