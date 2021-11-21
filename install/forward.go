@@ -39,14 +39,14 @@ func ufwForwardAdd() {
 	array := strings.Split(content, "\n")
 	index := FindIndex(array, ":POSTROUTING ACCEPT [0:0]")
 	value := ""
-	if ForwardConfig.Eip == "" {
+	if ForwardConfig.Dip == "" {
 		if strings.Contains(ForwardConfig.Protocol, "/") {
-			value = fmt.Sprintf("-A PREROUTING -p tcp --dport %s -j REDIRECT --to-port %s\n-A PREROUTING -p udp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Eport, ForwardConfig.Sport, ForwardConfig.Eport)
+			value = fmt.Sprintf("-A PREROUTING -p tcp --dport %s -j REDIRECT --to-port %s\n-A PREROUTING -p udp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Dport, ForwardConfig.Sport, ForwardConfig.Dport)
 		} else {
-			value = fmt.Sprintf("-A PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eport)
+			value = fmt.Sprintf("-A PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dport)
 		}
 	} else {
-		value = fmt.Sprintf("-A PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s\n-A POSTROUTING -d %s -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport, ForwardConfig.Eip)
+		value = fmt.Sprintf("-A PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s\n-A POSTROUTING -d %s -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport, ForwardConfig.Dip)
 	}
 	array = SliceInsert(array, index + 1, value)
 	WriteFile(ufwPath, strings.Join(array, "\n"))
@@ -55,14 +55,14 @@ func ufwForwardAdd() {
 func ufwForwardDel() {
 	content := ReadFile(ufwPath)
 	value := ""
-	if ForwardConfig.Eip == "" {
+	if ForwardConfig.Dip == "" {
 		if strings.Contains(ForwardConfig.Protocol, "/") {
-			value = fmt.Sprintf("-A PREROUTING -p tcp --dport %s -j REDIRECT --to-port %s\n-A PREROUTING -p udp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Eport, ForwardConfig.Sport, ForwardConfig.Eport)
+			value = fmt.Sprintf("-A PREROUTING -p tcp --dport %s -j REDIRECT --to-port %s\n-A PREROUTING -p udp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Dport, ForwardConfig.Sport, ForwardConfig.Dport)
 		} else {
-			value = fmt.Sprintf("-A PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eport)
+			value = fmt.Sprintf("-A PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dport)
 		}
 	} else {
-		value = fmt.Sprintf("-A PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s\n-A POSTROUTING -d %s -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport, ForwardConfig.Eip)
+		value = fmt.Sprintf("-A PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s\n-A POSTROUTING -d %s -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport, ForwardConfig.Dip)
 	}
 	WriteFile(ufwPath, strings.ReplaceAll(content, fmt.Sprintf("%s\n", value), ""))
 }
@@ -70,11 +70,11 @@ func ufwForwardDel() {
 func cmdForwardTemplate(mode string) string {
 	value := ""
 	if strings.Contains(ForwardConfig.Protocol, "/") {
-		tcp := fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-forward-port=port=\"%s\":proto=tcp:toaddr=\"%s\":toport=\"%s\"", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
-		udp := fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-forward-port=port=\"%s\":proto=udp:toaddr=\"%s\":toport=\"%s\"", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
+		tcp := fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-forward-port=port=\"%s\":proto=tcp:toaddr=\"%s\":toport=\"%s\"", ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport)
+		udp := fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-forward-port=port=\"%s\":proto=udp:toaddr=\"%s\":toport=\"%s\"", ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport)
 		value = fmt.Sprintf("%s && %s", tcp, udp)
 	} else {
-		value = fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-forward-port=port=\"%s\":proto=\"%s\":toaddr=\"%s\":toport=\"%s\"", ForwardConfig.Sport, ForwardConfig.Protocol, ForwardConfig.Eip, ForwardConfig.Eport)
+		value = fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-forward-port=port=\"%s\":proto=\"%s\":toaddr=\"%s\":toport=\"%s\"", ForwardConfig.Sport, ForwardConfig.Protocol, ForwardConfig.Dip, ForwardConfig.Dport)
 	}
 	if mode == "del" {
 		value = strings.ReplaceAll(value, "{MODE}", "remove")
@@ -102,21 +102,21 @@ func cmdForwardDel() {
 
 func iptablesForwardTemplate(mode string) string {
 	value := ""
-	if ForwardConfig.Eip == "" {
+	if ForwardConfig.Dip == "" {
 		if strings.Contains(ForwardConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p tcp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Eport)
-			udp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p udp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Eport)
+			tcp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p tcp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Dport)
+			udp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p udp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Dport)
 			value = fmt.Sprintf("%s && %s", tcp, udp)
 		} else {
-			value = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eport)
+			value = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dport)
 		}
 	} else {
 		if strings.Contains(ForwardConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p tcp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
-			udp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p udp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
+			tcp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p tcp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport)
+			udp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p udp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport)
 			value = fmt.Sprintf("%s && %s && iptables -t nat {MODE} POSTROUTING -j MASQUERADE", tcp, udp)
 		} else {
-			value = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s && iptables -t nat {MODE} POSTROUTING -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Eip, ForwardConfig.Eport)
+			value = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s && iptables -t nat {MODE} POSTROUTING -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport)
 		}
 	}
 	if mode == "del" {

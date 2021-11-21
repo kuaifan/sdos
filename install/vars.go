@@ -69,8 +69,8 @@ type Firewall struct {
 type Forward struct {
 	Mode     string
 	Sport    string
-	Eip      string
-	Eport    string
+	Dip      string
+	Dport    string
 	Protocol string
 }
 

@@ -31,7 +31,7 @@ func init() {
 	rootCmd.AddCommand(forwardCmd)
 	forwardCmd.Flags().StringVar(&install.ForwardConfig.Mode, "mode", "", "")
 	forwardCmd.Flags().StringVar(&install.ForwardConfig.Sport, "sport", "", "")
-	forwardCmd.Flags().StringVar(&install.ForwardConfig.Eip, "eip", "", "")
-	forwardCmd.Flags().StringVar(&install.ForwardConfig.Eport, "eport", "", "")
+	forwardCmd.Flags().StringVar(&install.ForwardConfig.Dip, "dip", "", "")
+	forwardCmd.Flags().StringVar(&install.ForwardConfig.Dport, "dport", "", "")
 	forwardCmd.Flags().StringVar(&install.ForwardConfig.Protocol, "protocol", "", "")
 }
