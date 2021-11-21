@@ -28,6 +28,9 @@ COPY --from=builder /go/sdos/sdos /usr/bin/
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+RUN mkdir /usr/.sdwan
+WORKDIR /usr/.sdwan
+
 ENTRYPOINT ["/entrypoint.sh"]
 
 

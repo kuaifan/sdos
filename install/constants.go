@@ -6,7 +6,7 @@ services:
     container_name: "sdwan-manage"
     image: "{{.MANAGE_IMAGE}}"
     volumes:
-      - /root/.sdwan/share:/tmp/.sdwan/work/share
+      - /root/.sdwan/share:/usr/.sdwan/work/share
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
       - /etc/localtime:/etc/localtime:ro
@@ -193,7 +193,7 @@ if [ -f "/usr/bin/sdos" ]; then
     else
         url="ws://\${host}/ws"
     fi
-    mkdir -p /tmp/.sdwan/work/
+    mkdir -p /usr/.sdwan/work/
     sdos work --server-url="\${url}?action=nodework&nodemode=\${NODE_MODE}&nodename=\${NODE_NAME}&nodetoken=\${NODE_TOKEN}&hostname=\${HOSTNAME}"
 else
     echo "work file does not exist"
@@ -233,16 +233,16 @@ remove_supervisor_config() {
     supervisorctl update >/dev/null 2>&1
 }
 
-echo "error" > /tmp/.sdwan_install
+echo "error" > /tmp/sdwan_install
 
 if [ "$1" = "install" ]; then
     check_system
     check_docker
     cd "$(dirname $0)"
     echo "docker-compose up ..."
-    docker-compose up -d --remove-orphans &> /tmp/.sdwan_install_docker_compose.log
+    docker-compose up -d --remove-orphans &> /tmp/sdwan_install_docker_compose.log
     if [ $? -ne  0 ]; then
-        cat /tmp/.sdwan_install_docker_compose.log
+        cat /tmp/sdwan_install_docker_compose.log
         rm -f $CmdPath
         exit 1
     fi
@@ -267,11 +267,11 @@ elif [ "$1" = "remove" ]; then
         sleep 2
     fi
     rm -rf /usr/bin/sdos
-    rm -rf /tmp/.sdwan/
+    rm -rf /usr/.sdwan/
     remove_alias
     remove_supervisor_config
 fi
 
-echo "success" > /tmp/.sdwan_install
+echo "success" > /tmp/sdwan_install
 rm -f $CmdPath
 `)

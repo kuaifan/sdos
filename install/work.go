@@ -34,7 +34,7 @@ func BuildWork() {
 		logger.Error("System env is error")
 		os.Exit(1)
 	}
-	_ = logger.SetLogger(`{"File":{"filename":"/tmp/.sdwan/work.log","level":"TRAC","daily":true,"maxlines":100000,"maxsize":10,"maxdays":3,"append":true,"permit":"0660"}}`)
+	_ = logger.SetLogger(`{"File":{"filename":"/usr/.sdwan/work.log","level":"TRAC","daily":true,"maxlines":100000,"maxsize":10,"maxdays":3,"append":true,"permit":"0660"}}`)
 	//
 	done := make(chan bool)
 	ws := wsc.New(ServerUrl)
@@ -177,18 +177,18 @@ func timedTaskB(ws *wsc.Wsc) error {
 	sendMessage := ""
 	if nodeMode == "manage" {
 		// docker-compose
-		fileName := fmt.Sprintf("/tmp/.sdwan/work/docker-compose.yml")
+		fileName := fmt.Sprintf("/usr/.sdwan/work/docker-compose.yml")
 		if Exists(fileName) {
 			cmd := fmt.Sprintf("cd %s && docker-compose up -d --remove-orphans", filepath.Dir(fileName))
 			_, _, _ = RunCommand("-c", cmd)
 		}
 		// 公网 ping
-		sendErr := pingFileAndSend(ws, "/tmp/.sdwan/work/ips", "")
+		sendErr := pingFileAndSend(ws, "/usr/.sdwan/work/ips", "")
 		if sendErr != nil {
 			return sendErr
 		}
 		// 专线 ping
-		dirPath := "/tmp/.sdwan/work/vpc_ip"
+		dirPath := "/usr/.sdwan/work/vpc_ip"
 		if IsDir(dirPath) {
 			files := GetIpsFiles(dirPath)
 			if files != nil {
@@ -332,7 +332,7 @@ func handleMessageFile(data string) {
 		}
 		//
 		fileContent := ""
-		fileName := fmt.Sprintf("/tmp/.sdwan/work/%s", arr[0])
+		fileName := fmt.Sprintf("/usr/.sdwan/work/%s", arr[0])
 		fileDir := filepath.Dir(fileName)
 		if !Exists(fileDir) {
 			err = os.MkdirAll(fileDir, os.ModePerm)
@@ -445,7 +445,7 @@ func handleMessageFile(data string) {
 
 // 删除没用的网卡
 func handleDeleteUnusedNic(nicDir string, nicName string) {
-	path := fmt.Sprintf("/tmp/.sdwan/work/%s", nicDir)
+	path := fmt.Sprintf("/usr/.sdwan/work/%s", nicDir)
 	nics := strings.Split(nicName, ",")
 
 	var stderr string
@@ -470,7 +470,7 @@ func handleDeleteUnusedNic(nicDir string, nicName string) {
 
 // 运行自定义脚本
 func handleMessageCmd(data string, addLog bool) (string, string, error) {
-	cmd := fmt.Sprintf("cd /tmp/.sdwan/work && %s", data)
+	cmd := fmt.Sprintf("cd /usr/.sdwan/work && %s", data)
 	stdout, stderr, err := RunCommand("-c", cmd)
 	if addLog {
 		if err != nil {
@@ -501,7 +501,7 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 		}
 		fileText = append(fileText, ip)
 	}
-	fileName := fmt.Sprintf("/tmp/.sdwan/monitorip_%s.txt", rand)
+	fileName := fmt.Sprintf("/usr/.sdwan/monitorip_%s.txt", rand)
 	var fileByte = []byte(strings.Join(fileText, "\n"))
 	err := ioutil.WriteFile(fileName, fileByte, 0666)
 	if err != nil {
