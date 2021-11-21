@@ -64,46 +64,12 @@ check_system() {
         exit 1
     fi
     #
-    sshPort=$(cat /etc/ssh/sshd_config | grep 'Port '|awk '{print $2}')
     if [ "${PM}" = "yum" ]; then
         yum update -y
-        yum install -y curl socat iptables-services epel-release
-        yum install -y supervisor   # 需要先装 epel-release 才能安装 supervisor
-        #
-        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
-        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
-        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
-        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
-        iptables -I INPUT -p udp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
-        iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${sshPort} -j ACCEPT
-        if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
-            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT
-        fi
-        iptables -A INPUT -p icmp --icmp-type any -j ACCEPT
-        iptables -A INPUT -s localhost -d localhost -j ACCEPT
-        iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-        iptables -P INPUT DROP
-        service iptables save
-        iptables_status=$(service iptables status | grep 'not running')
-        if [ "${iptables_status}" == '' ];then
-            service iptables restart
-        fi
+        yum install -y curl socat epel-release
     elif [ "${PM}" = "apt-get" ]; then
         apt-get update -y
-        apt-get install -y curl socat ufw supervisor
-        #
-        ufw allow 80/tcp
-        ufw allow 443/tcp
-        ufw allow 8443/tcp
-        ufw allow 10000:30000/tcp
-        ufw allow 10000:30000/udp
-        ufw allow ${sshPort}/tcp
-        if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
-            ufw allow {{.NODE_PORT}}/tcp
-        fi
-        echo y|ufw enable
-        ufw default deny
-        ufw reload
+        apt-get install -y curl socat
     fi
     judge "安装脚本依赖"
 }
@@ -161,6 +127,67 @@ add_ssl() {
     /root/.acme.sh/acme.sh --installcert -d "${domain}" --key-file "${sslPath}/site.key" --fullchain-file "${sslPath}/site.crt"
 }
 
+add_iptables() {
+    sshPort=$(cat /etc/ssh/sshd_config | grep 'Port '|awk '{print $2}')
+    if [ "${PM}" = "apt-get" ]; then
+        apt-get install -y ufw
+        if [ -f "/usr/sbin/ufw" ];then
+            ufw allow 80/tcp
+            ufw allow 443/tcp
+            ufw allow 8443/tcp
+            ufw allow 10000:30000/tcp
+            ufw allow 10000:30000/udp
+            ufw allow ${sshPort}/tcp
+            if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
+                ufw allow {{.NODE_PORT}}/tcp
+            fi
+            echo y|ufw enable
+            ufw default deny
+        fi
+    else
+        if [ -f "/etc/init.d/iptables" ]; then
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 80 -j ACCEPT
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 443 -j ACCEPT
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 8443 -j ACCEPT
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport 10000:30000 -j ACCEPT
+            iptables -I INPUT -p udp -m state --state NEW -m udp --dport 10000:30000 -j ACCEPT
+            iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport ${sshPort} -j ACCEPT
+            if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
+                iptables -I INPUT -p tcp -m state --state NEW -m tcp --dport {{.NODE_PORT}} -j ACCEPT
+            fi
+            iptables -A INPUT -p icmp --icmp-type any -j ACCEPT
+            iptables -A INPUT -s localhost -d localhost -j ACCEPT
+            iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+            iptables -P INPUT DROP
+            service iptables save
+            iptables_status=$(service iptables status | grep 'not running')
+            if [ "${iptables_status}" == '' ];then
+                service iptables restart
+            fi
+        else
+            AliyunCheck=$(cat /etc/redhat-release | grep "Aliyun Linux")
+            [ "${AliyunCheck}" ] && return
+            yum install firewalld -y
+            Centos8Check=$(cat /etc/redhat-release | grep ' 8.' | grep -iE 'centos|Red Hat')
+            [ "${Centos8Check}" ] && yum reinstall python3-six -y
+            systemctl enable firewalld
+			systemctl start firewalld
+            firewall-cmd --set-default-zone=public > /dev/null 2>&1
+			firewall-cmd --permanent --zone=public --add-port=80/tcp > /dev/null 2>&1
+			firewall-cmd --permanent --zone=public --add-port=443/tcp > /dev/null 2>&1
+			firewall-cmd --permanent --zone=public --add-port=8443/tcp > /dev/null 2>&1
+			firewall-cmd --permanent --zone=public --add-port=10000-30000/tcp > /dev/null 2>&1
+			firewall-cmd --permanent --zone=public --add-port=10000-30000/udp > /dev/null 2>&1
+			firewall-cmd --permanent --zone=public --add-port=${sshPort}/tcp > /dev/null 2>&1
+            if [ "${sshPort}" != "{{.NODE_PORT}}" ]; then
+                firewall-cmd --permanent --zone=public --add-port={{.NODE_PORT}}/tcp > /dev/null 2>&1
+            fi
+			firewall-cmd --reload
+        fi
+    fi
+    judge "安装防火墙"
+}
+
 add_alias() {
     cat > ~/.bashrc_sdwan <<-EOF
 docker_alias()
@@ -200,10 +227,12 @@ remove_alias() {
     source ~/.bashrc
 }
 
-add_supervisor_config() {
+add_supervisor() {
     if [ "${PM}" = "yum" ]; then
+        yum install -y supervisor
         systemctl start supervisord
     elif [ "${PM}" = "apt-get" ]; then
+        apt-get install -y supervisor
         systemctl start supervisor
     fi
     #
@@ -255,7 +284,7 @@ EOF
     supervisorctl restart sdwan
 }
 
-remove_supervisor_config() {
+remove_supervisor() {
     rm -f /etc/supervisor/conf.d/sdwan.conf
     rm -f /etc/supervisord.d/sdwan.ini
     rm -rf /usr/bin/sdos
@@ -277,12 +306,13 @@ if [ "$1" = "install" ]; then
         exit 1
     fi
     echo "docker-compose up ... done"
-    add_supervisor_config
     add_alias
+    add_supervisor
     add_swap "{{.SWAP_FILE}}"
     if [ -n "{{.SERVER_DOMAIN}}" ] && [ "{{.CERTIFICATE_AUTO}}" = "yes" ]; then
         add_ssl "{{.SERVER_DOMAIN}}"
     fi
+    add_iptables
 elif [ "$1" = "remove" ]; then
     docker --version &> /dev/null
     if [ $? -eq  0 ]; then
@@ -292,7 +322,7 @@ elif [ "$1" = "remove" ]; then
         [ -n "$ii" ] && docker rmi -f $ii &> /dev/null
     fi
     remove_alias
-    remove_supervisor_config
+    remove_supervisor
 fi
 
 echo "success" > /tmp/sdwan_install
