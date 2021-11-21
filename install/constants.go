@@ -181,7 +181,11 @@ add_supervisor_config() {
     touch /root/.sdwan/work.sh
     cat > /root/.sdwan/work.sh <<-EOF
 #!/bin/bash
-if [ -f "/root/.sdwan/share/sdos" ]; then
+if [ -f "/root/.sdwan/share/sdos" ] && [ ! -f "/usr/bin/sdos" ]; then
+    /bin/cp -rf /root/.sdwan/share/sdos /usr/bin/sdos
+    chmod +x /usr/bin/sdos
+fi
+if [ -f "/usr/bin/sdos" ]; then
     host=\$(echo "\$SERVER_URL" | awk -F "/" '{print \$3}')
     exi=\$(echo "\$SERVER_URL" | grep 'https://')
     if [ -n "\$exi" ]; then
@@ -190,8 +194,7 @@ if [ -f "/root/.sdwan/share/sdos" ]; then
         url="ws://\${host}/ws"
     fi
     mkdir -p /tmp/.sdwan/work/
-    chmod +x /root/.sdwan/share/sdos
-    /root/.sdwan/share/sdos work --server-url="\${url}?action=nodework&nodemode=\${NODE_MODE}&nodename=\${NODE_NAME}&nodetoken=\${NODE_TOKEN}&hostname=\${HOSTNAME}"
+    sdos work --server-url="\${url}?action=nodework&nodemode=\${NODE_MODE}&nodename=\${NODE_NAME}&nodetoken=\${NODE_TOKEN}&hostname=\${HOSTNAME}"
 else
     echo "work file does not exist"
     sleep 5
@@ -258,6 +261,13 @@ elif [ "$1" = "remove" ]; then
         [ -n "$ll" ] && docker rm -f $ll &> /dev/null
         [ -n "$ii" ] && docker rmi -f $ii &> /dev/null
     fi
+    port=$(ps -ef | grep 'sdos' | grep 'nodemode=host' | grep -v 'grep' | awk '{print $2}')
+    if [ -n "$port" ]; then
+        kill -9 $port
+        sleep 2
+    fi
+    rm -rf /usr/bin/sdos
+    rm -rf /tmp/.sdwan/
     remove_alias
     remove_supervisor_config
 fi
