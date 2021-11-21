@@ -58,13 +58,12 @@ type State struct {
 	}
 }
 
-type UFW struct {
+type Forward struct {
 	Type     string
 	Sport    string
-	Dport    string
-	Dip      string
+	Eip      string
+	Eport    string
 	Protocol string
-	Path     string
 }
 
 var (
@@ -91,5 +90,5 @@ var (
 	NetCount      uint
 	NetUpdateTime float64
 
-	UFWConfig UFW
+	ForwardConfig Forward
 )
