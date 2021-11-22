@@ -15,7 +15,7 @@ var firewallCmd = &cobra.Command{
 		install.FirewallConfig.Mode = strings.ToLower(install.FirewallConfig.Mode)
 		install.FirewallConfig.Type = strings.ToLower(install.FirewallConfig.Type)
 		install.FirewallConfig.Protocol = strings.ToLower(install.FirewallConfig.Protocol)
-		if !install.InArray(install.FirewallConfig.Mode, []string{"add", "del", "status", "save", "reload", "restart", "stop", "start"}) {
+		if !install.InArray(install.FirewallConfig.Mode, []string{"add", "del", "accept", "drop"}) {
 			err := cmd.Help()
 			if err != nil {
 				return
@@ -30,7 +30,7 @@ var firewallCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(firewallCmd)
-	firewallCmd.Flags().StringVar(&install.FirewallConfig.Mode, "mode", "", "add|del|status|save|reload|restart|stop|start")
+	firewallCmd.Flags().StringVar(&install.FirewallConfig.Mode, "mode", "", "add|del|accept|drop")
 	firewallCmd.Flags().StringVar(&install.FirewallConfig.Ports, "ports", "", "")
 	firewallCmd.Flags().StringVar(&install.FirewallConfig.Type, "type", "", "")
 	firewallCmd.Flags().StringVar(&install.FirewallConfig.Address, "address", "", "")

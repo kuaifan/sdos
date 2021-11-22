@@ -12,9 +12,9 @@ var forwardCmd = &cobra.Command{
 	Use:   "forward",
 	Short: "Only forward",
 	PreRun: func(cmd *cobra.Command, args []string) {
-		install.FirewallConfig.Mode = strings.ToLower(install.FirewallConfig.Mode)
-		install.FirewallConfig.Protocol = strings.ToLower(install.FirewallConfig.Protocol)
-		if install.ForwardConfig.Mode != "add" && install.ForwardConfig.Mode != "del" {
+		install.ForwardConfig.Mode = strings.ToLower(install.ForwardConfig.Mode)
+		install.ForwardConfig.Protocol = strings.ToLower(install.ForwardConfig.Protocol)
+		if !install.InArray(install.ForwardConfig.Mode, []string{"add", "del"}) {
 			err := cmd.Help()
 			if err != nil {
 				return
@@ -29,7 +29,7 @@ var forwardCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(forwardCmd)
-	forwardCmd.Flags().StringVar(&install.ForwardConfig.Mode, "mode", "", "")
+	forwardCmd.Flags().StringVar(&install.ForwardConfig.Mode, "mode", "", "add or del")
 	forwardCmd.Flags().StringVar(&install.ForwardConfig.Sport, "sport", "", "")
 	forwardCmd.Flags().StringVar(&install.ForwardConfig.Dip, "dip", "", "")
 	forwardCmd.Flags().StringVar(&install.ForwardConfig.Dport, "dport", "", "")

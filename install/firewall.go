@@ -10,143 +10,18 @@ import (
 func BuildFirewall() {
 	if FirewallConfig.Mode == "add" {
 		// 添加
-		firewallAdd()
+		iptablesFirewallAdd()
 	} else if FirewallConfig.Mode == "del" {
 		// 删除
-		firewallDel()
-	} else if FirewallConfig.Mode == "status" {
-		// 防火墙状态
-		FirewallStatus()
-	} else if FirewallConfig.Mode == "save" {
-		// 重载防火墙配置
-		FirewallSave()
-	} else if InArray(FirewallConfig.Mode, []string{"reload", "restart", "stop", "start"}) {
-		// 重载、重启、停止、启动
-		FirewallOperation(FirewallConfig.Mode)
+		iptablesFirewallDel()
+	} else if FirewallConfig.Mode == "accept" {
+		// 默认接收
+		iptablesDefaultAccept()
+	} else if FirewallConfig.Mode == "drop" {
+		// 默认丢弃
+		iptablesDefaultDrop()
 	} else {
 		logger.Error("Mode error")
-	}
-}
-
-func firewallAdd() {
-	if Exists("/usr/sbin/ufw") {
-		ufwFirewallAdd()
-	} else if Exists("/usr/sbin/firewalld") {
-		cmdFirewallAdd()
-	} else if Exists("/etc/init.d/iptables") {
-		iptablesFirewallAdd()
-	}
-}
-
-func firewallDel() {
-	if Exists("/usr/sbin/ufw") {
-		ufwFirewallDel()
-	} else if Exists("/usr/sbin/firewalld") {
-		cmdFirewallDel()
-	} else if Exists("/etc/init.d/iptables") {
-		iptablesFirewallDel()
-	}
-}
-
-func ufwFirewallTemplate(mode string) string {
-	FirewallConfig.Ports = strings.Replace(FirewallConfig.Ports, "-", ":", -1)
-	if FirewallConfig.Type == "accept" {
-		FirewallConfig.Type = "allow"
-	} else {
-		FirewallConfig.Type = "deny"
-	}
-	value := ""
-	if FirewallConfig.Address == "" {
-		if strings.Contains(FirewallConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("ufw {MODE} %s %s/tcp", FirewallConfig.Type, FirewallConfig.Ports)
-			udp := fmt.Sprintf("ufw {MODE} %s %s/udp", FirewallConfig.Type, FirewallConfig.Ports)
-			value = fmt.Sprintf("%s && %s", tcp, udp)
-		} else {
-			value = fmt.Sprintf("ufw {MODE} %s %s/%s", FirewallConfig.Type, FirewallConfig.Ports, FirewallConfig.Protocol)
-		}
-	} else {
-		if strings.Contains(FirewallConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("ufw {MODE} %s proto tcp from %s to any port %s", FirewallConfig.Type, FirewallConfig.Address, FirewallConfig.Ports)
-			udp := fmt.Sprintf("ufw {MODE} %s proto udp from %s to any port %s", FirewallConfig.Type, FirewallConfig.Address, FirewallConfig.Ports)
-			value = fmt.Sprintf("%s && %s", tcp, udp)
-		} else {
-			value = fmt.Sprintf("ufw {MODE} %s proto %s from %s to any port %s", FirewallConfig.Type, FirewallConfig.Protocol, FirewallConfig.Address, FirewallConfig.Ports)
-		}
-	}
-	if mode == "del" {
-		value = strings.ReplaceAll(value, "{MODE}", "delete")
-	} else {
-		value = strings.ReplaceAll(value, " {MODE}", "")
-	}
-	return value
-}
-
-func ufwFirewallAdd() {
-	cmd := ufwFirewallTemplate("add")
-	_, s, err := RunCommand("-c", cmd)
-	if err != nil {
-		logger.Error(err, s)
-	}
-}
-
-func ufwFirewallDel() {
-	cmd := ufwFirewallTemplate("del")
-	_, s, err := RunCommand("-c", cmd)
-	if err != nil {
-		logger.Error(err, s)
-	}
-}
-
-func cmdFirewallTemplate(mode string) string {
-	value := ""
-	if FirewallConfig.Address == "" {
-		if strings.Contains(FirewallConfig.Protocol, "/") {
-			if FirewallConfig.Type == "accept" {
-				tcp := fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-port=%s/tcp", FirewallConfig.Ports)
-				udp := fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-port=%s/udp", FirewallConfig.Ports)
-				value = fmt.Sprintf("%s && %s", tcp, udp)
-			} else {
-				tcp := fmt.Sprintf("firewall-cmd --permanent --{MODE}-rich-rule=\"rule family=\"ipv4\" port protocol=\"tcp\" port=\"%s\" drop\"", FirewallConfig.Ports)
-				udp := fmt.Sprintf("firewall-cmd --permanent --{MODE}-rich-rule=\"rule family=\"ipv4\" port protocol=\"udp\" port=\"%s\" drop\"", FirewallConfig.Ports)
-				value = fmt.Sprintf("%s && %s", tcp, udp)
-			}
-		} else {
-			if FirewallConfig.Type == "accept" {
-				value = fmt.Sprintf("firewall-cmd --permanent --zone=public --{MODE}-port=%s/%s", FirewallConfig.Ports, FirewallConfig.Protocol)
-			} else {
-				value = fmt.Sprintf("firewall-cmd --permanent --{MODE}-rich-rule=\"rule family=\"ipv4\" port protocol=\"%s\" port=\"%s\" drop\"", FirewallConfig.Protocol, FirewallConfig.Ports)
-			}
-		}
-	} else {
-		if strings.Contains(FirewallConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("firewall-cmd --permanent --{MODE}-rich-rule=\"rule family=\"ipv4\" source address=\"%s\" port protocol=\"tcp\" port=\"%s\" %s\"", FirewallConfig.Address, FirewallConfig.Ports, FirewallConfig.Type)
-			udp := fmt.Sprintf("firewall-cmd --permanent --{MODE}-rich-rule=\"rule family=\"ipv4\" source address=\"%s\" port protocol=\"udp\" port=\"%s\" %s\"", FirewallConfig.Address, FirewallConfig.Ports, FirewallConfig.Type)
-			value = fmt.Sprintf("%s && %s", tcp, udp)
-		} else {
-			value = fmt.Sprintf("firewall-cmd --permanent --{MODE}-rich-rule=\"rule family=\"ipv4\" source address=\"%s\" port protocol=\"%s\" port=\"%s\" %s\"", FirewallConfig.Address, FirewallConfig.Protocol, FirewallConfig.Ports, FirewallConfig.Type)
-		}
-	}
-	if mode == "del" {
-		value = strings.ReplaceAll(value, "{MODE}", "remove")
-	} else {
-		value = strings.ReplaceAll(value, "{MODE}", "add")
-	}
-	return value
-}
-
-func cmdFirewallAdd() {
-	cmd := cmdFirewallTemplate("add")
-	_, s, err := RunCommand("-c", cmd)
-	if err != nil {
-		logger.Error(err, s)
-	}
-}
-
-func cmdFirewallDel() {
-	cmd := cmdFirewallTemplate("del")
-	_, s, err := RunCommand("-c", cmd)
-	if err != nil {
-		logger.Error(err, s)
 	}
 }
 
@@ -179,17 +54,32 @@ func iptablesFirewallTemplate(mode string) string {
 }
 
 func iptablesFirewallAdd() {
-	cmd := iptablesFirewallTemplate("add")
-	_, s, err := RunCommand("-c", cmd)
+	// 先删除（防止重复添加）
+	_, _, _ = RunCommand("-c", iptablesFirewallTemplate("del"))
+	// 后添加
+	_, s, err := RunCommand("-c", iptablesFirewallTemplate("add"))
 	if err != nil {
 		logger.Error(err, s)
 	}
 }
 
 func iptablesFirewallDel() {
-	cmd := iptablesFirewallTemplate("del")
-	_, s, err := RunCommand("-c", cmd)
+	_, s, err := RunCommand("-c", iptablesFirewallTemplate("del"))
 	if err != nil {
 		logger.Error(err, s)
 	}
+}
+
+func iptablesDefaultAccept() {
+	_, _, _ = RunCommand("-c", "iptables -D INPUT -p icmp --icmp-type any -j ACCEPT")
+	_, _, _ = RunCommand("-c", "iptables -D INPUT -s localhost -d localhost -j ACCEPT")
+	_, _, _ = RunCommand("-c", "iptables -D INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT")
+	_, _, _ = RunCommand("-c", "iptables -P INPUT ACCEPT")
+}
+
+func iptablesDefaultDrop() {
+	_, _, _ = RunCommand("-c", "iptables -A INPUT -p icmp --icmp-type any -j ACCEPT")
+	_, _, _ = RunCommand("-c", "iptables -A INPUT -s localhost -d localhost -j ACCEPT")
+	_, _, _ = RunCommand("-c", "iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT")
+	_, _, _ = RunCommand("-c", "iptables -P INPUT DROP")
 }
