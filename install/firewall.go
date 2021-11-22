@@ -49,7 +49,7 @@ func firewallDel() {
 }
 
 func ufwFirewallTemplate(mode string) string {
-	FirewallConfig.Ports = strings.Replace("-", ":", FirewallConfig.Ports, -1)
+	FirewallConfig.Ports = strings.Replace(FirewallConfig.Ports, "-", ":", -1)
 	if FirewallConfig.Type == "accept" {
 		FirewallConfig.Type = "allow"
 	} else {
@@ -151,7 +151,7 @@ func cmdFirewallDel() {
 }
 
 func iptablesFirewallTemplate(mode string) string {
-	FirewallConfig.Ports = strings.Replace("-", ":", FirewallConfig.Ports, -1)
+	FirewallConfig.Ports = strings.Replace(FirewallConfig.Ports, "-", ":", -1)
 	value := ""
 	if FirewallConfig.Address == "" {
 		if strings.Contains(FirewallConfig.Protocol, "/") {
