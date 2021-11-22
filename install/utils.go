@@ -618,11 +618,11 @@ func GetManageState(lastState *State) *State {
 // FirewallIsRuning 防火墙是否运行
 func FirewallIsRuning() bool {
 	if Exists("/usr/sbin/ufw") {
-		result, s, err := RunCommand("-c", "/usr/sbin/ufw status | grep \"Status\"")
+		result, s, err := RunCommand("-c", "/usr/sbin/ufw status")
 		if err != nil {
 			logger.Error(err, s)
 		}
-		if strings.Contains(result, "Status: active") {
+		if strings.Contains(result, "Status: active") || strings.Contains(result, "状态： 激活") {
 			return true
 		} else {
 			return false
