@@ -23,8 +23,7 @@ COPY ./conf/nginx.conf /etc/nginx/nginx.conf
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-RUN mkdir /usr/.sdwan
-WORKDIR /usr/.sdwan
+WORKDIR /tmp/.sdwan
 
 ENTRYPOINT ["/entrypoint.sh"]
 

@@ -6,7 +6,7 @@ services:
     container_name: "sdwan-manage"
     image: "{{.MANAGE_IMAGE}}"
     volumes:
-      - /root/.sdwan/share:/usr/.sdwan/work/share
+      - /root/.sdwan/share:/tmp/.sdwan/work/share
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
       - /etc/localtime:/etc/localtime:ro
@@ -190,7 +190,7 @@ if [ -f "/usr/bin/sdos" ]; then
     else
         url="ws://\${host}/ws"
     fi
-    mkdir -p /usr/.sdwan/work/
+    mkdir -p /tmp/.sdwan/work/
     sdos work --server-url="\${url}?action=nodework&nodemode=\${NODE_MODE}&nodename=\${NODE_NAME}&nodetoken=\${NODE_TOKEN}&hostname=\${HOSTNAME}"
 else
     echo "work file does not exist"

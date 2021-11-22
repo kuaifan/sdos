@@ -38,7 +38,7 @@ if [ "$NODE_MODE" == "nginx" ]; then
     /docker-entrypoint.sh
     nginx -g "daemon off;" &
 elif [ "$NODE_MODE" == "manage" ]; then
-    /bin/cp -rf /usr/bin/sdos /usr/.sdwan/work/share/
+    /bin/cp -rf /usr/bin/sdos /tmp/.sdwan/work/share/
 else
     dnsmasq &
 fi

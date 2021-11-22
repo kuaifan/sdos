@@ -15,7 +15,7 @@ func BuildTest() {
 }
 
 func test2()  {
-	fileName := "/usr/.sdwan/work/nic/wgcenter"
+	fileName := "/tmp/.sdwan/work/nic/wgcenter"
 	stdout, stderr, err := RunCommand("-e", fileName, "install")
 	logger.Info("stdout: %s", stdout)
 	logger.Info("stderr: %s", stderr)
@@ -27,7 +27,7 @@ func test1() {
 	sendMessage := ""
 	if nodeMode == "manage" {
 		// ping 信息
-		fileName := "/usr/.sdwan/work/ips"
+		fileName := "/tmp/.sdwan/work/ips"
 		if !Exists(fileName) {
 			return
 		}
