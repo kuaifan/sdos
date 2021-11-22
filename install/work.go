@@ -210,7 +210,7 @@ func timedTaskB(ws *wsc.Wsc) error {
 		if value != "" {
 			sendMessage = fmt.Sprintf(`{"type":"node","action":"transfer","data":"%s"}`, Base64Encode(value))
 		}
-	} else {
+	} else if InArray(nodeMode, []string{"host", "nginx"}) {
 		// 其他容器
 		sendMessage = fmt.Sprintf(`{"type":"node","action":"refresh","data":"%d"}`, time.Now().Unix())
 	}
