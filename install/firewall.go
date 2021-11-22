@@ -8,41 +8,43 @@ import (
 
 //BuildFirewall is
 func BuildFirewall() {
-	if FirewallConfig.Mode == "status" {
+	if FirewallConfig.Mode == "add" {
+		// 添加
+		firewallAdd()
+	} else if FirewallConfig.Mode == "del" {
+		// 删除
+		firewallDel()
+	} else if FirewallConfig.Mode == "status" {
 		// 防火墙状态
-		if FirewallIsRuning() {
-			fmt.Println("running")
-		} else {
-			fmt.Println("stop")
-		}
-		return
+		FirewallStatus()
 	} else if FirewallConfig.Mode == "save" {
 		// 重载防火墙配置
 		FirewallSave()
-		return
 	} else if InArray(FirewallConfig.Mode, []string{"reload", "restart", "stop", "start"}) {
 		// 重载、重启、停止、启动
 		FirewallOperation(FirewallConfig.Mode)
-		return
+	} else {
+		logger.Error("Mode error")
 	}
+}
+
+func firewallAdd() {
 	if Exists("/usr/sbin/ufw") {
-		if FirewallConfig.Mode == "add" {
-			ufwFirewallAdd()
-		} else {
-			ufwFirewallDel()
-		}
+		ufwFirewallAdd()
 	} else if Exists("/usr/sbin/firewalld") {
-		if FirewallConfig.Mode == "add" {
-			cmdFirewallAdd()
-		} else {
-			cmdFirewallDel()
-		}
+		cmdFirewallAdd()
 	} else if Exists("/etc/init.d/iptables") {
-		if FirewallConfig.Mode == "add" {
-			iptablesFirewallAdd()
-		} else {
-			iptablesFirewallDel()
-		}
+		iptablesFirewallAdd()
+	}
+}
+
+func firewallDel() {
+	if Exists("/usr/sbin/ufw") {
+		ufwFirewallDel()
+	} else if Exists("/usr/sbin/firewalld") {
+		cmdFirewallDel()
+	} else if Exists("/etc/init.d/iptables") {
+		iptablesFirewallDel()
 	}
 }
 

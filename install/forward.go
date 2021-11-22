@@ -10,24 +10,34 @@ var ufwPath = "/etc/ufw/before.rules"
 
 //BuildForward is
 func BuildForward() {
+	if FirewallConfig.Mode == "add" {
+		// 添加
+		forwardAdd()
+	} else if FirewallConfig.Mode == "del" {
+		// 删除
+		forwardDel()
+	} else {
+		logger.Error("Mode error")
+	}
+}
+
+func forwardAdd() {
 	if Exists("/usr/sbin/ufw") {
-		if ForwardConfig.Mode == "add" {
-			ufwForwardAdd()
-		} else {
-			ufwForwardDel()
-		}
+		ufwForwardAdd()
 	} else if Exists("/usr/sbin/firewalld") {
-		if FirewallConfig.Mode == "add" {
-			cmdForwardAdd()
-		} else {
-			cmdForwardDel()
-		}
+		cmdForwardAdd()
 	} else if Exists("/etc/init.d/iptables") {
-		if ForwardConfig.Mode == "add" {
-			iptablesForwardAdd()
-		} else {
-			iptablesForwardDel()
-		}
+		iptablesForwardAdd()
+	}
+}
+
+func forwardDel() {
+	if Exists("/usr/sbin/ufw") {
+		ufwForwardDel()
+	} else if Exists("/usr/sbin/firewalld") {
+		cmdForwardDel()
+	} else if Exists("/etc/init.d/iptables") {
+		iptablesForwardDel()
 	}
 }
 

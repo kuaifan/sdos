@@ -651,6 +651,15 @@ func FirewallIsRuning() bool {
 	return false
 }
 
+// FirewallStatus 防火墙状态打印
+func FirewallStatus() {
+	if FirewallIsRuning() {
+		fmt.Println("running")
+	} else {
+		fmt.Println("stop")
+	}
+}
+
 // FirewallOperation 防火墙操作，支持：reload、restart、stop、start
 func FirewallOperation(name string) {
 	cmd := ""
