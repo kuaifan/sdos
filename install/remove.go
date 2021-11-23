@@ -45,7 +45,7 @@ func (s *SdosInstaller) RemoveNodes() {
 }
 
 func reportRemove(node string, nodeName string) {
-	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/sdwan_install", "")
+	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/.sdwan_install", "")
 	if res == "success" {
 		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 		resp, err := gohttp.NewRequest().

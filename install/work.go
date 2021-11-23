@@ -30,6 +30,7 @@ var (
 
 //BuildWork is
 func BuildWork() {
+	_, _, _ = RunCommand("-c", "rm -rf /tmp/.sdwan/.tmp")
 	if os.Getenv("NODE_MODE") == "" {
 		logger.Error("System env is error")
 		os.Exit(1)
