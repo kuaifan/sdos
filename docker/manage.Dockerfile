@@ -1,7 +1,7 @@
+FROM --platform=$TARGETPLATFORM debian:buster
+
 ARG TARGETOS
 ARG TARGETARCH
-
-FROM --platform=$TARGETPLATFORM debian:buster
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates curl procps fping wget jq && \

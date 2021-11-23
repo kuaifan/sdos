@@ -1,8 +1,9 @@
 ARG NGINX_VERSION="1.21.4-alpine"
-ARG TARGETOS
-ARG TARGETARCH
 
 FROM --platform=$TARGETPLATFORM nginx:${NGINX_VERSION}
+
+ARG TARGETOS
+ARG TARGETARCH
 
 RUN apk add --update --no-cache bash
 

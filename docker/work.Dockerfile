@@ -1,9 +1,10 @@
 ARG ALPINE_VERSION=3.14
+
+FROM --platform=$TARGETPLATFORM alpine:${ALPINE_VERSION}
+
 ARG TARGETPLATFORM
 ARG TARGETOS
 ARG TARGETARCH
-
-FROM --platform=$TARGETPLATFORM alpine:${ALPINE_VERSION}
 
 RUN apk add --update --no-cache bash wireguard-tools tcpdump git make ipset dnsmasq tini curl fping mtr jq tzdata ca-certificates dante-server
 

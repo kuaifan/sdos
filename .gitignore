@@ -1,3 +1,4 @@
 sdos
 *_test.go
 /release/
+/docker/release/
