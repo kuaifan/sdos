@@ -40,6 +40,7 @@ func iptablesForwardTemplate(mode string) string {
 	}
 	if mode == "del" {
 		value = strings.ReplaceAll(value, "{MODE}", "-D")
+		value = fmt.Sprintf("%s &> /dev/null", value)
 	} else {
 		value = strings.ReplaceAll(value, "{MODE}", "-A")
 	}

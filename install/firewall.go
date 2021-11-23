@@ -47,6 +47,7 @@ func iptablesFirewallTemplate(mode string) string {
 	}
 	if mode == "del" {
 		value = strings.ReplaceAll(value, "{MODE}", "-D")
+		value = fmt.Sprintf("%s &> /dev/null", value)
 	} else {
 		value = strings.ReplaceAll(value, "{MODE}", "-I")
 	}
@@ -71,9 +72,9 @@ func iptablesFirewallDel() {
 }
 
 func iptablesDefaultAccept() {
-	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -p icmp --icmp-type any -j ACCEPT")
-	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -s localhost -d localhost -j ACCEPT")
-	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT")
+	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -p icmp --icmp-type any -j ACCEPT &> /dev/null")
+	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -s localhost -d localhost -j ACCEPT &> /dev/null")
+	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT &> /dev/null")
 	_, _, _ = RunCommand("-c", "iptables -t mangle -P PREROUTING ACCEPT")
 }
 
