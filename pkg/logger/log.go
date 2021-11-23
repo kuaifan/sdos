@@ -400,8 +400,8 @@ func SetLogger(param ...string) error {
 	return nil
 }
 
-// Painc logs a message at emergency level and panic.
-func Painc(f interface{}, v ...interface{}) {
+// Panic logs a message at emergency level and panic.
+func Panic(f interface{}, v ...interface{}) {
 	defaultLogger.Panic(formatLog(f, v...))
 }
 

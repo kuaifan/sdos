@@ -18,7 +18,7 @@ func BuildFirewall() {
 		// 修改默认
 		iptablesDefault()
 	} else {
-		logger.Error("Mode error")
+		logger.Panic("Mode error")
 	}
 }
 
@@ -54,14 +54,14 @@ func iptablesFirewallTemplate(mode string) string {
 func iptablesFirewallAdd() {
 	_, s, err := RunCommand("-c", iptablesFirewallTemplate("add"))
 	if err != nil {
-		logger.Error(err, s)
+		logger.Panic(s, err)
 	}
 }
 
 func iptablesFirewallDel() {
 	_, s, err := RunCommand("-c", iptablesFirewallTemplate("del"))
 	if err != nil {
-		logger.Error(err, s)
+		logger.Panic(s, err)
 	}
 }
 
@@ -70,11 +70,13 @@ func iptablesDefault() {
 		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -p icmp --icmp-type any -j ACCEPT &> /dev/null")
 		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -s localhost -d localhost -j ACCEPT &> /dev/null")
 		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT &> /dev/null")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -P PREROUTING ACCEPT")
 	} else {
 		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -p icmp --icmp-type any -j ACCEPT")
 		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -s localhost -d localhost -j ACCEPT")
 		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -P PREROUTING DROP")
+	}
+	_, s, err := RunCommand("-c", fmt.Sprintf("iptables -t mangle -P PREROUTING %s", FirewallConfig.Type))
+	if err != nil {
+		logger.Panic(s, err)
 	}
 }

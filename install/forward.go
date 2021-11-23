@@ -15,7 +15,7 @@ func BuildForward() {
 		// 删除
 		iptablesForwardDel()
 	} else {
-		logger.Error("Mode error")
+		logger.Panic("Mode error")
 	}
 }
 
@@ -50,13 +50,13 @@ func iptablesForwardTemplate(mode string) string {
 func iptablesForwardAdd() {
 	_, s, err := RunCommand("-c", iptablesForwardTemplate("add"))
 	if err != nil {
-		logger.Error(err, s)
+		logger.Panic(s, err)
 	}
 }
 
 func iptablesForwardDel() {
 	_, s, err := RunCommand("-c", iptablesForwardTemplate("del"))
 	if err != nil {
-		logger.Error(err, s)
+		logger.Panic(s, err)
 	}
 }
