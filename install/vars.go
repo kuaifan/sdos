@@ -64,6 +64,7 @@ type Firewall struct {
 	Type     string
 	Address  string
 	Protocol string
+	Force    bool
 }
 
 type Forward struct {
@@ -72,6 +73,7 @@ type Forward struct {
 	Dip      string
 	Dport    string
 	Protocol string
+	Force    bool
 }
 
 var (

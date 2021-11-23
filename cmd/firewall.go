@@ -34,4 +34,5 @@ func init() {
 	firewallCmd.Flags().StringVar(&install.FirewallConfig.Type, "type", "", "")
 	firewallCmd.Flags().StringVar(&install.FirewallConfig.Address, "address", "", "")
 	firewallCmd.Flags().StringVar(&install.FirewallConfig.Protocol, "protocol", "", "")
+	firewallCmd.Flags().BoolVar(&install.FirewallConfig.Force, "force", false, "delete before adding")
 }

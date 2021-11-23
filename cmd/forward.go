@@ -34,4 +34,5 @@ func init() {
 	forwardCmd.Flags().StringVar(&install.ForwardConfig.Dip, "dip", "", "")
 	forwardCmd.Flags().StringVar(&install.ForwardConfig.Dport, "dport", "", "")
 	forwardCmd.Flags().StringVar(&install.ForwardConfig.Protocol, "protocol", "", "")
+	firewallCmd.Flags().BoolVar(&install.FirewallConfig.Force, "force", false, "delete before adding")
 }

@@ -48,6 +48,9 @@ func iptablesForwardTemplate(mode string) string {
 }
 
 func iptablesForwardAdd() {
+	if ForwardConfig.Force {
+		_, _, _ = RunCommand("-c", iptablesForwardTemplate("del"))
+	}
 	_, s, err := RunCommand("-c", iptablesForwardTemplate("add"))
 	if err != nil {
 		logger.Panic(s, err)

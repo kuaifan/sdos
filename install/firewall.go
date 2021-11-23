@@ -52,6 +52,9 @@ func iptablesFirewallTemplate(mode string) string {
 }
 
 func iptablesFirewallAdd() {
+	if FirewallConfig.Force {
+		_, _, _ = RunCommand("-c", iptablesFirewallTemplate("del"))
+	}
 	_, s, err := RunCommand("-c", iptablesFirewallTemplate("add"))
 	if err != nil {
 		logger.Panic(s, err)
@@ -65,15 +68,24 @@ func iptablesFirewallDel() {
 	}
 }
 
+func iptablesDefaultAccept()  {
+	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -p icmp --icmp-type any -j ACCEPT &> /dev/null")
+	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -s localhost -d localhost -j ACCEPT &> /dev/null")
+	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT &> /dev/null")
+}
+
+func iptablesDefaultDrop()  {
+	_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -p icmp --icmp-type any -j ACCEPT")
+	_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -s localhost -d localhost -j ACCEPT")
+	_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT")
+}
+
 func iptablesDefault() {
-	if FirewallConfig.Type == "ACCEPT" {
-		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -p icmp --icmp-type any -j ACCEPT &> /dev/null")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -s localhost -d localhost -j ACCEPT &> /dev/null")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT &> /dev/null")
-	} else {
-		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -p icmp --icmp-type any -j ACCEPT")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -s localhost -d localhost -j ACCEPT")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT")
+	if FirewallConfig.Type == "ACCEPT" || FirewallConfig.Force {
+		iptablesDefaultAccept()
+	}
+	if FirewallConfig.Type == "DROP" {
+		iptablesDefaultDrop()
 	}
 	_, s, err := RunCommand("-c", fmt.Sprintf("iptables -t mangle -P PREROUTING %s", FirewallConfig.Type))
 	if err != nil {
