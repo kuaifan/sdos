@@ -18,7 +18,7 @@ COPY ./conf/resolv.conf /etc/resolv.conf
 COPY ./conf/resolv.dnsmasq.conf /etc/resolv.dnsmasq.conf
 COPY ./conf/sysctl.conf /etc/sysctl.conf
 
-COPY ../release/sdos_${TARGETOS}_${TARGETARCH} /usr/bin/sdos
+COPY ./release/sdos_${TARGETOS}_${TARGETARCH} /usr/bin/sdos
 RUN chmod +x /usr/bin/sdos
 
 COPY ./entrypoint.sh /entrypoint.sh

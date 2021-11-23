@@ -9,7 +9,7 @@ RUN apk add --update --no-cache bash
 
 COPY ./conf/nginx.conf /etc/nginx/nginx.conf
 
-COPY ../release/sdos_${TARGETOS}_${TARGETARCH} /usr/bin/sdos
+COPY ./release/sdos_${TARGETOS}_${TARGETARCH} /usr/bin/sdos
 RUN chmod +x /usr/bin/sdos
 
 COPY ./entrypoint.sh /entrypoint.sh
