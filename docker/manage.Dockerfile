@@ -1,16 +1,5 @@
-ARG GOLANG_VERSION=1.16.6
-ARG ALPINE_VERSION=3.14
-
-
-FROM --platform=$TARGETPLATFORM golang:${GOLANG_VERSION}-alpine${ALPINE_VERSION} as builder
-
-RUN apk add --update --no-cache git build-base libmnl-dev iptables
-
-RUN git clone https://github.com/kuaifan/sdos.git && \
-    cd sdos && \
-    git pull && \
-    make
-
+ARG TARGETOS
+ARG TARGETARCH
 
 FROM --platform=$TARGETPLATFORM debian:buster
 
@@ -23,7 +12,8 @@ RUN wget --no-check-certificate https://github.com/docker/compose/releases/downl
     chmod +x /usr/local/bin/docker-compose && \
     ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
-COPY --from=builder /go/sdos/sdos /usr/bin/
+COPY ../release/sdos_${TARGETOS}_${TARGETARCH} /usr/bin/sdos
+RUN chmod +x /usr/bin/sdos
 
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
