@@ -7,7 +7,7 @@ BUILD_TIME      := $(shell date "+%F %T")
 
 LDFLAGS := -s -w -X 'main.CommitSha1=${COMMIT_SHA1}' -X 'main.BuildTime=${BUILD_TIME}'
 
-os-archs=linux:amd64 linux:arm64
+os-archs=linux:amd64
 all:
 	@$(foreach n, $(os-archs),\
 		os=$(shell echo "$(n)" | cut -d : -f 1);\
