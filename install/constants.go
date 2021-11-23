@@ -52,11 +52,11 @@ judge() {
 }
 
 check_system() {
-    if [[ "${ID}" == "centos" && ${VERSION_ID} -ge 7 ]]; then
+    if [[ "${ID}" = "centos" && ${VERSION_ID} -ge 7 ]]; then
         echo > /dev/null
-    elif [[ "${ID}" == "debian" && ${VERSION_ID} -ge 8 ]]; then
+    elif [[ "${ID}" = "debian" && ${VERSION_ID} -ge 8 ]]; then
         echo > /dev/null
-    elif [[ "${ID}" == "ubuntu" && $(echo "${VERSION_ID}" | cut -d '.' -f1) -ge 16 ]]; then
+    elif [[ "${ID}" = "ubuntu" && $(echo "${VERSION_ID}" | cut -d '.' -f1) -ge 16 ]]; then
         echo > /dev/null
     else
         echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
@@ -132,18 +132,18 @@ add_alias() {
 docker_alias()
 {
     local var=\$1
-    if [ "\$var" == "" ] || [ "\$var" == "ls" ]; then
+    if [ "\$var" = "" ] || [ "\$var" = "ls" ]; then
         shift
         docker ps --format "table {{"{{"}}.ID{{"}}"}}\t{{"{{"}}.Image{{"}}"}}\t{{"{{"}}.Command{{"}}"}}\t{{"{{"}}.RunningFor{{"}}"}}\t{{"{{"}}.Status{{"}}"}}\t{{"{{"}}.Names{{"}}"}}"
-    elif [ "\$var" == "sh" ]; then
+    elif [ "\$var" = "sh" ]; then
         shift
         docker exec -it \$@ /bin/sh
-    elif [ "\$var" == "bash" ]; then
+    elif [ "\$var" = "bash" ]; then
         shift
         docker exec -it \$@ /bin/bash
-    elif [ "\$var" == "sdwan-manage" ] || [ "\$var" == "sdwan" ]  || [ "\$var" == "manage" ] || [ "\$var" == "m" ]; then
+    elif [ "\$var" = "sdwan-manage" ] || [ "\$var" = "sdwan" ]  || [ "\$var" = "manage" ] || [ "\$var" = "m" ]; then
         docker exec -it sdwan-manage /bin/bash
-    elif [ "\${var:0:6}" == "sdwan-" ]; then
+    elif [ "\${var:0:6}" = "sdwan-" ]; then
         docker exec -it \$@ /bin/sh
     else
         docker \$@
@@ -201,7 +201,7 @@ EOF
     chmod +x /root/.sdwan/work.sh
     #
     local sdwanfile=/etc/supervisor/conf.d/sdwan.conf
-    if [ -f /etc/supervisord.conf ];then
+    if [ -f /etc/supervisord.conf ]; then
         sdwanfile=/etc/supervisord.d/sdwan.ini
     fi
     touch $sdwanfile

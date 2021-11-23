@@ -26,7 +26,7 @@ check_work() {
     local exist=`ps -ef | grep 'sdos work' | grep -v 'grep'`
     [ -n "$url" ] && [ -z "$exist" ] && {
         _network
-        if [ $? -eq 0 ];then
+        if [ $? -eq 0 ]; then
             echo "network is blocked, try again 10 seconds"
         else
             nohup sdos work --server-url="${url}?action=nodework&nodemode=${NODE_MODE}&nodename=${NODE_NAME}&nodetoken=${NODE_TOKEN}&hostname=${HOSTNAME}" > /dev/null 2>&1 &
@@ -34,10 +34,10 @@ check_work() {
     }
 }
 
-if [ "$NODE_MODE" == "nginx" ]; then
+if [ "$NODE_MODE" = "nginx" ]; then
     /docker-entrypoint.sh
     nginx -g "daemon off;" &
-elif [ "$NODE_MODE" == "manage" ]; then
+elif [ "$NODE_MODE" = "manage" ]; then
     /bin/cp -rf /usr/bin/sdos /tmp/.sdwan/work/share/
 else
     dnsmasq &
