@@ -14,12 +14,9 @@ func BuildFirewall() {
 	} else if FirewallConfig.Mode == "del" {
 		// 删除
 		iptablesFirewallDel()
-	} else if FirewallConfig.Mode == "accept" {
-		// 默认接收
-		iptablesDefaultAccept()
-	} else if FirewallConfig.Mode == "drop" {
-		// 默认丢弃
-		iptablesDefaultDrop()
+	} else if FirewallConfig.Mode == "default" {
+		// 修改默认
+		iptablesDefault()
 	} else {
 		logger.Error("Mode error")
 	}
@@ -55,9 +52,6 @@ func iptablesFirewallTemplate(mode string) string {
 }
 
 func iptablesFirewallAdd() {
-	// 先删除（防止重复添加）
-	_, _, _ = RunCommand("-c", iptablesFirewallTemplate("del"))
-	// 后添加
 	_, s, err := RunCommand("-c", iptablesFirewallTemplate("add"))
 	if err != nil {
 		logger.Error(err, s)
@@ -71,16 +65,16 @@ func iptablesFirewallDel() {
 	}
 }
 
-func iptablesDefaultAccept() {
-	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -p icmp --icmp-type any -j ACCEPT &> /dev/null")
-	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -s localhost -d localhost -j ACCEPT &> /dev/null")
-	_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT &> /dev/null")
-	_, _, _ = RunCommand("-c", "iptables -t mangle -P PREROUTING ACCEPT")
-}
-
-func iptablesDefaultDrop() {
-	_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -p icmp --icmp-type any -j ACCEPT")
-	_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -s localhost -d localhost -j ACCEPT")
-	_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT")
-	_, _, _ = RunCommand("-c", "iptables -t mangle -P PREROUTING DROP")
+func iptablesDefault() {
+	if FirewallConfig.Type == "ACCEPT" {
+		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -p icmp --icmp-type any -j ACCEPT &> /dev/null")
+		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -s localhost -d localhost -j ACCEPT &> /dev/null")
+		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT &> /dev/null")
+		_, _, _ = RunCommand("-c", "iptables -t mangle -P PREROUTING ACCEPT")
+	} else {
+		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -p icmp --icmp-type any -j ACCEPT")
+		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -s localhost -d localhost -j ACCEPT")
+		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT")
+		_, _, _ = RunCommand("-c", "iptables -t mangle -P PREROUTING DROP")
+	}
 }

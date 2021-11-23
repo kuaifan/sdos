@@ -48,9 +48,6 @@ func iptablesForwardTemplate(mode string) string {
 }
 
 func iptablesForwardAdd() {
-	// 先删除（防止重复添加）
-	_, _, _ = RunCommand("-c", iptablesForwardTemplate("del"))
-	// 后添加
 	_, s, err := RunCommand("-c", iptablesForwardTemplate("add"))
 	if err != nil {
 		logger.Error(err, s)
