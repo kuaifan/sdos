@@ -61,7 +61,7 @@ func FirewallUnInstall() {
 }
 
 func ExistMangleInput(key string) bool {
-	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -t mangle -L INPUT | grep '%s'", key))
+	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -w -t mangle -L INPUT | grep '%s'", key))
 	if strings.Contains(result, key) {
 		return true
 	}
@@ -69,7 +69,7 @@ func ExistMangleInput(key string) bool {
 }
 
 func ExistNatPrerouting(key string) bool {
-	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -t nat -L PREROUTING | grep '%s'", key))
+	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -w -t nat -L PREROUTING | grep '%s'", key))
 	if strings.Contains(result, key) {
 		return true
 	}
