@@ -69,12 +69,10 @@ func installDone(node string, nodeName string) {
 			keyContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.key", ServerDomain), "\n")
 			crtContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.crt", ServerDomain), "\n")
 			if !strings.Contains(keyContent, "PRIVATE KEY") {
-				logger.Error("[%s] [%s] read key error %s", node, ServerDomain)
 				ResultInstall.Store(node, "read key error")
 				return
 			}
 			if !strings.Contains(crtContent, "END CERTIFICATE") {
-				logger.Error("[%s] [%s] read crt error %s", node, ServerDomain)
 				ResultInstall.Store(node, "read crt error")
 				return
 			}
@@ -98,13 +96,11 @@ func installDone(node string, nodeName string) {
 			}).
 			Post(ReportUrl)
 		if err != nil || resp == nil {
-			logger.Error("[%s] install error %s", node, err)
 			ResultInstall.Store(node, err.Error())
 			return
 		}
 		body, errp := resp.GetBodyAsString()
 		if errp != nil {
-			logger.Error("[%s] install failed %s", node, errp)
 			ResultInstall.Store(node, errp.Error())
 			return
 		}
@@ -118,10 +114,10 @@ func installWalk(key interface{}, value interface{}) bool {
 	if value.(string) == "success" {
 		logger.Info("[%s] install %s", key, value)
 	} else {
-		if value == "" {
-			value = "error"
+		if value != "" && value != "error" {
+			value = fmt.Sprintf(": %s", value)
 		}
-		Error(fmt.Sprintf("[%s] install %s", key, value))
+		Error(fmt.Sprintf("[%s] install error%s", key, value))
 	}
 	return true
 }
