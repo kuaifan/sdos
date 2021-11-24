@@ -191,7 +191,6 @@ if [ -f "/usr/bin/sdos" ]; then
     else
         url="ws://\${host}/ws"
     fi
-    mkdir -p /tmp/.sdwan/work/
     sdos work --server-url="\${url}?action=nodework&nodemode=\${NODE_MODE}&nodename=\${NODE_NAME}&nodetoken=\${NODE_TOKEN}&hostname=\${HOSTNAME}"
 else
     echo "work file does not exist"
