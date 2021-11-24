@@ -12,8 +12,7 @@ import (
 // removeCmd represents the remove command
 var removeCmd = &cobra.Command{
 	Use:   "remove",
-	Short: "Simplest way to remove your sdwan cluster",
-	Long:  `sdos remove --node 192.168.0.5`,
+	Short: "Remove",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(install.NodeIPs) == 0 {
 			ipv4, _, _ := install.RunCommand("-c", "curl -4 ip.sb")

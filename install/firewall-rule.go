@@ -7,18 +7,18 @@ import (
 	"strings"
 )
 
-//BuildFirewall is
-func BuildFirewall() {
-	if FirewallConfig.Mode == "add" {
+//BuildFirewallRule is
+func BuildFirewallRule() {
+	if FirewallRuleConfig.Mode == "add" {
 		// 添加
-		iptablesFirewallAdd()
-	} else if FirewallConfig.Mode == "del" {
+		iptablesFirewallRuleAdd()
+	} else if FirewallRuleConfig.Mode == "del" {
 		// 删除
-		iptablesFirewallDel()
-	} else if FirewallConfig.Mode == "install" {
+		iptablesFirewallRuleDel()
+	} else if FirewallRuleConfig.Mode == "install" {
 		// 安装
 		iptablesInstall()
-	} else if FirewallConfig.Mode == "uninstall" {
+	} else if FirewallRuleConfig.Mode == "uninstall" {
 		// 卸载
 		iptablesUnInstall()
 	} else {
@@ -26,24 +26,24 @@ func BuildFirewall() {
 	}
 }
 
-func iptablesFirewallTemplate(mode string) (string, string) {
-	FirewallConfig.Ports = strings.Replace(FirewallConfig.Ports, "-", ":", -1)
+func iptablesFirewallRuleTemplate(mode string) (string, string) {
+	FirewallRuleConfig.Ports = strings.Replace(FirewallRuleConfig.Ports, "-", ":", -1)
 	cmd := ""
-	if FirewallConfig.Address == "" {
-		if strings.Contains(FirewallConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -p tcp -m state --state NEW -m tcp --dport %s -j %s", FirewallConfig.Ports, FirewallConfig.Type)
-			udp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -p udp -m state --state NEW -m udp --dport %s -j %s", FirewallConfig.Ports, FirewallConfig.Type)
+	if FirewallRuleConfig.Address == "" {
+		if strings.Contains(FirewallRuleConfig.Protocol, "/") {
+			tcp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -p tcp -m state --state NEW -m tcp --dport %s -j %s", FirewallRuleConfig.Ports, FirewallRuleConfig.Type)
+			udp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -p udp -m state --state NEW -m udp --dport %s -j %s", FirewallRuleConfig.Ports, FirewallRuleConfig.Type)
 			cmd = fmt.Sprintf("%s && %s", tcp, udp)
 		} else {
-			cmd = fmt.Sprintf("iptables -t mangle {MODE} INPUT -p tcp -m state --state NEW -m %s --dport %s -j %s", FirewallConfig.Protocol, FirewallConfig.Ports, FirewallConfig.Type)
+			cmd = fmt.Sprintf("iptables -t mangle {MODE} INPUT -p tcp -m state --state NEW -m %s --dport %s -j %s", FirewallRuleConfig.Protocol, FirewallRuleConfig.Ports, FirewallRuleConfig.Type)
 		}
 	} else {
-		if strings.Contains(FirewallConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p tcp --dport %s -j %s", FirewallConfig.Address, FirewallConfig.Ports, FirewallConfig.Type)
-			udp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p udp --dport %s -j %s", FirewallConfig.Address, FirewallConfig.Ports, FirewallConfig.Type)
+		if strings.Contains(FirewallRuleConfig.Protocol, "/") {
+			tcp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p tcp --dport %s -j %s", FirewallRuleConfig.Address, FirewallRuleConfig.Ports, FirewallRuleConfig.Type)
+			udp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p udp --dport %s -j %s", FirewallRuleConfig.Address, FirewallRuleConfig.Ports, FirewallRuleConfig.Type)
 			cmd = fmt.Sprintf("%s && %s", tcp, udp)
 		} else {
-			cmd = fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p %s --dport %s -j %s", FirewallConfig.Address, FirewallConfig.Protocol, FirewallConfig.Ports, FirewallConfig.Type)
+			cmd = fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p %s --dport %s -j %s", FirewallRuleConfig.Address, FirewallRuleConfig.Protocol, FirewallRuleConfig.Ports, FirewallRuleConfig.Type)
 		}
 	}
 	key := StringMd5(cmd)
@@ -55,9 +55,9 @@ func iptablesFirewallTemplate(mode string) (string, string) {
 	return key, fmt.Sprintf("%s -m comment --comment \"%s\"", cmd, key)
 }
 
-func iptablesFirewallAdd() {
-	key, cmd := iptablesFirewallTemplate("add")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
+func iptablesFirewallRuleAdd() {
+	key, cmd := iptablesFirewallRuleTemplate("add")
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
 	WriteFile(cmdFile, strings.Join(os.Args, " "))
 	//
 	if !existMangleInput(key) {
@@ -68,9 +68,9 @@ func iptablesFirewallAdd() {
 	}
 }
 
-func iptablesFirewallDel() {
-	key, cmd := iptablesFirewallTemplate("del")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
+func iptablesFirewallRuleDel() {
+	key, cmd := iptablesFirewallRuleTemplate("del")
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
 	_ = os.RemoveAll(cmdFile)
 	//
 	if existMangleInput(key) {
@@ -90,7 +90,7 @@ func iptablesInstall() {
 		"iptables -t mangle -P INPUT DROP",
 		"iptables -t nat -A POSTROUTING -j MASQUERADE",
 	}, " && ")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
 	WriteFile(cmdFile, strings.Join(os.Args, " "))
 	//
 	if !existMangleInput(key) {
@@ -110,7 +110,7 @@ func iptablesUnInstall() {
 		"iptables -t mangle -P INPUT ACCEPT",
 		"iptables -t nat -D POSTROUTING -j MASQUERADE",
 	}, " && ")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
 	_ = os.RemoveAll(cmdFile)
 	//
 	if existMangleInput(key) {

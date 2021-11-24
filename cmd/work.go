@@ -11,8 +11,7 @@ import (
 // workCmd represents the websocket command
 var workCmd = &cobra.Command{
 	Use:   "work",
-	Short: "Simplest websocket",
-	Long:  `sdos work --server-url ws://127.0.0.1`,
+	Short: "Work",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if install.ServerUrl == "" {
 			logger.Error("server-url is required.")

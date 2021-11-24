@@ -8,7 +8,7 @@ import (
 // testCmd represents the test command
 var testCmd = &cobra.Command{
 	Use:   "test",
-	Short: "Only test",
+	Short: "Test",
 	Run: func(cmd *cobra.Command, args []string) {
 		install.BuildTest()
 	},

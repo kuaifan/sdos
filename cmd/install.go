@@ -12,8 +12,7 @@ import (
 // installCmd represents the install command
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Simplest way to install your sdwan cluster",
-	Long:  `sdos install --node 192.168.0.5`,
+	Short: "Install",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		if len(install.NodeIPs) == 0 {
 			ipv4, _, _ := install.RunCommand("-c", "curl -4 ip.sb")
