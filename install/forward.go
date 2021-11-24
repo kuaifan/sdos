@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"github.com/kuaifan/sdos/pkg/logger"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 )
 
 //BuildForward is
@@ -47,14 +45,15 @@ func iptablesForwardTemplate(mode string) (string, string) {
 	} else {
 		cmd = strings.ReplaceAll(cmd, "{MODE}", "-A")
 	}
-	return key, cmd
+	return key, fmt.Sprintf("%s -m comment --comment \"%s\"", cmd, key)
 }
 
 func iptablesForwardAdd() {
 	key, cmd := iptablesForwardTemplate("add")
-	file := fmt.Sprintf("/tmp/.sdwan/tmp/forward_%s", key)
-	if ForwardConfig.Force || !Exists(file) {
-		WriteFile(file, strconv.FormatInt(time.Now().Unix(), 10))
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/forward_%s", key)
+	WriteFile(cmdFile, strings.Join(os.Args, " "))
+	//
+	if !existNatPrerouting(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
@@ -64,12 +63,21 @@ func iptablesForwardAdd() {
 
 func iptablesForwardDel() {
 	key, cmd := iptablesForwardTemplate("del")
-	file := fmt.Sprintf("/tmp/.sdwan/tmp/forward_%s", key)
-	if ForwardConfig.Force || Exists(file) {
-		_ = os.RemoveAll(file)
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/forward_%s", key)
+	_ = os.RemoveAll(cmdFile)
+	//
+	if existNatPrerouting(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
 		}
 	}
+}
+
+func existNatPrerouting(key string) bool {
+	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -t nat -L PREROUTING | grep '%s'", key))
+	if strings.Contains(result, key) {
+		return true
+	}
+	return false
 }

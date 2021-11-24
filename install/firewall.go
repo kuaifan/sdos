@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"github.com/kuaifan/sdos/pkg/logger"
 	"os"
-	"strconv"
 	"strings"
-	"time"
 )
 
 //BuildFirewall is
@@ -17,9 +15,12 @@ func BuildFirewall() {
 	} else if FirewallConfig.Mode == "del" {
 		// 删除
 		iptablesFirewallDel()
-	} else if FirewallConfig.Mode == "default" {
-		// 修改默认
-		iptablesDefault()
+	} else if FirewallConfig.Mode == "install" {
+		// 安装
+		iptablesInstall()
+	} else if FirewallConfig.Mode == "uninstall" {
+		// 卸载
+		iptablesUnInstall()
 	} else {
 		logger.Panic("Mode error")
 	}
@@ -30,19 +31,19 @@ func iptablesFirewallTemplate(mode string) (string, string) {
 	cmd := ""
 	if FirewallConfig.Address == "" {
 		if strings.Contains(FirewallConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("iptables -t mangle {MODE} PREROUTING -p tcp -m state --state NEW -m tcp --dport %s -j %s", FirewallConfig.Ports, FirewallConfig.Type)
-			udp := fmt.Sprintf("iptables -t mangle {MODE} PREROUTING -p udp -m state --state NEW -m udp --dport %s -j %s", FirewallConfig.Ports, FirewallConfig.Type)
+			tcp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -p tcp -m state --state NEW -m tcp --dport %s -j %s", FirewallConfig.Ports, FirewallConfig.Type)
+			udp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -p udp -m state --state NEW -m udp --dport %s -j %s", FirewallConfig.Ports, FirewallConfig.Type)
 			cmd = fmt.Sprintf("%s && %s", tcp, udp)
 		} else {
-			cmd = fmt.Sprintf("iptables -t mangle {MODE} PREROUTING -p tcp -m state --state NEW -m %s --dport %s -j %s", FirewallConfig.Protocol, FirewallConfig.Ports, FirewallConfig.Type)
+			cmd = fmt.Sprintf("iptables -t mangle {MODE} INPUT -p tcp -m state --state NEW -m %s --dport %s -j %s", FirewallConfig.Protocol, FirewallConfig.Ports, FirewallConfig.Type)
 		}
 	} else {
 		if strings.Contains(FirewallConfig.Protocol, "/") {
-			tcp := fmt.Sprintf("iptables -t mangle {MODE} PREROUTING -s %s -p tcp --dport %s -j %s", FirewallConfig.Address, FirewallConfig.Ports, FirewallConfig.Type)
-			udp := fmt.Sprintf("iptables -t mangle {MODE} PREROUTING -s %s -p udp --dport %s -j %s", FirewallConfig.Address, FirewallConfig.Ports, FirewallConfig.Type)
+			tcp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p tcp --dport %s -j %s", FirewallConfig.Address, FirewallConfig.Ports, FirewallConfig.Type)
+			udp := fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p udp --dport %s -j %s", FirewallConfig.Address, FirewallConfig.Ports, FirewallConfig.Type)
 			cmd = fmt.Sprintf("%s && %s", tcp, udp)
 		} else {
-			cmd = fmt.Sprintf("iptables -t mangle {MODE} PREROUTING -s %s -p %s --dport %s -j %s", FirewallConfig.Address, FirewallConfig.Protocol, FirewallConfig.Ports, FirewallConfig.Type)
+			cmd = fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p %s --dport %s -j %s", FirewallConfig.Address, FirewallConfig.Protocol, FirewallConfig.Ports, FirewallConfig.Type)
 		}
 	}
 	key := StringMd5(cmd)
@@ -51,14 +52,15 @@ func iptablesFirewallTemplate(mode string) (string, string) {
 	} else {
 		cmd = strings.ReplaceAll(cmd, "{MODE}", "-I")
 	}
-	return key, cmd
+	return key, fmt.Sprintf("%s -m comment --comment \"%s\"", cmd, key)
 }
 
 func iptablesFirewallAdd() {
 	key, cmd := iptablesFirewallTemplate("add")
-	file := fmt.Sprintf("/tmp/.sdwan/tmp/firewall_%s", key)
-	if FirewallConfig.Force || !Exists(file) {
-		WriteFile(file, strconv.FormatInt(time.Now().Unix(), 10))
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
+	WriteFile(cmdFile, strings.Join(os.Args, " "))
+	//
+	if !existMangleInput(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
@@ -68,9 +70,10 @@ func iptablesFirewallAdd() {
 
 func iptablesFirewallDel() {
 	key, cmd := iptablesFirewallTemplate("del")
-	file := fmt.Sprintf("/tmp/.sdwan/tmp/firewall_%s", key)
-	if FirewallConfig.Force || Exists(file) {
-		_ = os.RemoveAll(file)
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
+	_ = os.RemoveAll(cmdFile)
+	//
+	if existMangleInput(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
@@ -78,34 +81,48 @@ func iptablesFirewallDel() {
 	}
 }
 
-func iptablesDefaultAccept()  {
-	file := "/tmp/.sdwan/tmp/firewall_default"
-	if Exists(file) {
-		_ = os.RemoveAll(file)
-		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -p icmp --icmp-type any -j ACCEPT")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -s localhost -d localhost -j ACCEPT")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -D PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT")
+func iptablesInstall() {
+	key := StringMd5("sdwan-default")
+	cmd := strings.Join([]string{
+		fmt.Sprintf("iptables -t mangle -A INPUT -p icmp --icmp-type any -j ACCEPT -m comment --comment \"%s\"", key),
+		"iptables -t mangle -A INPUT -s localhost -d localhost -j ACCEPT",
+		"iptables -t mangle -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
+		"iptables -t mangle -P INPUT DROP",
+	}, " && ")
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
+	WriteFile(cmdFile, strings.Join(os.Args, " "))
+	//
+	if !existMangleInput(key) {
+		_, s, err := RunCommand("-c", cmd)
+		if err != nil {
+			logger.Panic(s, err)
+		}
 	}
 }
 
-func iptablesDefaultDrop()  {
-	file := "/tmp/.sdwan/tmp/firewall_default"
-	if !Exists(file) {
-		WriteFile(file, strconv.FormatInt(time.Now().Unix(), 10))
-		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -p icmp --icmp-type any -j ACCEPT")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -s localhost -d localhost -j ACCEPT")
-		_, _, _ = RunCommand("-c", "iptables -t mangle -A PREROUTING -m state --state ESTABLISHED,RELATED -j ACCEPT")
+func iptablesUnInstall() {
+	key := StringMd5("sdwan-default")
+	cmd := strings.Join([]string{
+		fmt.Sprintf("iptables -t mangle -D INPUT -p icmp --icmp-type any -j ACCEPT -m comment --comment \"%s\"", key),
+		"iptables -t mangle -D INPUT -s localhost -d localhost -j ACCEPT",
+		"iptables -t mangle -D INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
+		"iptables -t mangle -P INPUT ACCEPT",
+	}, " && ")
+	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
+	_ = os.RemoveAll(cmdFile)
+	//
+	if existMangleInput(key) {
+		_, s, err := RunCommand("-c", cmd)
+		if err != nil {
+			logger.Panic(s, err)
+		}
 	}
 }
 
-func iptablesDefault() {
-	if FirewallConfig.Type == "ACCEPT" {
-		iptablesDefaultAccept()
-	} else if FirewallConfig.Type == "DROP" {
-		iptablesDefaultDrop()
+func existMangleInput(key string) bool {
+	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -t mangle -L INPUT | grep '%s'", key))
+	if strings.Contains(result, key) {
+		return true
 	}
-	_, s, err := RunCommand("-c", fmt.Sprintf("iptables -t mangle -P PREROUTING %s", FirewallConfig.Type))
-	if err != nil {
-		logger.Panic(s, err)
-	}
+	return false
 }

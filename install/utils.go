@@ -16,6 +16,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -30,6 +31,24 @@ import (
 	gopsnet "github.com/shirou/gopsutil/net"
 	"github.com/shirou/gopsutil/v3/process"
 )
+
+// StartRun 启动运行
+func StartRun() {
+	_ = os.RemoveAll("/tmp/.sdwan/tmp")
+	_ = os.MkdirAll("/tmp/.sdwan/tmp", os.ModePerm)
+	//
+	_ = os.MkdirAll("/usr/.sdwan/startcmd", os.ModePerm)
+	path := fmt.Sprintf("/usr/.sdwan/startcmd")
+	files, err := filepath.Glob(filepath.Join(path, "*"))
+	if err != nil {
+		logger.Error(err)
+	}
+	for i := range files {
+		file := files[i]
+		content := ReadFile(file)
+		_, _, _ = RunCommand("-c", content)
+	}
+}
 
 // YmdHis 返回示例：2021-08-05 00:00:01
 func YmdHis() string {
