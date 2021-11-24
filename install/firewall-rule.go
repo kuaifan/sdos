@@ -15,12 +15,6 @@ func BuildFirewallRule() {
 	} else if FirewallRuleConfig.Mode == "del" {
 		// 删除
 		firewallRuleDel()
-	} else if FirewallRuleConfig.Mode == "install" {
-		// 安装
-		iptablesInstall()
-	} else if FirewallRuleConfig.Mode == "uninstall" {
-		// 卸载
-		iptablesUnInstall()
 	} else {
 		logger.Panic("Mode error")
 	}
@@ -60,7 +54,7 @@ func firewallRuleAdd() {
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
 	WriteFile(cmdFile, strings.Join(os.Args, " "))
 	//
-	if !existMangleInput(key) {
+	if !ExistMangleInput(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
@@ -73,58 +67,10 @@ func firewallRuleDel() {
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
 	_ = os.RemoveAll(cmdFile)
 	//
-	if existMangleInput(key) {
+	if ExistMangleInput(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
 		}
 	}
-}
-
-func iptablesInstall() {
-	key := StringMd5("sdwan-default")
-	cmd := strings.Join([]string{
-		fmt.Sprintf("iptables -t mangle -A INPUT -p icmp --icmp-type any -j ACCEPT -m comment --comment \"%s\"", key),
-		"iptables -t mangle -A INPUT -s localhost -d localhost -j ACCEPT",
-		"iptables -t mangle -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
-		"iptables -t mangle -P INPUT DROP",
-		"iptables -t nat -A POSTROUTING -j MASQUERADE",
-	}, " && ")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
-	WriteFile(cmdFile, strings.Join(os.Args, " "))
-	//
-	if !existMangleInput(key) {
-		_, s, err := RunCommand("-c", cmd)
-		if err != nil {
-			logger.Panic(s, err)
-		}
-	}
-}
-
-func iptablesUnInstall() {
-	key := StringMd5("sdwan-default")
-	cmd := strings.Join([]string{
-		fmt.Sprintf("iptables -t mangle -D INPUT -p icmp --icmp-type any -j ACCEPT -m comment --comment \"%s\"", key),
-		"iptables -t mangle -D INPUT -s localhost -d localhost -j ACCEPT",
-		"iptables -t mangle -D INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
-		"iptables -t mangle -P INPUT ACCEPT",
-		"iptables -t nat -D POSTROUTING -j MASQUERADE",
-	}, " && ")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
-	_ = os.RemoveAll(cmdFile)
-	//
-	if existMangleInput(key) {
-		_, s, err := RunCommand("-c", cmd)
-		if err != nil {
-			logger.Panic(s, err)
-		}
-	}
-}
-
-func existMangleInput(key string) bool {
-	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -t mangle -L INPUT | grep '%s'", key))
-	if strings.Contains(result, key) {
-		return true
-	}
-	return false
 }

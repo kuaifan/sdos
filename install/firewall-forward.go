@@ -53,7 +53,7 @@ func firewallForwardAdd() {
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_forward_%s", key)
 	WriteFile(cmdFile, strings.Join(os.Args, " "))
 	//
-	if !existNatPrerouting(key) {
+	if !ExistNatPrerouting(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
@@ -66,18 +66,10 @@ func firewallForwardDel() {
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_forward_%s", key)
 	_ = os.RemoveAll(cmdFile)
 	//
-	if existNatPrerouting(key) {
+	if ExistNatPrerouting(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
 		}
 	}
-}
-
-func existNatPrerouting(key string) bool {
-	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -t nat -L PREROUTING | grep '%s'", key))
-	if strings.Contains(result, key) {
-		return true
-	}
-	return false
 }

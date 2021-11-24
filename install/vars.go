@@ -58,6 +58,10 @@ type State struct {
 	}
 }
 
+type Firewall struct {
+	Mode     string
+}
+
 type FirewallRule struct {
 	Mode     string
 	Ports    string
@@ -96,10 +100,7 @@ var (
 	ResultInstall sync.Map
 	ResultRemove  sync.Map
 
-	NetInterface  string
-	NetCount      uint
-	NetUpdateTime float64
-
+	FirewallConfig Firewall
 	FirewallRuleConfig FirewallRule
 	FirewallForwardConfig FirewallForward
 )
