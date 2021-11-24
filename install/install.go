@@ -70,11 +70,13 @@ func installDone(node string, nodeName string) {
 			crtContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.crt", ServerDomain), "\n")
 			if !strings.Contains(keyContent, "PRIVATE KEY") {
 				logger.Error("[%s] [%s] read key error %s", node, ServerDomain)
-				keyContent = ""
+				ResultInstall.Store(node, "read key error")
+				return
 			}
 			if !strings.Contains(crtContent, "END CERTIFICATE") {
 				logger.Error("[%s] [%s] read crt error %s", node, ServerDomain)
-				crtContent = ""
+				ResultInstall.Store(node, "read crt error")
+				return
 			}
 		}
 		nodeIp, nodePort := GetIpAndPort(node)
@@ -97,17 +99,19 @@ func installDone(node string, nodeName string) {
 			Post(ReportUrl)
 		if err != nil || resp == nil {
 			logger.Error("[%s] install error %s", node, err)
-		} else {
-			body, errp := resp.GetBodyAsString()
-			if errp != nil {
-				logger.Error("[%s] install failed %s", node, errp)
-			} else {
-				ResultInstall.Store(node, body)
-			}
+			ResultInstall.Store(node, err.Error())
+			return
 		}
-	} else {
-		ResultInstall.Store(node, res)
+		body, errp := resp.GetBodyAsString()
+		if errp != nil {
+			logger.Error("[%s] install failed %s", node, errp)
+			ResultInstall.Store(node, errp.Error())
+			return
+		}
+		ResultInstall.Store(node, body)
+		return
 	}
+	ResultInstall.Store(node, res)
 }
 
 func installWalk(key interface{}, value interface{}) bool {
