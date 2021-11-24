@@ -11,10 +11,10 @@ import (
 func BuildFirewallRule() {
 	if FirewallRuleConfig.Mode == "add" {
 		// 添加
-		iptablesFirewallRuleAdd()
+		firewallRuleAdd()
 	} else if FirewallRuleConfig.Mode == "del" {
 		// 删除
-		iptablesFirewallRuleDel()
+		firewallRuleDel()
 	} else if FirewallRuleConfig.Mode == "install" {
 		// 安装
 		iptablesInstall()
@@ -26,7 +26,7 @@ func BuildFirewallRule() {
 	}
 }
 
-func iptablesFirewallRuleTemplate(mode string) (string, string) {
+func firewallRuleTemplate(mode string) (string, string) {
 	FirewallRuleConfig.Ports = strings.Replace(FirewallRuleConfig.Ports, "-", ":", -1)
 	cmd := ""
 	if FirewallRuleConfig.Address == "" {
@@ -55,8 +55,8 @@ func iptablesFirewallRuleTemplate(mode string) (string, string) {
 	return key, fmt.Sprintf("%s -m comment --comment \"%s\"", cmd, key)
 }
 
-func iptablesFirewallRuleAdd() {
-	key, cmd := iptablesFirewallRuleTemplate("add")
+func firewallRuleAdd() {
+	key, cmd := firewallRuleTemplate("add")
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
 	WriteFile(cmdFile, strings.Join(os.Args, " "))
 	//
@@ -68,8 +68,8 @@ func iptablesFirewallRuleAdd() {
 	}
 }
 
-func iptablesFirewallRuleDel() {
-	key, cmd := iptablesFirewallRuleTemplate("del")
+func firewallRuleDel() {
+	key, cmd := firewallRuleTemplate("del")
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
 	_ = os.RemoveAll(cmdFile)
 	//

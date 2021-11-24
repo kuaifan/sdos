@@ -11,16 +11,16 @@ import (
 func BuildFirewallForward() {
 	if FirewallForwardConfig.Mode == "add" {
 		// 添加
-		iptablesFirewallForwardAdd()
+		firewallForwardAdd()
 	} else if FirewallForwardConfig.Mode == "del" {
 		// 删除
-		iptablesFirewallForwardDel()
+		firewallForwardDel()
 	} else {
 		logger.Panic("Mode error")
 	}
 }
 
-func iptablesFirewallForwardTemplate(mode string) (string, string) {
+func firewallForwardTemplate(mode string) (string, string) {
 	cmd := ""
 	if FirewallForwardConfig.Dip == "" {
 		if strings.Contains(FirewallForwardConfig.Protocol, "/") {
@@ -48,8 +48,8 @@ func iptablesFirewallForwardTemplate(mode string) (string, string) {
 	return key, fmt.Sprintf("%s -m comment --comment \"%s\"", cmd, key)
 }
 
-func iptablesFirewallForwardAdd() {
-	key, cmd := iptablesFirewallForwardTemplate("add")
+func firewallForwardAdd() {
+	key, cmd := firewallForwardTemplate("add")
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_forward_%s", key)
 	WriteFile(cmdFile, strings.Join(os.Args, " "))
 	//
@@ -61,8 +61,8 @@ func iptablesFirewallForwardAdd() {
 	}
 }
 
-func iptablesFirewallForwardDel() {
-	key, cmd := iptablesFirewallForwardTemplate("del")
+func firewallForwardDel() {
+	key, cmd := firewallForwardTemplate("del")
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_forward_%s", key)
 	_ = os.RemoveAll(cmdFile)
 	//
