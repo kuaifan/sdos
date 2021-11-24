@@ -114,7 +114,10 @@ func installWalk(key interface{}, value interface{}) bool {
 	if value.(string) == "success" {
 		logger.Info("[%s] install %s", key, value)
 	} else {
-		if value != "" && value != "error" {
+		if value == "error" {
+			value = ""
+		}
+		if value != "" {
 			value = fmt.Sprintf(": %s", value)
 		}
 		Error(fmt.Sprintf("[%s] install error%s", key, value))
