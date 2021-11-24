@@ -57,7 +57,7 @@ var installCmd = &cobra.Command{
 			}
 			ip, _ := net.LookupHost(install.ServerDomain)
 			if install.StringsContains(ip, install.NodeIPs[0]) == -1 {
-				install.Error(fmt.Sprintf("Domain name [%s] resolution results [%s], inconsistent with server IP [%s].", install.ServerDomain, ip, install.NodeIPs[0]))
+				install.Error(fmt.Sprintf("Domain name [%s] resolution results %s, inconsistent with server IP %s.", install.ServerDomain, ip, install.NodeIPs[0]))
 				os.Exit(0)
 			}
 		}

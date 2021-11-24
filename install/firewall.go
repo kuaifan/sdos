@@ -88,6 +88,7 @@ func iptablesInstall() {
 		"iptables -t mangle -A INPUT -s localhost -d localhost -j ACCEPT",
 		"iptables -t mangle -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
 		"iptables -t mangle -P INPUT DROP",
+		"iptables -t nat -A POSTROUTING -j MASQUERADE",
 	}, " && ")
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
 	WriteFile(cmdFile, strings.Join(os.Args, " "))
@@ -107,6 +108,7 @@ func iptablesUnInstall() {
 		"iptables -t mangle -D INPUT -s localhost -d localhost -j ACCEPT",
 		"iptables -t mangle -D INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
 		"iptables -t mangle -P INPUT ACCEPT",
+		"iptables -t nat -D POSTROUTING -j MASQUERADE",
 	}, " && ")
 	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_%s", key)
 	_ = os.RemoveAll(cmdFile)
