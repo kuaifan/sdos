@@ -3,7 +3,10 @@ package install
 import (
 	"fmt"
 	"github.com/kuaifan/sdos/pkg/logger"
+	"os"
+	"strconv"
 	"strings"
+	"time"
 )
 
 //BuildForward is
@@ -19,47 +22,54 @@ func BuildForward() {
 	}
 }
 
-func iptablesForwardTemplate(mode string) string {
-	value := ""
+func iptablesForwardTemplate(mode string) (string, string) {
+	cmd := ""
 	if ForwardConfig.Dip == "" {
 		if strings.Contains(ForwardConfig.Protocol, "/") {
 			tcp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p tcp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Dport)
 			udp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p udp --dport %s -j REDIRECT --to-port %s", ForwardConfig.Sport, ForwardConfig.Dport)
-			value = fmt.Sprintf("%s && %s", tcp, udp)
+			cmd = fmt.Sprintf("%s && %s", tcp, udp)
 		} else {
-			value = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dport)
+			cmd = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j REDIRECT --to-port %s", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dport)
 		}
 	} else {
 		if strings.Contains(ForwardConfig.Protocol, "/") {
 			tcp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p tcp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport)
 			udp := fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p udp --dport %s -j DNAT --to-destination %s:%s", ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport)
-			value = fmt.Sprintf("%s && %s && iptables -t nat {MODE} POSTROUTING -j MASQUERADE", tcp, udp)
+			cmd = fmt.Sprintf("%s && %s && iptables -t nat {MODE} POSTROUTING -j MASQUERADE", tcp, udp)
 		} else {
-			value = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s && iptables -t nat {MODE} POSTROUTING -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport)
+			cmd = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s && iptables -t nat {MODE} POSTROUTING -j MASQUERADE", ForwardConfig.Protocol, ForwardConfig.Sport, ForwardConfig.Dip, ForwardConfig.Dport)
 		}
 	}
+	key := StringMd5(cmd)
 	if mode == "del" {
-		value = strings.ReplaceAll(value, "{MODE}", "-D")
-		value = fmt.Sprintf("%s &> /dev/null", value)
+		cmd = strings.ReplaceAll(cmd, "{MODE}", "-D")
 	} else {
-		value = strings.ReplaceAll(value, "{MODE}", "-A")
+		cmd = strings.ReplaceAll(cmd, "{MODE}", "-A")
 	}
-	return value
+	return key, cmd
 }
 
 func iptablesForwardAdd() {
-	if ForwardConfig.Force {
-		_, _, _ = RunCommand("-c", iptablesForwardTemplate("del"))
-	}
-	_, s, err := RunCommand("-c", iptablesForwardTemplate("add"))
-	if err != nil {
-		logger.Panic(s, err)
+	key, cmd := iptablesForwardTemplate("add")
+	file := fmt.Sprintf("/tmp/.sdwan/tmp/forward_%s", key)
+	if ForwardConfig.Force || !Exists(file) {
+		WriteFile(file, strconv.FormatInt(time.Now().Unix(), 10))
+		_, s, err := RunCommand("-c", cmd)
+		if err != nil {
+			logger.Panic(s, err)
+		}
 	}
 }
 
 func iptablesForwardDel() {
-	_, s, err := RunCommand("-c", iptablesForwardTemplate("del"))
-	if err != nil {
-		logger.Panic(s, err)
+	key, cmd := iptablesForwardTemplate("del")
+	file := fmt.Sprintf("/tmp/.sdwan/tmp/forward_%s", key)
+	if ForwardConfig.Force || Exists(file) {
+		_ = os.RemoveAll(file)
+		_, s, err := RunCommand("-c", cmd)
+		if err != nil {
+			logger.Panic(s, err)
+		}
 	}
 }

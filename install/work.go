@@ -35,12 +35,8 @@ func BuildWork() {
 		logger.Error("System env is error")
 		os.Exit(1)
 	}
-	_, _, _ = RunCommand("-c", "rm -rf /tmp/.sdwan/tmp")
-	if nodeMode == "host" {
-		_, _, _ = RunCommand("-c", "mkdir -p /tmp/.sdwan/tmp/firewall")
-	} else {
-		_, _, _ = RunCommand("-c", "mkdir -p /tmp/.sdwan/tmp")
-	}
+	_ = os.RemoveAll("/tmp/.sdwan/tmp")
+	_ = os.MkdirAll("/tmp/.sdwan/tmp", os.ModePerm)
 	_ = logger.SetLogger(`{"File":{"filename":"/tmp/.sdwan/work.log","level":"TRAC","daily":true,"maxlines":100000,"maxsize":10,"maxdays":3,"append":true,"permit":"0660"}}`)
 	//
 	done := make(chan bool)
