@@ -66,10 +66,10 @@ check_system() {
     #
     if [ "${PM}" = "yum" ]; then
         yum update -y
-        yum install -y curl socat epel-release
+        yum install -y curl wget socat epel-release
     elif [ "${PM}" = "apt-get" ]; then
         apt-get update -y
-        apt-get install -y curl socat
+        apt-get install -y curl wget socat
     fi
     judge "安装脚本依赖"
 }
