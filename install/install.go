@@ -35,19 +35,19 @@ func (s *SdosInstaller) InstallNodes() {
 			nodeName := GetRemoteHostName(node)
 			if InReset {
 				_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/")
-				_ = SSHConfig.SaveFile(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
+				_ = SSHConfig.SaveFileX(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
 				_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base remove")
 				_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
 			}
-			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/")
-			_ = SSHConfig.SaveFile(node, "/root/.sdwan/docker-compose.yml", DockerCompose(nodeName, node))
-			_ = SSHConfig.SaveFile(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
-			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base install")
 			if ServerKey != "" {
 				_ = SSHConfig.CmdAsync(node, fmt.Sprintf("mkdir -p /root/.sdwan/ssl/%s/", ServerDomain))
-				_ = SSHConfig.CmdAsync(node, fmt.Sprintf("wget -N --no-check-certificate '%s' -O /root/.sdwan/ssl/%s/site.key", ServerKey, ServerDomain))
-				_ = SSHConfig.CmdAsync(node, fmt.Sprintf("wget -N --no-check-certificate '%s' -O /root/.sdwan/ssl/%s/site.crt", ServerCrt, ServerDomain))
+				_ = SSHConfig.SaveFile(node, fmt.Sprintf("/root/.sdwan/ssl/%s/site.key", ServerDomain), ReadFile(ServerKey))
+				_ = SSHConfig.SaveFile(node, fmt.Sprintf("/root/.sdwan/ssl/%s/site.crt", ServerDomain), ReadFile(ServerCrt))
 			}
+			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/")
+			_ = SSHConfig.SaveFileX(node, "/root/.sdwan/docker-compose.yml", DockerCompose(nodeName, node))
+			_ = SSHConfig.SaveFileX(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
+			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base install")
 			installDone(node, nodeName)
 		}(node)
 	}

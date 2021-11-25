@@ -33,7 +33,7 @@ func (s *SdosInstaller) InstallRemoteNodes() {
 		go func(node string) {
 			defer wg.Done()
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.remote/")
-			_ = SSHConfig.SaveFile(node, "/root/.remote/base", BaseRemoteUtils(node))
+			_ = SSHConfig.SaveFileX(node, "/root/.remote/base", BaseRemoteUtils(node))
 			_ = SSHConfig.CmdAsync(node, "/root/.remote/base install")
 			installRemoteDone(node)
 		}(node)
