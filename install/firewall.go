@@ -61,6 +61,9 @@ func firewallCheckRule() {
 		result, _, _ := RunCommand("-c", "iptables -L INPUT -nvt mangle --line-number | grep 'sdwan-'")
 		items := strings.Split(result, "\n")
 		for _, item := range items {
+			if item == "" {
+				continue
+			}
 			del := true
 			for _, key := range keys {
 				if strings.Contains(item, key) {
@@ -87,6 +90,9 @@ func firewallCheckForward() {
 		result, _, _ := RunCommand("-c", "iptables -L PREROUTING -nvt nat --line-number | grep 'sdwan-'")
 		items := strings.Split(result, "\n")
 		for _, item := range items {
+			if item == "" {
+				continue
+			}
 			del := true
 			for _, key := range keys {
 				if strings.Contains(item, key) {
