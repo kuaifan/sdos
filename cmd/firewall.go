@@ -13,11 +13,8 @@ var firewallCmd = &cobra.Command{
 	Short: "Firewall",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		install.FirewallConfig.Mode = strings.ToLower(install.FirewallConfig.Mode)
-		if !install.InArray(install.FirewallConfig.Mode, []string{"install", "uninstall"}) {
-			err := cmd.Help()
-			if err != nil {
-				return
-			}
+		if !install.InArray(install.FirewallConfig.Mode, []string{"install", "uninstall", "check"}) {
+			install.Error("mode error")
 			os.Exit(0)
 		}
 	},
@@ -28,5 +25,6 @@ var firewallCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(firewallCmd)
-	firewallCmd.Flags().StringVar(&install.FirewallConfig.Mode, "mode", "", "install|uninstall")
+	firewallCmd.Flags().StringVar(&install.FirewallConfig.Mode, "mode", "", "install|uninstall|check")
+	firewallCmd.Flags().StringVar(&install.FirewallConfig.Keys, "keys", "", "")
 }

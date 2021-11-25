@@ -3,7 +3,6 @@ package install
 import (
 	"fmt"
 	"github.com/kuaifan/sdos/pkg/logger"
-	"os"
 	"strings"
 )
 
@@ -15,8 +14,6 @@ func BuildFirewallForward() {
 	} else if FirewallForwardConfig.Mode == "del" {
 		// 删除
 		firewallForwardDel()
-	} else {
-		logger.Panic("Mode error")
 	}
 }
 
@@ -39,7 +36,7 @@ func firewallForwardTemplate(mode string) (string, string) {
 			cmd = fmt.Sprintf("iptables -t nat {MODE} PREROUTING -p %s --dport %s -j DNAT --to-destination %s:%s", FirewallForwardConfig.Protocol, FirewallForwardConfig.Sport, FirewallForwardConfig.Dip, FirewallForwardConfig.Dport)
 		}
 	}
-	key := StringMd5(cmd)
+	key := fmt.Sprintf("sdwan-forward-%s", FirewallForwardConfig.Key)
 	if mode == "del" {
 		cmd = strings.ReplaceAll(cmd, "{MODE}", "-D")
 	} else {
@@ -50,10 +47,7 @@ func firewallForwardTemplate(mode string) (string, string) {
 
 func firewallForwardAdd() {
 	key, cmd := firewallForwardTemplate("add")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_forward_%s", key)
-	WriteFile(cmdFile, strings.Join(os.Args, " "))
-	//
-	if !ExistNatPrerouting(key) {
+	if !FirewallForwardExist(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
@@ -63,10 +57,7 @@ func firewallForwardAdd() {
 
 func firewallForwardDel() {
 	key, cmd := firewallForwardTemplate("del")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_forward_%s", key)
-	_ = os.RemoveAll(cmdFile)
-	//
-	if ExistNatPrerouting(key) {
+	if FirewallForwardExist(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)

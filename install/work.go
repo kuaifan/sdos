@@ -365,7 +365,7 @@ func handleMessageFile(data string) {
 		}
 		FileMd5.Store(fileKey, contentKey)
 		//
-		if InArray(arr[1], []string{"nic", "firewall"}) && Exists(fileName) {
+		if arr[1] == "nic" && Exists(fileName) {
 			// 先判断上次的文件是否存在，如果存在先 remove
 			logger.Info("Remove old %s: [%s]", arr[1], fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
@@ -379,7 +379,7 @@ func handleMessageFile(data string) {
 			logger.Error("WriteFile error: [%s] %s", fileName, err)
 			continue
 		}
-		if InArray(arr[1], []string{"nic", "firewall"}) {
+		if arr[1] == "nic" {
 			logger.Info("Install %s start: [%s]", arr[1], fileName)
 			_, _, _ = RunCommand("-c", fmt.Sprintf("chmod +x %s", fileName))
 			_, stderr, err = RunCommand(fileName, "install")

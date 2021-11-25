@@ -3,7 +3,6 @@ package install
 import (
 	"fmt"
 	"github.com/kuaifan/sdos/pkg/logger"
-	"os"
 	"strings"
 )
 
@@ -15,8 +14,6 @@ func BuildFirewallRule() {
 	} else if FirewallRuleConfig.Mode == "del" {
 		// 删除
 		firewallRuleDel()
-	} else {
-		logger.Panic("Mode error")
 	}
 }
 
@@ -40,7 +37,7 @@ func firewallRuleTemplate(mode string) (string, string) {
 			cmd = fmt.Sprintf("iptables -t mangle {MODE} INPUT -s %s -p %s --dport %s -j %s", FirewallRuleConfig.Address, FirewallRuleConfig.Protocol, FirewallRuleConfig.Ports, FirewallRuleConfig.Type)
 		}
 	}
-	key := StringMd5(cmd)
+	key := fmt.Sprintf("sdwan-rule-%s", FirewallRuleConfig.Key)
 	if mode == "del" {
 		cmd = strings.ReplaceAll(cmd, "{MODE}", "-D")
 	} else {
@@ -51,10 +48,7 @@ func firewallRuleTemplate(mode string) (string, string) {
 
 func firewallRuleAdd() {
 	key, cmd := firewallRuleTemplate("add")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
-	WriteFile(cmdFile, strings.Join(os.Args, " "))
-	//
-	if !ExistMangleInput(key) {
+	if !FirewallRuleExist(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)
@@ -64,10 +58,7 @@ func firewallRuleAdd() {
 
 func firewallRuleDel() {
 	key, cmd := firewallRuleTemplate("del")
-	cmdFile := fmt.Sprintf("/usr/.sdwan/startcmd/firewall_rule_%s", key)
-	_ = os.RemoveAll(cmdFile)
-	//
-	if ExistMangleInput(key) {
+	if FirewallRuleExist(key) {
 		_, s, err := RunCommand("-c", cmd)
 		if err != nil {
 			logger.Panic(s, err)

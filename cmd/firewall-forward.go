@@ -15,10 +15,11 @@ var firewallForwardCmd = &cobra.Command{
 		install.FirewallForwardConfig.Mode = strings.ToLower(install.FirewallForwardConfig.Mode)
 		install.FirewallForwardConfig.Protocol = strings.ToLower(install.FirewallForwardConfig.Protocol)
 		if !install.InArray(install.FirewallForwardConfig.Mode, []string{"add", "del"}) {
-			err := cmd.Help()
-			if err != nil {
-				return
-			}
+			install.Error("mode error")
+			os.Exit(0)
+		}
+		if install.FirewallForwardConfig.Key == "" {
+			install.Error("key error")
 			os.Exit(0)
 		}
 	},
@@ -34,5 +35,5 @@ func init() {
 	firewallForwardCmd.Flags().StringVar(&install.FirewallForwardConfig.Dip, "dip", "", "")
 	firewallForwardCmd.Flags().StringVar(&install.FirewallForwardConfig.Dport, "dport", "", "")
 	firewallForwardCmd.Flags().StringVar(&install.FirewallForwardConfig.Protocol, "protocol", "", "")
-	firewallForwardCmd.Flags().BoolVar(&install.FirewallForwardConfig.Force, "force", false, "delete before adding")
+	firewallForwardCmd.Flags().StringVar(&install.FirewallForwardConfig.Key, "key", "", "")
 }

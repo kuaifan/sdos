@@ -60,6 +60,7 @@ type State struct {
 
 type Firewall struct {
 	Mode     string
+	Keys     string
 }
 
 type FirewallRule struct {
@@ -68,7 +69,7 @@ type FirewallRule struct {
 	Type     string
 	Address  string
 	Protocol string
-	Force    bool
+	Key      string
 }
 
 type FirewallForward struct {
@@ -77,7 +78,7 @@ type FirewallForward struct {
 	Dip      string
 	Dport    string
 	Protocol string
-	Force    bool
+	Key      string
 }
 
 var (

@@ -633,3 +633,21 @@ func GetManageState(lastState *State) *State {
 
 	return state
 }
+
+// FirewallRuleExist 判断端口规则是否存在
+func FirewallRuleExist(key string) bool {
+	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -L INPUT -nvt mangle | grep '%s'", key))
+	if strings.Contains(result, key) {
+		return true
+	}
+	return false
+}
+
+// FirewallForwardExist 判断终端转发是否存在
+func FirewallForwardExist(key string) bool {
+	result, _, _ := RunCommand("-c", fmt.Sprintf("iptables -L PREROUTING -nvt nat | grep '%s'", key))
+	if strings.Contains(result, key) {
+		return true
+	}
+	return false
+}

@@ -15,10 +15,11 @@ var firewallRuleCmd = &cobra.Command{
 		install.FirewallRuleConfig.Mode = strings.ToLower(install.FirewallRuleConfig.Mode)
 		install.FirewallRuleConfig.Protocol = strings.ToLower(install.FirewallRuleConfig.Protocol)
 		if !install.InArray(install.FirewallRuleConfig.Mode, []string{"add", "del"}) {
-			err := cmd.Help()
-			if err != nil {
-				return
-			}
+			install.Error("mode error")
+			os.Exit(0)
+		}
+		if install.FirewallRuleConfig.Key == "" {
+			install.Error("key error")
 			os.Exit(0)
 		}
 	},
@@ -29,10 +30,10 @@ var firewallRuleCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(firewallRuleCmd)
-	firewallRuleCmd.Flags().StringVar(&install.FirewallRuleConfig.Mode, "mode", "", "add|del")
+	firewallRuleCmd.Flags().StringVar(&install.FirewallRuleConfig.Mode, "mode", "", "add or del")
 	firewallRuleCmd.Flags().StringVar(&install.FirewallRuleConfig.Ports, "ports", "", "")
 	firewallRuleCmd.Flags().StringVar(&install.FirewallRuleConfig.Type, "type", "", "")
 	firewallRuleCmd.Flags().StringVar(&install.FirewallRuleConfig.Address, "address", "", "")
 	firewallRuleCmd.Flags().StringVar(&install.FirewallRuleConfig.Protocol, "protocol", "", "")
-	firewallRuleCmd.Flags().BoolVar(&install.FirewallRuleConfig.Force, "force", false, "delete before adding")
+	firewallRuleCmd.Flags().StringVar(&install.FirewallRuleConfig.Key, "key", "", "")
 }
