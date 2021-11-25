@@ -25,8 +25,8 @@ func firewallInstall() {
 	key := StringMd5("firewall-default")
 	cmd := strings.Join([]string{
 		fmt.Sprintf("iptables -t mangle -A INPUT -p icmp --icmp-type any -j ACCEPT -m comment --comment \"%s\"", key),
-		"iptables -t mangle -A INPUT -s localhost -d localhost -j ACCEPT",
-		"iptables -t mangle -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
+		fmt.Sprintf("iptables -t mangle -A INPUT -s localhost -d localhost -j ACCEPT -m comment --comment \"%s\"", key),
+		fmt.Sprintf("iptables -t mangle -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT -m comment --comment \"%s\"", key),
 		"iptables -t mangle -P INPUT DROP",
 	}, " && ")
 	if !FirewallRuleExist(key) {
@@ -41,8 +41,8 @@ func firewallUnInstall() {
 	key := StringMd5("firewall-default")
 	cmd := strings.Join([]string{
 		fmt.Sprintf("iptables -t mangle -D INPUT -p icmp --icmp-type any -j ACCEPT -m comment --comment \"%s\"", key),
-		"iptables -t mangle -D INPUT -s localhost -d localhost -j ACCEPT",
-		"iptables -t mangle -D INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT",
+		fmt.Sprintf("iptables -t mangle -D INPUT -s localhost -d localhost -j ACCEPT -m comment --comment \"%s\"", key),
+		fmt.Sprintf("iptables -t mangle -D INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT -m comment --comment \"%s\"", key),
 		"iptables -t mangle -P INPUT ACCEPT",
 	}, " && ")
 	if FirewallRuleExist(key) {
