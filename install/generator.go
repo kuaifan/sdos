@@ -40,6 +40,18 @@ func BaseUtils(nodeName string, node string) string {
 	return FromTemplateContent(sb.String(), envMap)
 }
 
+func BaseRemoteUtils(node string) string {
+	var sb strings.Builder
+	sb.Write([]byte(baseRemoteUtils))
+	var envMap = make(map[string]interface{})
+	nodeIp, nodePort := GetIpAndPort(node)
+	envMap["SERVER_URL"] = ServerUrl
+	envMap["NODE_IP"] = nodeIp
+	envMap["NODE_PORT"] = nodePort
+	envMap["NODE_PASSWORD"] = SSHConfig.GetPassword(node)
+	return FromTemplateContent(sb.String(), envMap)
+}
+
 func FromTemplateContent(templateContent string, envMap map[string]interface{}) string {
 	tmpl, err := template.New("text").Parse(templateContent)
 	defer func() {

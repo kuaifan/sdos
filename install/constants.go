@@ -266,3 +266,122 @@ fi
 echo "success" > /tmp/.sdwan_install
 rm -f $CmdPath
 `)
+
+const baseRemoteUtils = string(`#!/bin/bash
+#fonts color
+Green="\033[32m"
+Red="\033[31m"
+GreenBG="\033[42;37m"
+RedBG="\033[41;37m"
+Font="\033[0m"
+
+#notification information
+OK="${Green}[OK]${Font}"
+Error="${Red}[错误]${Font}"
+
+CmdPath=$0
+
+source '/etc/os-release' > /dev/null
+
+if [ -f "/usr/bin/yum" ] && [ -d "/etc/yum.repos.d" ]; then
+    PM="yum"
+elif [ -f "/usr/bin/apt-get" ] && [ -f "/usr/bin/dpkg" ]; then
+    PM="apt-get"        
+fi
+
+judge() {
+    if [[ 0 -eq $? ]]; then
+        echo -e "${OK} ${GreenBG} $1 完成 ${Font}"
+        sleep 1
+    else
+        echo -e "${Error} ${RedBG} $1 失败 ${Font}"
+        exit 1
+    fi
+}
+
+check_system() {
+    if [[ "${ID}" = "centos" && ${VERSION_ID} -ge 7 ]]; then
+        echo > /dev/null
+    elif [[ "${ID}" = "debian" && ${VERSION_ID} -ge 8 ]]; then
+        echo > /dev/null
+    elif [[ "${ID}" = "ubuntu" && $(echo "${VERSION_ID}" | cut -d '.' -f1) -ge 16 ]]; then
+        echo > /dev/null
+    else
+        echo -e "${Error} ${RedBG} 当前系统为 ${ID} ${VERSION_ID} 不在支持的系统列表内，安装中断 ${Font}"
+        rm -f $CmdPath
+        exit 1
+    fi
+    #
+    if [ "${PM}" = "yum" ]; then
+        yum update -y
+        yum install -y curl socat
+    elif [ "${PM}" = "apt-get" ]; then
+        apt-get update -y
+        apt-get install -y curl socat
+    fi
+    judge "安装脚本依赖"
+}
+
+check_docker() {
+    docker --version &> /dev/null
+    if [ $? -ne  0 ]; then
+        echo -e "安装docker环境..."
+        curl -sSL https://get.daocloud.io/docker | sh
+        echo -e "${OK} Docker环境安装完成！"
+    fi
+    systemctl start docker
+    if [[ 0 -ne $? ]]; then
+        echo -e "${Error} ${RedBG} Docker 启动 失败${Font}"
+        rm -f $CmdPath
+        exit 1
+    fi
+    #
+    docker-compose --version &> /dev/null
+    if [ $? -ne  0 ]; then
+        echo -e "安装docker-compose..."
+        curl -s -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+        ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+        echo -e "${OK} Docker-compose安装完成！"
+        service docker restart
+    fi
+}
+
+add_certificate() {
+    mkdir -p /etc/docker/certs
+    cd /etc/docker/certs
+    openssl genrsa -aes256 -passout pass:111111 -out ca-key.pem 4096
+    openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem --passin pass:111111 -subj "/C=CN/ST=GD/L=SZ/O=SDMC/OU=SystemDepartment"
+    openssl genrsa -out server-key.pem 4096
+    openssl req -subj "/CN={{.NODE_IP}}" -sha256 -new -key server-key.pem -out server.csr
+    echo subjectAltName = IP:0.0.0.0,IP:{{.NODE_IP}},IP:127.0.0.1 > extfile.cnf
+    echo extendedKeyUsage = serverAuth >> extfile.cnf
+    openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -extfile extfile.cnf --passin pass:111111
+    openssl genrsa -out key.pem 4096
+    openssl req -subj "/CN={{.NODE_IP}}" -new -key key.pem -out client.csr
+    echo extendedKeyUsage = clientAuth > extfile-client.cnf
+    openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -extfile extfile-client.cnf --passin pass:111111
+    rm -f client.csr server.csr extfile.cnf extfile-client.cnf
+    chmod 0400 ca-key.pem key.pem server-key.pem
+    chmod 0444 ca.pem server-cert.pem cert.pem
+    #
+    cp /lib/systemd/system/docker.service /etc/systemd/system/docker.service
+    execstart="$(cat /lib/systemd/system/docker.service | grep 'ExecStart=')"
+    if [ -z "$(echo $execstart | grep 'tlscacert')" ]; then
+        sed -i "/ExecStart=/c ${execstart} --tlsverify --tlscacert=/etc/docker/certs/ca.pem --tlscert=/etc/docker/certs/server-cert.pem --tlskey=/etc/docker/certs/server-key.pem -H tcp://0.0.0.0:2376 -H unix:///var/run/docker.sock" /lib/systemd/system/docker.service
+    fi
+    systemctl daemon-reload
+    systemctl restart docker
+}
+
+echo "error" > /tmp/.remote_install
+
+if [ "$1" = "install" ]; then
+    check_system
+    check_docker
+    add_certificate
+fi
+
+echo "success" > /tmp/.remote_install
+rm -f $CmdPath
+`)
