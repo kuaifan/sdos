@@ -46,8 +46,8 @@ func installRemoteDone(node string) {
 	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/.remote_install", "")
 	if res == "success" {
 		caContent := SSHConfig.CmdToStringNoLog(node, "cat /etc/docker/certs/ca.pem", "\n")
-		certContent := SSHConfig.CmdToStringNoLog(node, "cat /etc/docker/certs/server-cert.pem", "\n")
-		keyContent := SSHConfig.CmdToStringNoLog(node, "cat /etc/docker/certs/server-key.pem", "\n")
+		certContent := SSHConfig.CmdToStringNoLog(node, "cat /etc/docker/certs/cert.pem", "\n")
+		keyContent := SSHConfig.CmdToStringNoLog(node, "cat /etc/docker/certs/key.pem", "\n")
 		if !strings.Contains(caContent, "END CERTIFICATE") {
 			ResultInstall.Store(node, "read ca error")
 			return
