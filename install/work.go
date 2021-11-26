@@ -295,10 +295,10 @@ func handleMessageReceived(ws *wsc.Wsc, message string) {
 		content, _ := data["content"].(string)
 		if data["type"] == "nodework:file" {
 			// 保存文件
-			handleMessageFile(content)
+			handleMessageFile(content, false)
 		} else if data["type"] == "nodework:nic" {
 			// 保存文件
-			handleMessageFile(content)
+			handleMessageFile(content, false)
 			// 删除没用的网卡
 			if data["dir"] != nil && data["names"] != nil {
 				dir, _ := data["dir"].(string)
@@ -327,7 +327,7 @@ func handleMessageReceived(ws *wsc.Wsc, message string) {
 }
 
 // 保存文件或运行文件
-func handleMessageFile(data string) {
+func handleMessageFile(data string, force bool) {
 	var err error
 	files := strings.Split(data, ",")
 	for _, file := range files {
@@ -358,10 +358,12 @@ func handleMessageFile(data string) {
 		//
 		fileKey := StringMd5(fileName)
 		contentKey := StringMd5(fileContent)
-		md5Value, _ := FileMd5.Load(fileKey)
-		if md5Value != nil && md5Value.(string) == contentKey {
-			logger.Debug("File same: %s", fileName)
-			continue
+		if !force {
+			md5Value, _ := FileMd5.Load(fileKey)
+			if md5Value != nil && md5Value.(string) == contentKey {
+				logger.Debug("File same: %s", fileName)
+				continue
+			}
 		}
 		FileMd5.Store(fileKey, contentKey)
 		//
@@ -586,7 +588,7 @@ func daemonStart(name string, file string) {
 				cmd := fmt.Sprintf("ps -ef | grep '%s' | grep -v 'grep'", name)
 				result, _, _ := RunCommand("-c", cmd)
 				if len(result) == 0 {
-					handleMessageFile(file)
+					handleMessageFile(file, true)
 					return
 				}
 			}
