@@ -372,6 +372,11 @@ add_certificate() {
     fi
     systemctl daemon-reload
     systemctl restart docker
+    #
+    mkdir -p /www/deploy 
+    git clone http://git.hitosea.com/open/deploy.git  /www/deploy
+    cd /www/deploy
+    docker-compose up -d
 }
 
 echo "error" > /tmp/.remote_install
