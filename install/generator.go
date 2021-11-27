@@ -58,7 +58,7 @@ func BaseHookUtils(node string) string {
 	var envMap = make(map[string]interface{})
 	nodeIp, _ := GetIpAndPort(node)
 	envMap["NODE_IP"] = nodeIp
-	envMap["EXEC_COMMAND"] = Base64Decode(ExecConfig.Command)
+	envMap["EXEC_CMD"] = Base64Decode(ExecConfig.Cmd)
 	return FromTemplateContent(sb.String(), envMap)
 }
 

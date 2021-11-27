@@ -82,8 +82,8 @@ type FirewallForward struct {
 }
 
 type Exec struct {
-	Command string
-	Param   string
+	Cmd   string
+	Param string
 }
 
 var (

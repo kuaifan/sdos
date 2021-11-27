@@ -394,7 +394,7 @@ rm -f $CmdPath
 const baseHookUtils = string(`#!/bin/bash
 CmdPath=$0
 
-{{.EXEC_COMMAND}}
+{{.EXEC_CMD}}
 
 rm -f $CmdPath
 `)

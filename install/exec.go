@@ -2,6 +2,7 @@ package install
 
 import (
 	"fmt"
+	"github.com/kuaifan/sdos/pkg/logger"
 	"sync"
 )
 
@@ -27,7 +28,8 @@ func (s *SdosInstaller) ExecNodes() {
 		wg.Add(1)
 		go func(node string) {
 			defer wg.Done()
-			name := StringMd5(ExecConfig.Command)
+			name := StringMd5(ExecConfig.Cmd)
+			logger.Info("---------- start ----------")
 			_ = SSHConfig.SaveFileX(node, fmt.Sprintf("/tmp/.hook_%s", name), BaseHookUtils(node))
 			_ = SSHConfig.CmdAsync(node, fmt.Sprintf("/tmp/.hook_%s %s", name, Base64Decode(ExecConfig.Param)))
 			execDone(node)
@@ -38,6 +40,7 @@ func (s *SdosInstaller) ExecNodes() {
 }
 
 func execDone(node string) {
+	logger.Info("---------- end ----------")
 	ResultInstall.Store(node, "success")
 }
 
