@@ -38,8 +38,8 @@ var execCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(execCmd)
 	execCmd.Flags().StringSliceVar(&install.NodeIPs, "node", []string{}, "Multi nodes ex. 192.168.0.5-192.168.0.5")
-	installRemoteCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
-	installRemoteCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh, It’s base64 encode")
+	execCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
+	execCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh, It’s base64 encode")
 	execCmd.Flags().StringVar(&install.ExecConfig.Cmd, "cmd", "", "")
 	execCmd.Flags().StringVar(&install.ExecConfig.Param, "param", "", "")
 }
