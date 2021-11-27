@@ -31,6 +31,12 @@ var execCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		beforeNodes := install.ParseIPs(install.NodeIPs)
+		if install.SSHConfig.User == "" {
+			install.SSHConfig.User = "root"
+		}
+		if install.SSHConfig.Password != "" {
+			install.SSHConfig.Password = install.Base64Decode(install.SSHConfig.Password)
+		}
 		install.BuildExec(beforeNodes)
 	},
 }
