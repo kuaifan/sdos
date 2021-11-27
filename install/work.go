@@ -500,12 +500,11 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 			continue
 		}
 		ip := address.String()
-		if len(arr) >= 5 {
+		if len(arr) >= 4 {
 			state := arr[1]
-			sn := arr[2]
-			ping, _ := strconv.ParseFloat(arr[3], 64)
-			unix, _ := strconv.ParseInt(arr[4], 10, 64)
-			monitorRecord[ip] = &Monitor{State: state, Sn: sn, Ping: ping, Unix: unix}
+			ping, _ := strconv.ParseFloat(arr[2], 64)
+			unix, _ := strconv.ParseInt(arr[3], 10, 64)
+			monitorRecord[ip] = &Monitor{State: state, Ping: ping, Unix: unix}
 		}
 		fileText = append(fileText, ip)
 	}
@@ -538,11 +537,7 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 			if ping > 0 {
 				state = "accept"	// ping值大于0表示线路通
 			}
-			sn := ""
 			record = monitorRecord[ip]
-			if record != nil {
-				sn = record.Sn
-			}
 			/**
 			1、记录没有
 			2、状态改变（通 不通 发生改变
@@ -550,7 +545,7 @@ func handleMessageMonitorIp(ws *wsc.Wsc, rand string, content string) {
 			4、大于10秒钟且（与上次ping值相差大于等于50或与上次相差1.1倍）
 			 */
 			if record == nil || record.State != state || unix - record.Unix >= 600 || (unix - record.Unix >= 10 && ComputePing(record.Ping, ping)) {
-				report[ip] = &Monitor{State: state, Sn: sn, Ping: ping, Unix: unix}
+				report[ip] = &Monitor{State: state, Ping: ping, Unix: unix}
 				monitorRecord[ip] = report[ip]
 			}
 		}
