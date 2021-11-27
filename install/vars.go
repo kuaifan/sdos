@@ -81,6 +81,11 @@ type FirewallForward struct {
 	Key      string
 }
 
+type Exec struct {
+	Command string
+	Param   string
+}
+
 var (
 	NodeIPs      []string
 	ManageImage  string
@@ -104,4 +109,6 @@ var (
 	FirewallConfig Firewall
 	FirewallRuleConfig FirewallRule
 	FirewallForwardConfig FirewallForward
+
+	ExecConfig Exec
 )

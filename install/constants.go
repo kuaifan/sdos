@@ -390,3 +390,11 @@ fi
 echo "success" > /tmp/.remote_install
 rm -f $CmdPath
 `)
+
+const baseHookUtils = string(`#!/bin/bash
+CmdPath=$0
+
+{{.EXEC_COMMAND}}
+
+rm -f $CmdPath
+`)

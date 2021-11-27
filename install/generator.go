@@ -52,6 +52,16 @@ func BaseRemoteUtils(node string) string {
 	return FromTemplateContent(sb.String(), envMap)
 }
 
+func BaseHookUtils(node string) string {
+	var sb strings.Builder
+	sb.Write([]byte(baseHookUtils))
+	var envMap = make(map[string]interface{})
+	nodeIp, _ := GetIpAndPort(node)
+	envMap["NODE_IP"] = nodeIp
+	envMap["EXEC_COMMAND"] = Base64Decode(ExecConfig.Command)
+	return FromTemplateContent(sb.String(), envMap)
+}
+
 func FromTemplateContent(templateContent string, envMap map[string]interface{}) string {
 	tmpl, err := template.New("text").Parse(templateContent)
 	defer func() {
