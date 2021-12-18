@@ -41,6 +41,8 @@ dockers:
     goarch: amd64
     image_templates:
       - "kuaifan/sdos:manage-{{ .Tag }}-amd64"
+    extra_files:
+      - docker/entrypoint.sh
   -
     dockerfile: manage.Dockerfile
     use_buildx: true
@@ -56,6 +58,8 @@ dockers:
     goarch: arm64
     image_templates:
       - "kuaifan/sdos:manage-{{ .Tag }}-arm64"
+    extra_files:
+      - docker/entrypoint.sh
 docker_manifests:
   - name_template: "kuaifan/sdos:manage-{{ .Tag }}"
     image_templates:
