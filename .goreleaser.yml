@@ -27,7 +27,7 @@ archives:
 
 dockers:
   -
-    dockerfile: manage.Dockerfile
+    dockerfile: docker/manage.Dockerfile
     use_buildx: true
     build_flag_templates:
       - "--pull"
@@ -44,7 +44,7 @@ dockers:
     extra_files:
       - docker/entrypoint.sh
   -
-    dockerfile: manage.Dockerfile
+    dockerfile: docker/manage.Dockerfile
     use_buildx: true
     build_flag_templates:
       - "--pull"

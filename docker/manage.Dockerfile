@@ -1,7 +1,4 @@
-FROM --platform=$TARGETPLATFORM debian:buster
-
-ARG TARGETOS
-ARG TARGETARCH
+FROM debian:buster
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends ca-certificates curl procps fping wget jq && \
@@ -12,17 +9,12 @@ RUN wget --no-check-certificate https://github.com/docker/compose/releases/downl
     chmod +x /usr/local/bin/docker-compose && \
     ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
-COPY ./release/sdos_${TARGETOS}_${TARGETARCH} /usr/bin/sdos
+COPY ../sdos /usr/bin/sdos
 RUN chmod +x /usr/bin/sdos
 
-COPY ./entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 WORKDIR /tmp/.sdwan
 
 ENTRYPOINT ["/entrypoint.sh"]
-
-
-# docker buildx create --use
-# docker buildx build --platform linux/amd64 -t kuaifan/sdwan:manage-0.0.1 --push -f ./manage.Dockerfile .
-# 需要 docker login 到 docker hub, 用户名 (docker id): kuaifan
