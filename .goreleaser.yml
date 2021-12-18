@@ -60,8 +60,91 @@ dockers:
       - "kuaifan/sdos:manage-{{ .Tag }}-arm64"
     extra_files:
       - docker/entrypoint.sh
+  -
+    dockerfile: docker/nginx.Dockerfile
+    use_buildx: true
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/amd64"
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "kuaifan/sdos:nginx-{{ .Tag }}-amd64"
+    extra_files:
+      - docker/entrypoint.sh
+      - docker/conf/nginx.conf
+  -
+    dockerfile: docker/nginx.Dockerfile
+    use_buildx: true
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/arm64"
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "kuaifan/sdos:nginx-{{ .Tag }}-arm64"
+    extra_files:
+      - docker/entrypoint.sh
+      - docker/conf/nginx.conf
+  -
+    dockerfile: docker/work.Dockerfile
+    use_buildx: true
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/amd64"
+    goos: linux
+    goarch: amd64
+    image_templates:
+      - "kuaifan/sdos:work-{{ .Tag }}-amd64"
+    extra_files:
+      - docker/entrypoint.sh
+      - docker/conf/dnsmasq.conf
+      - docker/conf/resolv.conf
+      - docker/conf/resolv.dnsmasq.conf
+      - docker/conf/sysctl.conf
+      - docker/xray/xray.sh
+  -
+    dockerfile: docker/work.Dockerfile
+    use_buildx: true
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--platform=linux/arm64"
+    goos: linux
+    goarch: arm64
+    image_templates:
+      - "kuaifan/sdos:work-{{ .Tag }}-arm64"
+    extra_files:
+      - docker/entrypoint.sh
 docker_manifests:
   - name_template: "kuaifan/sdos:manage-{{ .Tag }}"
     image_templates:
       - "kuaifan/sdos:manage-{{ .Tag }}-amd64"
       - "kuaifan/sdos:manage-{{ .Tag }}-arm64"
+  - name_template: "kuaifan/sdos:nginx-{{ .Tag }}"
+    image_templates:
+      - "kuaifan/sdos:nginx-{{ .Tag }}-amd64"
+      - "kuaifan/sdos:nginx-{{ .Tag }}-arm64"
+  - name_template: "kuaifan/sdos:work-{{ .Tag }}"
+    image_templates:
+      - "kuaifan/sdos:work-{{ .Tag }}-amd64"
+      - "kuaifan/sdos:work-{{ .Tag }}-arm64"
