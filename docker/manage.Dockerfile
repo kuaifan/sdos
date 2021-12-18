@@ -9,10 +9,10 @@ RUN wget --no-check-certificate https://github.com/docker/compose/releases/downl
     chmod +x /usr/local/bin/docker-compose && \
     ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
-COPY ../sdos /usr/bin/sdos
+COPY sdos /usr/bin/sdos
 RUN chmod +x /usr/bin/sdos
 
-COPY entrypoint.sh /entrypoint.sh
+COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 WORKDIR /tmp/.sdwan
