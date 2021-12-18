@@ -135,6 +135,11 @@ dockers:
       - "kuaifan/sdos:work-{{ .Tag }}-arm64"
     extra_files:
       - docker/entrypoint.sh
+      - docker/conf/dnsmasq.conf
+      - docker/conf/resolv.conf
+      - docker/conf/resolv.dnsmasq.conf
+      - docker/conf/sysctl.conf
+      - docker/xray/xray.sh
 docker_manifests:
   - name_template: "kuaifan/sdos:manage-{{ .Tag }}"
     image_templates:
