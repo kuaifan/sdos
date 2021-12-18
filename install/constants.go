@@ -255,7 +255,7 @@ elif [ "$1" = "remove" ]; then
     docker --version &> /dev/null
     if [ $? -eq  0 ]; then
         ll=$(docker ps -a --format "table {{"{{"}}.Names{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep -E "^sdwan\-" | awk '{print $2}')
-        ii=$(docker images --format "table {{"{{"}}.Repository{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep -E "^kuaifan\/(sdos|filebrowser)" | awk '{print $2}')
+        ii=$(docker images --format "table {{"{{"}}.Repository{{"}}"}}\t{{"{{"}}.ID{{"}}"}}" | grep -E "^kuaifan\/(sdos|sdwan|filebrowser)" | awk '{print $2}')
         [ -n "$ll" ] && docker rm -f $ll &> /dev/null
         [ -n "$ii" ] && docker rmi -f $ii &> /dev/null
     fi
