@@ -1,22 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/kuaifan/sdos/cmd"
-	"os"
-)
-
-var (
-	BuildTime  string
-	CommitSha1 string
+	"runtime"
 )
 
 func main() {
-	args := os.Args
-	if len(args) > 1 && ("-v" == args[1] || "--version" == args[1]) {
-		fmt.Println("BuildTime:\t", BuildTime)
-		fmt.Println("CommitSha1:\t", CommitSha1)
-		os.Exit(0)
-	}
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	cmd.Execute()
 }
