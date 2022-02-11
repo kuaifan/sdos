@@ -62,8 +62,9 @@ func installDone(node string, nodeName string) {
 			Mtu = "1360"
 		}
 		var (
-			keyContent = ""
-			crtContent = ""
+			keyContent      = ""
+			crtContent      = ""
+			certificateAuto = ""
 		)
 		if ServerDomain != "" {
 			keyContent = SSHConfig.CmdToStringNoLog(node, fmt.Sprintf("cat /root/.sdwan/ssl/%s/site.key", ServerDomain), "\n")
@@ -77,22 +78,28 @@ func installDone(node string, nodeName string) {
 				return
 			}
 		}
+		if ServerKey == "" {
+			certificateAuto = "yes"
+		} else {
+			certificateAuto = "no"
+		}
 		nodeIp, nodePort := GetIpAndPort(node)
 		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 		resp, err := gohttp.NewRequest().
 			FormData(map[string]string{
-				"action":     "install",
-				"ip":         nodeIp,
-				"name":       nodeName,
-				"mtu":        Mtu,
-				"port":       nodePort,
-				"user":       SSHConfig.User,
-				"pw":         SSHConfig.GetPassword(node),
-				"tk":         ServerToken,
-				"domain":     ServerDomain,
-				"domain_key": keyContent,
-				"domain_crt": crtContent,
-				"timestamp":  timestamp,
+				"action":           "install",
+				"ip":               nodeIp,
+				"name":             nodeName,
+				"mtu":              Mtu,
+				"port":             nodePort,
+				"user":             SSHConfig.User,
+				"pw":               SSHConfig.GetPassword(node),
+				"tk":               ServerToken,
+				"domain":           ServerDomain,
+				"domain_key":       keyContent,
+				"domain_crt":       crtContent,
+				"certificate_auto": certificateAuto,
+				"timestamp":        timestamp,
 			}).
 			Post(ReportUrl)
 		if err != nil || resp == nil {

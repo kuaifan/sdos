@@ -62,13 +62,14 @@ func reportFreessl(node string, nodeName string) {
 		timestamp := strconv.FormatInt(time.Now().Unix(), 10)
 		resp, err := gohttp.NewRequest().
 			FormData(map[string]string{
-				"action":     "freessl",
-				"name":       nodeName,
-				"ip":         RemoveIpPort(node),
-				"domain":     ServerDomain,
-				"domain_key": keyContent,
-				"domain_crt": crtContent,
-				"timestamp":  timestamp,
+				"action":           "freessl",
+				"name":             nodeName,
+				"ip":               RemoveIpPort(node),
+				"domain":           ServerDomain,
+				"domain_key":       keyContent,
+				"domain_crt":       crtContent,
+				"certificate_auto": "yes",
+				"timestamp":        timestamp,
 			}).
 			Post(ReportUrl)
 		if err != nil || resp == nil {
