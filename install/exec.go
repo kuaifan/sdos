@@ -30,7 +30,7 @@ func (s *SdosInstaller) ExecNodes() {
 			defer wg.Done()
 			name := StringMd5(ExecConfig.Cmd)
 			logger.Info("---------- start ----------")
-			_ = SSHConfig.SaveFileX(node, fmt.Sprintf("/tmp/.hook_%s", name), BaseHookUtils(node))
+			_ = SSHConfig.SaveFileAndChmodX(node, fmt.Sprintf("/tmp/.hook_%s", name), BaseHookUtils(node))
 			_ = SSHConfig.CmdAsync(node, fmt.Sprintf("/tmp/.hook_%s %s", name, Base64Decode(ExecConfig.Param)))
 			execDone(node)
 		}(node)

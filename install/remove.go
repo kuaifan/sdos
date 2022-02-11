@@ -34,7 +34,7 @@ func (s *SdosInstaller) RemoveNodes() {
 			defer wg.Done()
 			nodeName := GetRemoteHostName(node)
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/")
-			_ = SSHConfig.SaveFileX(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
+			_ = SSHConfig.SaveFileAndChmodX(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base remove")
 			_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
 			reportRemove(node, nodeName)

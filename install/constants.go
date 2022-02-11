@@ -265,6 +265,14 @@ elif [ "$1" = "remove" ]; then
     fi
     remove_alias
     remove_supervisor
+elif [ "$1" = "freessl" ]; then
+    if [ -n "{{.SERVER_DOMAIN}}" ]; then
+        add_ssl "{{.SERVER_DOMAIN}}"
+    else
+        echo -e "${Error} ${RedBG} 域名填写错误${Font}"
+        rm -f $CmdPath
+        exit 1
+    fi
 fi
 
 echo "success" > /tmp/.sdwan_install

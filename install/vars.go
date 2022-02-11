@@ -59,8 +59,8 @@ type State struct {
 }
 
 type Firewall struct {
-	Mode     string
-	Keys     string
+	Mode string
+	Keys string
 }
 
 type FirewallRule struct {
@@ -105,9 +105,10 @@ var (
 
 	ResultInstall sync.Map
 	ResultRemove  sync.Map
+	ResultFreessl sync.Map
 
-	FirewallConfig Firewall
-	FirewallRuleConfig FirewallRule
+	FirewallConfig        Firewall
+	FirewallRuleConfig    FirewallRule
 	FirewallForwardConfig FirewallForward
 
 	ExecConfig Exec

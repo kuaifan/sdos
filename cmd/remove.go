@@ -21,8 +21,8 @@ var removeCmd = &cobra.Command{
 				install.NodeIPs = append(install.NodeIPs, ipv4)
 			}
 		}
-		if len(install.NodeIPs) == 0 || install.ServerUrl == "" {
-			logger.Error("node / server-url required.")
+		if len(install.NodeIPs) == 0 || install.ReportUrl == "" {
+			logger.Error("node / report-url required.")
 			err := cmd.Help()
 			if err != nil {
 				return
