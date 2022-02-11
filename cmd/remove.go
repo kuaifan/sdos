@@ -35,6 +35,9 @@ var removeCmd = &cobra.Command{
 		if install.SSHConfig.User == "" {
 			install.SSHConfig.User = "root"
 		}
+		if install.SSHConfig.Password != "" {
+			install.SSHConfig.Password = install.Base64Decode(install.SSHConfig.Password)
+		}
 		install.BuildRemove(beforeNodes)
 	},
 }
