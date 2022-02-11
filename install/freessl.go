@@ -38,7 +38,6 @@ func (s *SdosInstaller) FreesslNodes() {
 			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.sdwan/")
 			_ = SSHConfig.SaveFileAndChmodX(node, "/root/.sdwan/base", BaseUtils(nodeName, node))
 			_ = SSHConfig.CmdAsync(node, "/root/.sdwan/base freessl")
-			_ = SSHConfig.CmdAsync(node, "rm -rf /root/.sdwan/")
 			reportFreessl(node, nodeName)
 		}(node)
 	}
