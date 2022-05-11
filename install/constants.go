@@ -95,7 +95,7 @@ check_docker() {
     docker-compose --version &> /dev/null
     if [ $? -ne  0 ]; then
         echo -e "安装docker-compose..."
-        curl -s -L "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        curl -s -L "https://get.daocloud.io/docker/compose/releases/download/v2.5.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         chmod +x /usr/local/bin/docker-compose
         ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
         echo -e "${OK} Docker-compose安装完成！"
@@ -351,7 +351,7 @@ check_docker() {
     docker-compose --version &> /dev/null
     if [ $? -ne  0 ]; then
         echo -e "安装docker-compose..."
-        curl -s -L "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        curl -s -L "https://get.daocloud.io/docker/compose/releases/download/v2.5.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         chmod +x /usr/local/bin/docker-compose
         ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
         echo -e "${OK} Docker-compose安装完成！"
