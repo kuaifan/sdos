@@ -28,7 +28,7 @@ archives:
 dockers:
   -
     dockerfile: docker/manage.Dockerfile
-    use_buildx: true
+    use: buildx
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -45,7 +45,7 @@ dockers:
       - docker/entrypoint.sh
   -
     dockerfile: docker/manage.Dockerfile
-    use_buildx: true
+    use: buildx
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -62,7 +62,7 @@ dockers:
       - docker/entrypoint.sh
   -
     dockerfile: docker/nginx.Dockerfile
-    use_buildx: true
+    use: buildx
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -80,7 +80,7 @@ dockers:
       - docker/conf/nginx.conf
   -
     dockerfile: docker/nginx.Dockerfile
-    use_buildx: true
+    use: buildx
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -98,7 +98,7 @@ dockers:
       - docker/conf/nginx.conf
   -
     dockerfile: docker/work.Dockerfile
-    use_buildx: true
+    use: buildx
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
@@ -120,7 +120,7 @@ dockers:
       - docker/xray/xray.sh
   -
     dockerfile: docker/work.Dockerfile
-    use_buildx: true
+    use: buildx
     build_flag_templates:
       - "--pull"
       - "--label=org.opencontainers.image.created={{.Date}}"
