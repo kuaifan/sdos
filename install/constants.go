@@ -5,6 +5,7 @@ services:
   sdos:
     container_name: "sdwan-manage"
     image: "{{.MANAGE_IMAGE}}"
+    privileged: true
     volumes:
       - /root/.sdwan/share:/tmp/.sdwan/work/share
       - /var/run/docker.sock:/var/run/docker.sock
