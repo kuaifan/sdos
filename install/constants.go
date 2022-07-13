@@ -66,8 +66,8 @@ check_system() {
     fi
     #
     if [ "${PM}" = "yum" ]; then
-        yum update -y
-        yum install -y curl wget socat
+        sudo yum update -y
+        sudo yum install -y curl wget socat
     elif [ "${PM}" = "apt-get" ]; then
         apt-get update -y
         apt-get install -y curl wget socat
@@ -75,7 +75,7 @@ check_system() {
     judge "安装脚本依赖"
     #
     if [ "${PM}" = "yum" ]; then
-        yum install -y epel-release
+        sudo yum install -y epel-release
     fi
 }
 
@@ -125,7 +125,7 @@ add_ssl() {
     judge "安装 SSL 证书生成脚本"
 
     sslPath="/root/.sdwan/ssl/${domain}"
-    mkdir -p "${sslPath}"
+    sudo mkdir -p "${sslPath}"
 
     /root/.acme.sh/acme.sh --register-account -m admin@admin.com
     /root/.acme.sh/acme.sh --issue -d "${domain}" --standalone
@@ -173,7 +173,7 @@ remove_alias() {
 
 add_supervisor() {
     if [ "${PM}" = "yum" ]; then
-        yum install -y supervisor
+        sudo yum install -y supervisor
         systemctl enable supervisord
         systemctl start supervisord
     elif [ "${PM}" = "apt-get" ]; then
@@ -326,8 +326,8 @@ check_system() {
     fi
     #
     if [ "${PM}" = "yum" ]; then
-        yum update -y
-        yum install -y curl socat
+        sudo yum update -y
+        sudo yum install -y curl socat
     elif [ "${PM}" = "apt-get" ]; then
         apt-get update -y
         apt-get install -y curl socat
@@ -361,7 +361,7 @@ check_docker() {
 }
 
 add_certificate() {
-    mkdir -p /etc/docker/certs
+    sudo mkdir -p /etc/docker/certs
     cd /etc/docker/certs
     openssl genrsa -aes256 -passout pass:111111 -out ca-key.pem 4096
     openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem --passin pass:111111 -subj "/C=CN/ST=GD/L=SZ/O=SDMC/OU=SystemDepartment"
@@ -386,7 +386,7 @@ add_certificate() {
     systemctl daemon-reload
     systemctl restart docker
     #
-    mkdir -p /www/deploy 
+    sudo mkdir -p /www/deploy 
     git clone http://git.hitosea.com/open/deploy.git  /www/deploy
     cd /www/deploy
     docker-compose up -d
