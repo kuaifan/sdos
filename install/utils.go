@@ -423,9 +423,14 @@ func GetIpsFiles(dirPath string) []string {
 		if !fi.IsDir() {
 			ok := strings.HasSuffix(fi.Name(), ".ips")
 			if ok {
-				ip := strings.TrimSuffix(fi.Name(), ".ips")
-				if stringToIP(ip) != nil {
-					files = append(files, ip)
+				basename := strings.TrimSuffix(fi.Name(), ".ips")
+				if stringToIP(basename) != nil { // xxx.xxx.xxx.xxx.ips
+					files = append(files, basename)
+				} else if strings.Contains(basename, "_") { // xxx.xxx.xxx.xxx(_xx)+.ips
+					ip := strings.Split(basename, "_")[0]
+					if stringToIP(ip) != nil {
+						files = append(files, basename)
+					}
 				}
 			}
 		}
@@ -650,4 +655,44 @@ func FirewallForwardExist(key string) bool {
 		return true
 	}
 	return false
+}
+
+func Mkdir(path string, perm os.FileMode) (err error) {
+	if _, err = os.Stat(path); os.IsNotExist(err) {
+		err = os.MkdirAll(path, perm)
+		if err != nil {
+			return
+		}
+		err = os.Chmod(path, perm)
+		if err != nil {
+			return
+		}
+	}
+	return err
+}
+
+func PrintError(msg string) {
+	fmt.Printf("\033[1;31m" + msg + " \033[0m\n")
+}
+
+func PrintSuccess(msg string) {
+	fmt.Printf("\033[1;32m" + msg + " \033[0m\n")
+}
+
+func DisplayRunning(display string, done chan bool) {
+	chars := []string{
+		"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏",
+	}
+	d := time.NewTicker(100 * time.Millisecond)
+	for {
+		select {
+		case <-done:
+			fmt.Print("\r")
+			return
+		case _ = <-d.C:
+			s1 := chars[:1]
+			chars = append(chars[1:], s1[0])
+			fmt.Printf("\r %s %s ...", s1[0], display)
+		}
+	}
 }

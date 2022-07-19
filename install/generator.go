@@ -76,3 +76,31 @@ func FromTemplateContent(templateContent string, envMap map[string]interface{}) 
 	_ = tmpl.Execute(&buffer, envMap)
 	return string(buffer.Bytes())
 }
+
+func LocalDockerCompose(nodeName string) string {
+	var sb strings.Builder
+	sb.Write([]byte(dockerCompose))
+	var envMap = make(map[string]interface{})
+	envMap["SERVER_URL"] = ServerUrl
+	envMap["NODE_NAME"] = nodeName
+	envMap["NODE_TOKEN"] = ServerToken
+	envMap["MANAGE_IMAGE"] = ManageImage
+	return FromTemplateContent(sb.String(), envMap)
+}
+
+func BaseScriptUtils(nodeName string) string {
+	var sb strings.Builder
+	sb.Write([]byte(baseUtils))
+	var envMap = make(map[string]interface{})
+	envMap["SERVER_URL"] = ServerUrl
+	envMap["SERVER_DOMAIN"] = ServerDomain
+	if ServerKey != "" && ServerCrt != "" {
+		envMap["CERTIFICATE_AUTO"] = "no"
+	} else {
+		envMap["CERTIFICATE_AUTO"] = "yes"
+	}
+	envMap["NODE_NAME"] = nodeName
+	envMap["NODE_TOKEN"] = ServerToken
+	envMap["SWAP_FILE"] = SwapFile
+	return FromTemplateContent(sb.String(), envMap)
+}
