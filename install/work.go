@@ -224,6 +224,10 @@ func timedTaskB(ws *wsc.Wsc) error {
 
 // ping 文件并发送
 func pingFileAndSend(ws *wsc.Wsc, fileName string, source string) error {
+	originalSource := source
+	if strings.Contains(source, "_") {
+		source = strings.Split(source, "_")[0]
+	}
 	if !Exists(fileName) {
 		logger.Debug("File no exist [%s]", fileName)
 		return nil
@@ -234,7 +238,7 @@ func pingFileAndSend(ws *wsc.Wsc, fileName string, source string) error {
 		logger.Debug("Ping error [%s]: %s", fileName, err)
 		return nil
 	}
-	sendMessage := fmt.Sprintf(`{"type":"node","action":"ping","data":"%s","source":"%s"}`, Base64Encode(result), source)
+	sendMessage := fmt.Sprintf(`{"type":"node","action":"ping","data":"%s","source":"%s"}`, Base64Encode(result), originalSource)
 	return ws.SendTextMessage(sendMessage)
 }
 
@@ -477,11 +481,17 @@ func handleDeleteUnusedNic(nicDir string, nicName string) {
 
 // 运行自定义脚本
 func handleMessageCmd(data string, addLog bool) (string, string, error) {
-	cmd := fmt.Sprintf("cd /tmp/.sdwan/work && %s", data)
+	var cmd string
+	if os.Getenv("NODE_MODE") != "host" { // biz container
+		cmd = fmt.Sprintf("cd /tmp/.sdwan/work && %s", data)
+	} else {
+		cmd = data
+	}
+
 	stdout, stderr, err := RunCommand("-c", cmd)
 	if addLog {
 		if err != nil {
-			logger.Error("Run cmd error: [%s] %s", data, err)
+			logger.Error("Run cmd error: [%s] %s; stdout: [%s]; stderr: [%s]", data, err, stdout, stderr)
 		} else {
 			logger.Info("Run cmd success: [%s]", data)
 		}

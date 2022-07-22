@@ -98,6 +98,7 @@ var (
 	ServerToken  string
 	Mtu          string
 	InReset      bool
+	CustomCrt    bool
 
 	SSHConfig sshutil.SSH
 
