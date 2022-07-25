@@ -1,4 +1,4 @@
-FROM alpine:3.14
+FROM --platform=$TARGETPLATFORM alpine:3.14
 
 ARG TARGETPLATFORM
 
