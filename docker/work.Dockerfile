@@ -2,7 +2,7 @@ FROM alpine:3.14
 
 ARG TARGETPLATFORM
 
-RUN apk add --update --no-cache bash wireguard-tools tcpdump git make ipset dnsmasq tini curl fping mtr jq tzdata ca-certificates dante-server
+RUN apk add --update --no-cache bash wireguard-tools tcpdump git make ipset dnsmasq tini curl fping mtr jq tzdata ca-certificates dante-server frr expect busybox-extras
 
 RUN git clone https://github.com/kuaifan/wondershaper.git && \
     cd wondershaper/ && \
