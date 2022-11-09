@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-//BuildInstallRemote is
+// BuildInstallRemote is
 func BuildInstallRemote(installRemoteNodes []string) {
 	if len(installRemoteNodes) > 0 {
 		installRemoteNodesFunc(installRemoteNodes)
@@ -32,9 +32,9 @@ func (s *SdosInstaller) InstallRemoteNodes() {
 		wg.Add(1)
 		go func(node string) {
 			defer wg.Done()
-			_ = SSHConfig.CmdAsync(node, "mkdir -p /root/.remote/")
+			_ = SSHConfig.CmdAsync(node, "sudo mkdir -p /root/.remote/")
 			_ = SSHConfig.SaveFileAndChmodX(node, "/root/.remote/base", BaseRemoteUtils(node))
-			_ = SSHConfig.CmdAsync(node, "/root/.remote/base install")
+			_ = SSHConfig.CmdAsync(node, "sudo /root/.remote/base install")
 			installRemoteDone(node)
 		}(node)
 	}
@@ -43,11 +43,11 @@ func (s *SdosInstaller) InstallRemoteNodes() {
 }
 
 func installRemoteDone(node string) {
-	res := SSHConfig.CmdToStringNoLog(node, "cat /tmp/.remote_install", "")
+	res := SSHConfig.CmdToStringNoLog(node, "sudo cat /tmp/.remote_install", "")
 	if res == "success" {
-		caContent := SSHConfig.CmdToStringNoLog(node, "cat /etc/docker/certs/ca.pem", "\n")
-		certContent := SSHConfig.CmdToStringNoLog(node, "cat /etc/docker/certs/cert.pem", "\n")
-		keyContent := SSHConfig.CmdToStringNoLog(node, "cat /etc/docker/certs/key.pem", "\n")
+		caContent := SSHConfig.CmdToStringNoLog(node, "sudo cat /etc/docker/certs/ca.pem", "\n")
+		certContent := SSHConfig.CmdToStringNoLog(node, "sudo cat /etc/docker/certs/cert.pem", "\n")
+		keyContent := SSHConfig.CmdToStringNoLog(node, "sudo cat /etc/docker/certs/key.pem", "\n")
 		if !strings.Contains(caContent, "END CERTIFICATE") {
 			ResultInstall.Store(node, "read ca error")
 			return

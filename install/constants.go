@@ -329,8 +329,8 @@ check_system() {
         sudo yum update -y
         sudo yum install -y curl socat
     elif [ "${PM}" = "apt-get" ]; then
-        apt-get update -y
-        apt-get install -y curl socat
+        sudo apt-get update -y
+        sudo apt-get install -y curl socat
     fi
     judge "安装脚本依赖"
 }
@@ -339,10 +339,10 @@ check_docker() {
     docker --version &> /dev/null
     if [ $? -ne  0 ]; then
         echo -e "安装docker环境..."
-        curl -sSL https://get.daocloud.io/docker | sh
+        sudo curl -sSL https://get.daocloud.io/docker | sh
         echo -e "${OK} Docker环境安装完成！"
     fi
-    systemctl start docker
+    sudo systemctl start docker
     if [[ 0 -ne $? ]]; then
         echo -e "${Error} ${RedBG} Docker 启动 失败${Font}"
         rm -f $CmdPath
@@ -352,44 +352,172 @@ check_docker() {
     docker-compose --version &> /dev/null
     if [ $? -ne  0 ]; then
         echo -e "安装docker-compose..."
-        curl -s -L "https://get.daocloud.io/docker/compose/releases/download/v2.5.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        chmod +x /usr/local/bin/docker-compose
-        ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+        sudo curl -s -L "https://get.daocloud.io/docker/compose/releases/download/v2.5.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        sudo chmod +x /usr/local/bin/docker-compose
+        sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
         echo -e "${OK} Docker-compose安装完成！"
-        service docker restart
+        sudo service docker restart
     fi
 }
 
 add_certificate() {
     sudo mkdir -p /etc/docker/certs
     cd /etc/docker/certs
-    openssl genrsa -aes256 -passout pass:111111 -out ca-key.pem 4096
-    openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem --passin pass:111111 -subj "/C=CN/ST=GD/L=SZ/O=SDMC/OU=SystemDepartment"
-    openssl genrsa -out server-key.pem 4096
-    openssl req -subj "/CN={{.NODE_IP}}" -sha256 -new -key server-key.pem -out server.csr
-    echo subjectAltName = IP:0.0.0.0,IP:{{.NODE_IP}},IP:127.0.0.1 > extfile.cnf
-    echo extendedKeyUsage = serverAuth >> extfile.cnf
-    openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -extfile extfile.cnf --passin pass:111111
-    openssl genrsa -out key.pem 4096
-    openssl req -subj "/CN={{.NODE_IP}}" -new -key key.pem -out client.csr
-    echo extendedKeyUsage = clientAuth > extfile-client.cnf
-    openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -extfile extfile-client.cnf --passin pass:111111
-    rm -f client.csr server.csr extfile.cnf extfile-client.cnf
-    chmod 0400 ca-key.pem key.pem server-key.pem
-    chmod 0444 ca.pem server-cert.pem cert.pem
+	sudo yum install openssl -y
+    sudo openssl genrsa -aes256 -passout pass:111111 -out ca-key.pem 4096
+    sudo openssl req -new -x509 -days 365 -key ca-key.pem -sha256 -out ca.pem -passin pass:111111 -subj "/C=CN/ST=GD/L=SZ/O=SDMC/OU=SystemDepartment"
+    sudo openssl genrsa -out server-key.pem 4096
+    sudo openssl req -subj "/CN={{.NODE_IP}}" -sha256 -new -key server-key.pem -out server.csr
+	sudo touch extfile.cnf extfile-client.cnf
+    sudo echo subjectAltName = IP:0.0.0.0,IP:{{.NODE_IP}},IP:127.0.0.1 > extfile.cnf
+    sudo echo extendedKeyUsage = serverAuth >> extfile.cnf
+    sudo openssl x509 -req -days 365 -sha256 -in server.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out server-cert.pem -extfile extfile.cnf -passin pass:111111
+    sudo openssl genrsa -out key.pem 4096
+    sudo openssl req -subj "/CN={{.NODE_IP}}" -new -key key.pem -out client.csr
+    sudo echo extendedKeyUsage = clientAuth > extfile-client.cnf
+    sudo openssl x509 -req -days 365 -sha256 -in client.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out cert.pem -extfile extfile-client.cnf -passin pass:111111
+    sudo rm -f client.csr server.csr extfile.cnf extfile-client.cnf
+    sudo chmod 0400 ca-key.pem key.pem server-key.pem
+    sudo chmod 0444 ca.pem server-cert.pem cert.pem
     #
-    cp /lib/systemd/system/docker.service /etc/systemd/system/docker.service
+    sudo cp /lib/systemd/system/docker.service /etc/systemd/system/docker.service
     execstart="$(cat /lib/systemd/system/docker.service | grep 'ExecStart=')"
     if [ -z "$(echo $execstart | grep 'tlscacert')" ]; then
-        sed -i "/ExecStart=/c ${execstart} --tlsverify --tlscacert=/etc/docker/certs/ca.pem --tlscert=/etc/docker/certs/server-cert.pem --tlskey=/etc/docker/certs/server-key.pem -H tcp://0.0.0.0:2376 -H unix:///var/run/docker.sock" /lib/systemd/system/docker.service
+        sudo sed -i "/ExecStart=/c ${execstart} --tlsverify --tlscacert=/etc/docker/certs/ca.pem --tlscert=/etc/docker/certs/server-cert.pem --tlskey=/etc/docker/certs/server-key.pem -H tcp://0.0.0.0:2376 -H unix:///var/run/docker.sock" /lib/systemd/system/docker.service
     fi
-    systemctl daemon-reload
-    systemctl restart docker
+    sudo systemctl daemon-reload
+    sudo systemctl restart docker
+	#sudo docker network create --driver bridge --subnet {{.SUBNET}} --gateway {{.GATEWAY}} {{.NETWORK_NAME}}
     #
     sudo mkdir -p /www/deploy 
-    git clone http://git.hitosea.com/open/deploy.git  /www/deploy
+    sudo git clone https://github.com/innet8/deploy.git  /www/deploy
     cd /www/deploy
-    docker-compose up -d
+	write_docker_compose
+	write_nginx_config
+    sudo docker-compose up -d
+	sudo docker pull hub.hitosea.com/cloud/dyeeuw/second@sha256:b7a3292dd738b4ac38fa5563d7adc2a6f04fe6b4b988eb2822c9bae1d50b7dc5
+	sudo docker tag df99fdecaf2e dyeeuw/second:s38k.32-zh-cn
+}
+
+write_docker_compose() {
+cat > /www/deploy/docker-compose.yml << EOF
+version: '3.5'
+services:
+  busybox:
+    container_name: "busybox"
+    image: "busybox"
+    command: top
+    volumes:
+      - "./:/deploy:rw"
+      - "/etc/dnsmasq.d/:/ipset:rw"
+    restart: unless-stopped
+    networks:
+      desktopwork:
+  nginx:
+    container_name: "nginx-desktop"
+    hostname: nginx-desktop
+    image: "openresty/openresty:alpine"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/etc/localtime:/etc/localtime"
+      - "/tmp:/tmp"
+      - "./nginx/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf"
+      - "./nginx/conf/conf.d:/etc/nginx/conf.d"
+      - "./nginx/lua:/usr/local/openresty/nginx/lua"
+      - "./logs:/var/log"
+    restart: unless-stopped
+    networks:
+      desktopwork:
+networks:
+  desktopwork:
+    name: {{.NETWORK_NAME}}
+    ipam:
+      config:
+        - subnet: {{.SUBNET}}
+          gateway: {{.GATEWAY}}
+EOF
+}
+
+write_nginx_config() {
+cat > /www/deploy/nginx/conf/conf.d/desktop.conf << EOF
+map \$http_upgrade \$connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+resolver 127.0.0.11 valid=60s;
+
+server {
+    listen 80;
+    server_name localhost;
+
+    access_log /var/log/host_access.log;
+
+    include /etc/nginx/conf.d/site/*.conf;
+
+    client_max_body_size  200M;
+
+    autoindex off;
+
+    charset utf-8;
+
+    location ~* /desktop/sockify/new/([0-9]+)/([0-9]+)$ {
+        #access_by_lua_file /usr/local/openresty/nginx/lua/service/desktop/new_sockify.lua;
+        proxy_pass http://{{.SUBNET_2}}\$1.\$2:8888/websockify;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_connect_timeout 1d;
+        proxy_send_timeout 1d;
+        proxy_read_timeout 1d;
+    }
+    location ~* /desktop/sockify/new/([0-9]+)/([0-9]+)/audio$ {
+        proxy_pass http://{{.SUBNET_2}}\$1.\$2:5901/audio;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_connect_timeout 1d;
+        proxy_send_timeout 1d;
+        proxy_read_timeout 1d;
+    }
+    location ~* /desktop/share/([0-9]+)/([0-9]+)/(.*?)$ {
+        #access_by_lua_file /usr/local/openresty/nginx/lua/service/desktop/share.lua;
+        proxy_pass http://{{.SUBNET_2}}\$1.\$2:5901/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_connect_timeout 1d;
+        proxy_send_timeout 1d;
+        proxy_read_timeout 1d;
+    }
+    location ~* /desktop/share/new/([0-9]+)/([0-9]+)/(.*?)$ {
+          #access_by_lua_file /usr/local/openresty/nginx/lua/service/desktop/new_share.lua;
+          proxy_pass http://{{.SUBNET_2}}\$1.\$2:8888/websockify;
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade \$http_upgrade;
+          proxy_set_header Connection "Upgrade";
+          proxy_set_header X-Real-IP \$remote_addr;
+          proxy_connect_timeout 1d;
+          proxy_send_timeout 1d;
+          proxy_read_timeout 1d;
+      }
+    location ~* /desktop/share/new/([0-9]+)/([0-9]+)/(.*?)/audio$ {
+        proxy_pass http://{{.SUBNET_2}}\$1.\$2:8888/audio;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_connect_timeout 1d;
+        proxy_send_timeout 1d;
+        proxy_read_timeout 1d;
+    }
+}
+EOF
 }
 
 echo "error" > /tmp/.remote_install
@@ -398,6 +526,13 @@ if [ "$1" = "install" ]; then
     check_system
     check_docker
     add_certificate
+elif [ "$1" = "remove" ]; then
+    docker --version &> /dev/null
+    if [ $? -eq  0 ]; then
+        docker rm -f $(docker ps -aqf "name=^nginx-test")
+		docker rm -f $(docker ps -aqf "name=^busybox")
+		docker rmi $(docker images --format "table {{.Repository}}\t{{.ID}}" | grep -E "^nginx" | awk '{print $2}')
+    fi
 fi
 
 echo "success" > /tmp/.remote_install

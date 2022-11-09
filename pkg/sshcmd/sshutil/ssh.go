@@ -154,6 +154,6 @@ func (ss *SSH) SaveFile(node string, path string, content string) error {
 }
 
 func (ss *SSH) SaveFileAndChmodX(node string, path string, content string) error {
-	cmd := fmt.Sprintf(`echo -n "%s" | base64 -d > %s && chmod +x %s`, Base64Encode(content), path, path)
+	cmd := fmt.Sprintf(`sudo bash -c 'echo -n "%s" | base64 -d > %s && chmod +x %s'`, Base64Encode(content), path, path)
 	return ss.CmdAsync(node, cmd, fmt.Sprintf("Save file %s and chmod +x", path))
 }

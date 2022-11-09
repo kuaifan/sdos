@@ -47,4 +47,7 @@ func init() {
 	installRemoteCmd.Flags().StringVar(&install.SSHConfig.User, "user", "root", "Servers user name for ssh")
 	installRemoteCmd.Flags().StringVar(&install.SSHConfig.Password, "passwd", "", "Password for ssh, It’s base64 encode")
 	installRemoteCmd.Flags().StringVar(&install.ReportUrl, "report-url", "", "Report url, \"http://\" or \"https://\" prefix.")
+	installRemoteCmd.Flags().StringVar(&install.DockerNetworkConfig.Subnet, "subnet", "", "Create a docker network subnet")
+	installRemoteCmd.Flags().StringVar(&install.DockerNetworkConfig.Gateway, "gateway", "", "Create a gateway for the Docker network")
+	installRemoteCmd.Flags().StringVar(&install.DockerNetworkConfig.NetworkNma, "network-name", "", "The name of the docker network created")
 }

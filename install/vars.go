@@ -86,6 +86,12 @@ type Exec struct {
 	Param string
 }
 
+type DockerNwConfig struct {
+	Subnet     string
+	Gateway    string
+	NetworkNma string
+}
+
 var (
 	NodeIPs      []string
 	ManageImage  string
@@ -113,4 +119,6 @@ var (
 	FirewallForwardConfig FirewallForward
 
 	ExecConfig Exec
+
+	DockerNetworkConfig DockerNwConfig
 )

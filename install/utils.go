@@ -230,6 +230,16 @@ func RunCommand(arg ...string) (string, string, error) {
 	return stdout.String(), stderr.String(), err
 }
 
+// GetBetweenStr 截取ip地址前两位 10.68.138.0/16 10.68.
+func GetBetweenStr(ip string) string {
+	var hh string
+	str := strings.Split(ip, ".")
+	for i := 0; i < 2; i++ {
+		hh += str[i] + "."
+	}
+	return hh
+}
+
 // RemoveIpPort 去除IP中的端口
 func RemoveIpPort(ip string) string {
 	if strings.Contains(ip, ":") {
@@ -535,7 +545,7 @@ func GetNetIoInNic(lastNetIoNic *NetIoNic) *NetIoNic {
 		}
 		now := time.Now()
 		netIoNic := &NetIoNic{
-			T: now,
+			T:    now,
 			Sent: stat.BytesSent,
 			Recv: stat.BytesRecv,
 		}

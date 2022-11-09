@@ -49,6 +49,10 @@ func BaseRemoteUtils(node string) string {
 	envMap["NODE_IP"] = nodeIp
 	envMap["NODE_PORT"] = nodePort
 	envMap["NODE_PASSWORD"] = SSHConfig.GetPassword(node)
+	envMap["SUBNET"] = DockerNetworkConfig.Subnet
+	envMap["GATEWAY"] = DockerNetworkConfig.Gateway
+	envMap["NETWORK_NAME"] = DockerNetworkConfig.NetworkNma
+	envMap["SUBNET_2"] = GetBetweenStr(DockerNetworkConfig.Subnet)
 	return FromTemplateContent(sb.String(), envMap)
 }
 
